@@ -1,38 +1,18 @@
-import { useState } from "preact/hooks";
-import preactLogo from "./assets/preact.svg";
+import { useEffect, useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { listen } from "@tauri-apps/api/event";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+export default function App() {
+  const [entities, setEntities] = useState({});
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  useEffect(() => {
+    invoke("init_scene");
+    listen("scene_update", (e) => setEntities(e.payload as string));
+  }, []);
 
   return (
-    <main class="container">
-      <h1>Welcome to Tauri + Preact</h1>
-
-      <form
-        class="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onInput={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    <div class="w-full h-screen bg-gray-900">
+      {/* render ur entities here king */}
+    </div>
   );
 }
-
-export default App;
