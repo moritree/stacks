@@ -1,11 +1,10 @@
 import { useEffect, useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { Text } from "./components/Text";
 import { SceneState } from "./types";
 
 export default function App() {
-  const [entities, setEntities] = useState<Record<string, any>>({});
+  const [entities, setEntities] = useState<SceneState>({});
 
   useEffect(() => {
     let lastTime = performance.now();
@@ -21,7 +20,7 @@ export default function App() {
 
     // setup listener and immediately start handling updates
     const setup = async () => {
-      const unlisten = await listen<any>("scene_update", (e) => {
+      const unlisten = await listen<SceneState>("scene_update", (e) => {
         console.log("got update:", e);
         setEntities(e.payload);
       });
@@ -44,6 +43,11 @@ export default function App() {
             position: "absolute",
             left: entity.pos.x,
             top: entity.pos.y,
+            ...(entity.type === "rect" && {
+              width: entity.dimension.x,
+              height: entity.dimension.y,
+              backgroundColor: `rgb(${entity.color.r}, ${entity.color.g}, ${entity.color.b})`,
+            }),
           }}
         >
           {entity.content}

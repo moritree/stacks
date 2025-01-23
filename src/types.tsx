@@ -3,13 +3,26 @@ interface Position {
   y: number;
 }
 
+interface Color {
+  r: number;
+  g: number;
+  b: number;
+}
+
 interface TextEntity {
   type: "text";
   pos: Position;
   content: string;
 }
 
-export type Entity = TextEntity; // Add other entity types here as needed
+interface RectEntity {
+  type: "rect";
+  pos: Position;
+  dimension: Position;
+  color: Color;
+}
+
+export type Entity = TextEntity | RectEntity;
 
 export interface SceneState {
   [key: string]: Entity;
