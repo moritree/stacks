@@ -8,6 +8,17 @@ pub fn run() {
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
             let state = init_lua_thread(window.clone());
+
+            let state_clone = state.clone();
+            // Shutting down the clone WILL shut down the actual original state.
+            // The `mpsc::Sender` type specifically is designed to work this way
+            // a clone isn't a deep copy of the channel, but another handle to it
+            window.on_window_event(move |event| {
+                if let tauri::WindowEvent::Destroyed = event {
+                    let _ = state_clone.shutdown();
+                }
+            });
+
             app.manage(state);
             Ok(())
         })

@@ -3,19 +3,34 @@ use serde_json::Value;
 use std::sync::mpsc;
 use tauri::{Emitter, State, WebviewWindow};
 
+#[derive(Clone)]
 pub struct LuaState {
     tx: mpsc::Sender<LuaMessage>,
 }
 
-enum LuaMessage {
+impl LuaState {
+    pub fn tick(&self, dt: f64) -> Result<(), String> {
+        self.tx
+            .send(LuaMessage::Tick(dt))
+            .map_err(|e| e.to_string())
+    }
+
+    // Handle cleanup
+    pub fn shutdown(&self) -> Result<(), String> {
+        self.tx.send(LuaMessage::Die).map_err(|e| e.to_string())
+    }
+}
+
+// Messages TO Lua thread
+pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
     Die,
 }
 
 pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
-    let (tx, rx) = mpsc::channel();
-    let event_tx = tx.clone(); // CLONE HERE
+    let (tx, rx) = mpsc::channel(); // create communication channel
+    let event_tx = tx.clone(); // clone sender, allow multiple parts of code to send messages
     let w = window.clone();
 
     std::thread::spawn(move || {
@@ -31,6 +46,8 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
             )
             .unwrap();
         setup_lua(&lua, event_tx);
+
+        // message processing loop: runs in separate thread
         while let Ok(msg) = rx.recv() {
             match msg {
                 LuaMessage::Tick(dt) => tick_lua(&lua, dt),
@@ -41,14 +58,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     });
 
     LuaState { tx } // original tx lives here
-}
-
-impl LuaState {
-    pub fn tick(&self, dt: f64) -> Result<(), String> {
-        self.tx
-            .send(LuaMessage::Tick(dt))
-            .map_err(|e| e.to_string())
-    }
 }
 
 fn setup_lua(lua: &Lua, event_tx: mpsc::Sender<LuaMessage>) {
@@ -69,10 +78,11 @@ fn setup_lua(lua: &Lua, event_tx: mpsc::Sender<LuaMessage>) {
     lua.globals().set("scene", scene).unwrap();
 }
 
+// Calls the Lua update function for each tick of the app loop
 fn tick_lua(lua: &Lua, dt: f64) {
     let scene: LuaTable = lua.globals().get("scene").unwrap();
     let update: LuaFunction = scene.get("update").unwrap();
-    update.call::<_, ()>(dt).unwrap(); // return unit type bc idgaf
+    update.call::<_, ()>(dt).unwrap(); // return unit type bc idc
 }
 
 #[tauri::command]
