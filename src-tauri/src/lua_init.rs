@@ -30,27 +30,49 @@ pub enum LuaMessage {
 
 pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     let (tx, rx) = mpsc::channel(); // create communication channel
-    let event_tx = tx.clone(); // clone sender, allow multiple parts of code to send messages
+    let event_tx = tx.clone(); // clone sender, multiple parts of code can send messages (rust ownership is weird)
     let w = window.clone();
 
     std::thread::spawn(move || {
         let lua = Lua::new();
+
+        let emit = move |_: &Lua, (evt, data): (String, LuaValue)| {
+            let json = serde_json::to_value(&data).unwrap();
+            event_tx
+                .send(LuaMessage::EmitEvent(evt, json))
+                .map_err(|e| mlua::Error::runtime(e.to_string()))?;
+            Ok(())
+        };
+
+        // let lua emit messages that TS can pick up
+        lua.globals()
+            .set("emit", lua.create_function(emit).unwrap())
+            .unwrap();
+
+        // intercept & tag lua prints to stdout
         lua.globals()
             .set(
                 "print",
                 lua.create_function(|_, msg: String| {
-                    println!("[lua] {}", msg); // force stdout flush
+                    println!("[lua] {}", msg);
                     Ok(())
                 })
                 .unwrap(),
             )
             .unwrap();
-        setup_lua(&lua, event_tx);
+
+        // load AND set global
+        let scene: LuaTable = lua.load(include_str!("../lua/scene.lua")).eval().unwrap();
+        lua.globals().set("scene", scene).unwrap();
 
         // message processing loop: runs in separate thread
         while let Ok(msg) = rx.recv() {
             match msg {
-                LuaMessage::Tick(dt) => tick_lua(&lua, dt),
+                LuaMessage::Tick(dt) => {
+                    let scene: LuaTable = lua.globals().get("scene").unwrap();
+                    let update: LuaFunction = scene.get("update").unwrap();
+                    update.call::<_, ()>(dt).unwrap(); // return unit type bc idc
+                }
                 LuaMessage::EmitEvent(evt, data) => w.emit(&evt, data).unwrap(),
                 LuaMessage::Die => break,
             }
@@ -58,31 +80,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     });
 
     LuaState { tx } // original tx lives here
-}
-
-fn setup_lua(lua: &Lua, event_tx: mpsc::Sender<LuaMessage>) {
-    let emit = move |_: &Lua, (evt, data): (String, LuaValue)| {
-        let json = serde_json::to_value(&data).unwrap();
-        event_tx
-            .send(LuaMessage::EmitEvent(evt, json))
-            .map_err(|e| mlua::Error::runtime(e.to_string()))?;
-        Ok(())
-    };
-
-    lua.globals()
-        .set("emit", lua.create_function(emit).unwrap())
-        .unwrap();
-
-    // CRUCIAL BIT: load AND set global
-    let scene: LuaTable = lua.load(include_str!("../lua/scene.lua")).eval().unwrap();
-    lua.globals().set("scene", scene).unwrap();
-}
-
-// Calls the Lua update function for each tick of the app loop
-fn tick_lua(lua: &Lua, dt: f64) {
-    let scene: LuaTable = lua.globals().get("scene").unwrap();
-    let update: LuaFunction = scene.get("update").unwrap();
-    update.call::<_, ()>(dt).unwrap(); // return unit type bc idc
 }
 
 #[tauri::command]
