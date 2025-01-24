@@ -1,3 +1,15 @@
+export default function entityComponent([id, entity]: [string, any]): any {
+  switch (entity.type) {
+    case "text":
+      return Text(id, entity);
+    case "rect":
+      return Rect(id, entity);
+    default:
+      console.warn("Invalid entity", id, entity);
+      return <></>;
+  }
+}
+
 function Text(id: string, obj: any) {
   return (
     <div
@@ -29,19 +41,4 @@ function Rect(id: string, obj: any) {
       {obj.content}
     </div>
   );
-}
-
-export function toComponent([id, entity]: [string, any]): any {
-  switch (entity.type) {
-    case "text": {
-      return Text(id, entity);
-    }
-    case "rect": {
-      return Rect(id, entity);
-    }
-    default: {
-      console.warn("Invalid entity", id, entity);
-      return <></>;
-    }
-  }
 }

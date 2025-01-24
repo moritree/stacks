@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { toComponent } from "./types";
+import entityComponent from "./entityComponent";
 
 export default function App() {
   const [entities, setEntities] = useState<any>({});
@@ -36,7 +36,7 @@ export default function App() {
 
   return (
     <div className="w-full h-screen bg-gray-900 text-white relative">
-      {Object.entries(entities).map(toComponent)}
+      {Object.entries(entities).map(entityComponent)}
     </div>
   );
 }
