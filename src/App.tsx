@@ -33,9 +33,5 @@ export default function App() {
     };
   }, []);
 
-  return (
-    <div className="w-full h-screen bg-gray-900 text-white relative">
-      {Object.entries(entities).map(entityComponent)}
-    </div>
-  );
+  return <div>{Object.entries(entities).map(entityComponent)}</div>;
 }

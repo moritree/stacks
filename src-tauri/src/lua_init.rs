@@ -65,7 +65,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
         let scene: LuaTable = lua.load(include_str!("../lua/scene.lua")).eval().unwrap();
         lua.globals().set("scene", scene).unwrap();
 
-        // message processing loop: runs in separate thread
+        // message processing loop
         while let Ok(msg) = rx.recv() {
             match msg {
                 LuaMessage::Tick(dt) => {
@@ -74,7 +74,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                     update.call::<_, ()>(dt).unwrap(); // return unit type bc idc
                 }
                 LuaMessage::EmitEvent(evt, data) => w.emit(&evt, data).unwrap(),
-                LuaMessage::Die => break,
+                LuaMessage::Die => break, // TODO trigger any shutdown code
             }
         }
     });
