@@ -21,7 +21,6 @@ export default function App() {
     // setup listener and immediately start handling updates
     const setup = async () => {
       const unlisten = await listen<any>("scene_update", (e) => {
-        console.log("got update:", e.payload);
         setEntities(e.payload);
       });
       return unlisten;

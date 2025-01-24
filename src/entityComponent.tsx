@@ -37,8 +37,6 @@ function Rect(id: string, obj: any) {
         height: obj.dimension.y,
         backgroundColor: `rgb(${obj.color.r}, ${obj.color.g}, ${obj.color.b})`,
       }}
-    >
-      {obj.content}
-    </div>
+    />
   );
 }
