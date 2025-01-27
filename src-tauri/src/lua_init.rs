@@ -15,7 +15,7 @@ impl LuaState {
     }
 }
 
-// Messages TO Lua thread
+/// Messages to Lua thread
 pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
@@ -23,6 +23,7 @@ pub enum LuaMessage {
     Die,
 }
 
+/// Set up Lua environment
 pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     let (tx, rx) = mpsc::channel(); // create communication channel
     let event_tx = tx.clone(); // clone sender, multiple parts of code can send messages (rust ownership is weird)

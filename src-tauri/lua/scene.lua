@@ -1,4 +1,4 @@
--- most basic possible scene
+-- Most basic possible scene
 local scene = {
     entities = {
         test = {
