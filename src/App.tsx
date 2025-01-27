@@ -19,17 +19,18 @@ export default function App() {
     requestAnimationFrame(tick);
 
     // setup listener and immediately start handling updates
+    let unlisten: () => void;
     const setup = async () => {
-      const unlisten = await listen<any>("scene_update", (e) => {
+      unlisten = await listen<any>("scene_update", (e) => {
         setEntities(e.payload);
       });
-      return unlisten;
     };
 
     setup();
 
+    // clean up listener on unmount
     return () => {
-      setup().then((u) => u());
+      if (unlisten) unlisten();
     };
   }, []);
 
