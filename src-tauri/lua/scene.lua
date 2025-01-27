@@ -1,3 +1,6 @@
+local Entity = require 'Entity'
+print(Entity.type)
+
 -- Most basic possible scene
 local scene = {
     entities = {
