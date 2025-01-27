@@ -24,4 +24,12 @@ function scene.update(dt)
     emit("scene_update", scene.entities)
 end
 
+function scene.move_entity_randomly(id)
+    if not scene.entities[id] then
+        print(string.format("Warning: %s is not an entity within this scene", id))
+        return
+    end
+    scene.entities[id].pos = { x = math.random(window_width), y = math.random(window_height) }
+end
+
 return scene

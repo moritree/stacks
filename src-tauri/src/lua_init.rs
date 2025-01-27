@@ -25,6 +25,7 @@ impl LuaState {
 pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
+    MoveEntityRandomly(String),
     Die,
 }
 
@@ -36,6 +37,12 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     std::thread::spawn(move || {
         let lua = Lua::new();
 
+        // give lua window size info
+        // TODO not hardcoded
+        lua.globals().set("window_width", 1280).unwrap();
+        lua.globals().set("window_height", 720).unwrap();
+
+        // let lua emit messages that TS can pick up
         let emit = move |_: &Lua, (evt, data): (String, LuaValue)| {
             let json = serde_json::to_value(&data).unwrap();
             event_tx
@@ -43,8 +50,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                 .map_err(|e| mlua::Error::runtime(e.to_string()))?;
             Ok(())
         };
-
-        // let lua emit messages that TS can pick up
         lua.globals()
             .set("emit", lua.create_function(emit).unwrap())
             .unwrap();
@@ -73,6 +78,11 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                     let update: LuaFunction = scene.get("update").unwrap();
                     update.call::<_, ()>(dt).unwrap(); // return unit type bc idc
                 }
+                LuaMessage::MoveEntityRandomly(id) => {
+                    let scene: LuaTable = lua.globals().get("scene").unwrap();
+                    let move_func: LuaFunction = scene.get("move_entity_randomly").unwrap();
+                    move_func.call::<_, ()>(id).unwrap();
+                }
                 LuaMessage::EmitEvent(evt, data) => w.emit(&evt, data).unwrap(),
                 LuaMessage::Die => break, // TODO trigger any shutdown code
             }
@@ -85,4 +95,12 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
 #[tauri::command]
 pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
     state.tick(dt)
+}
+
+#[tauri::command]
+pub async fn move_entity_randomly(state: State<'_, LuaState>, id: String) -> Result<(), String> {
+    state
+        .tx
+        .send(LuaMessage::MoveEntityRandomly(id))
+        .map_err(|e| e.to_string())
 }
