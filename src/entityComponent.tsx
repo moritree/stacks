@@ -28,7 +28,11 @@ function Text(id: string, obj: any) {
 }
 
 function move_randomly(id: string) {
-  invoke("move_entity", { id: id, x: 69, y: 420 });
+  invoke("update_entity_property", {
+    id: id,
+    key: "pos",
+    data: { x: 69, y: 420 },
+  });
 }
 
 function Rect(id: string, obj: any) {

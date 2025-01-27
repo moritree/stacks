@@ -19,7 +19,7 @@ impl LuaState {
 pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
-    MoveEntity(String, f32, f32),
+    UpdateEntityProperty(String, String, Value),
     Die,
 }
 
@@ -90,10 +90,14 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                     let update: LuaFunction = scene.get("update").unwrap();
                     update.call::<_, ()>(dt).unwrap(); // return unit type bc idc
                 }
-                LuaMessage::MoveEntity(id, x, y) => {
+                LuaMessage::UpdateEntityProperty(id, key, data) => {
                     let scene: LuaTable = lua.globals().get("scene").unwrap();
-                    let move_func: LuaFunction = scene.get("move_entity").unwrap();
-                    move_func.call::<_, ()>((id, x, y)).unwrap();
+                    let update_func: LuaFunction = scene
+                        .get("update_entity_property")
+                        .expect("Couldn't find update_entity_property function");
+                    update_func
+                        .call::<_, ()>((id, key, json_value_to_lua(&lua, &data).unwrap()))
+                        .expect("Failed calling update_entity_property")
                 }
                 LuaMessage::EmitEvent(evt, data) => w.emit(&evt, data).unwrap(),
                 LuaMessage::Die => break, // TODO trigger any shutdown code
@@ -102,6 +106,39 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     });
 
     LuaState { tx } // original tx lives here
+}
+
+fn json_value_to_lua<'lua>(
+    lua: &'lua Lua,
+    value: &serde_json::Value,
+) -> LuaResult<mlua::Value<'lua>> {
+    match value {
+        serde_json::Value::Null => Ok(mlua::Value::Nil),
+        serde_json::Value::Bool(b) => Ok(mlua::Value::Boolean(*b)),
+        serde_json::Value::Number(n) => {
+            if let Some(f) = n.as_f64() {
+                Ok(mlua::Value::Number(f))
+            } else {
+                Ok(mlua::Value::Number(0.0))
+            }
+        }
+        serde_json::Value::String(s) => Ok(mlua::Value::String(lua.create_string(s)?)),
+        serde_json::Value::Array(arr) => {
+            let table = lua.create_table()?;
+            for (i, value) in arr.iter().enumerate() {
+                // indices from 1 because Lua
+                table.set(i + 1, json_value_to_lua(lua, value)?)?;
+            }
+            Ok(mlua::Value::Table(table))
+        }
+        serde_json::Value::Object(map) => {
+            let table = lua.create_table()?;
+            for (key, value) in map {
+                table.set(key.clone(), json_value_to_lua(lua, value)?)?;
+            }
+            Ok(mlua::Value::Table(table))
+        }
+    }
 }
 
 #[tauri::command]
@@ -113,14 +150,15 @@ pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn move_entity(
+pub async fn update_entity_property(
     state: State<'_, LuaState>,
     id: String,
-    x: f32,
-    y: f32,
+    key: String,
+    data: Value,
 ) -> Result<(), String> {
+    println!("update_entity_property");
     state
         .tx
-        .send(LuaMessage::MoveEntity(id, x, y))
+        .send(LuaMessage::UpdateEntityProperty(id, key, data))
         .map_err(|e| e.to_string())
 }

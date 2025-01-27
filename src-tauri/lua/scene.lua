@@ -24,20 +24,14 @@ function scene.update(dt)
     emit("scene_update", scene.entities)
 end
 
-function scene.move_entity_randomly(id)
-    if not scene.entities[id] then
-        print(string.format("Warning: %s is not an entity within this scene", id))
+function scene.update_entity_property(id, key, data)
+    if scene.entities[id] == nil then
+        print(string.format("Error: %s is not a valid entity ID", id))
         return
+    elseif scene.entities[id][key] == nil then
+        print(string.format("Warning: %s is not an existing property on entity %s. Updating anyway lol", key, id))
     end
-    scene.entities[id].pos = { x = math.random(window_width), y = math.random(window_height) }
-end
-
-function scene.move_entity(id, x, y)
-    if not scene.entities[id] then
-        print(string.format("Warning: %s is not an entity within this scene", id))
-        return
-    end
-    scene.entities[id].pos = { x = x, y = y }
+    scene.entities[id][key] = data
 end
 
 return scene
