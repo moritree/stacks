@@ -41,14 +41,17 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
         let window_size = window
             .inner_size()
             .expect("There should be a working window with a size...");
-        let width_scaled = window_size.width as f64 / scale_factor;
-        let height_scaled = window_size.height as f64 / scale_factor;
-
         lua.globals()
-            .set("window_width", width_scaled as u32)
+            .set(
+                "window_width",
+                (window_size.width as f64 / scale_factor) as u32,
+            )
             .expect("Failed to set window_width Lua global");
         lua.globals()
-            .set("window_height", height_scaled as u32)
+            .set(
+                "window_height",
+                (window_size.height as f64 / scale_factor) as u32,
+            )
             .expect("Failed to set window_height Lua global");
 
         // let lua emit messages that TS can pick up
