@@ -1,3 +1,5 @@
+import { invoke } from "@tauri-apps/api/core";
+
 export default function entityComponent([id, entity]: [string, any]): any {
   switch (entity.type) {
     case "text":
@@ -25,6 +27,14 @@ function Text(id: string, obj: any) {
   );
 }
 
+function move_randomly(id: string) {
+  invoke("update_entity_property", {
+    id: id,
+    key: "pos",
+    data: { x: 69, y: 420 },
+  });
+}
+
 function Rect(id: string, obj: any) {
   return (
     <div
@@ -37,6 +47,7 @@ function Rect(id: string, obj: any) {
         height: obj.dimension.y,
         backgroundColor: `rgb(${obj.color.r}, ${obj.color.g}, ${obj.color.b})`,
       }}
+      onClick={() => move_randomly(id)}
     />
   );
 }
