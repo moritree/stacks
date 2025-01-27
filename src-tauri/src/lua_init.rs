@@ -9,12 +9,6 @@ pub struct LuaState {
 }
 
 impl LuaState {
-    pub fn tick(&self, dt: f64) -> Result<(), String> {
-        self.tx
-            .send(LuaMessage::Tick(dt))
-            .map_err(|e| e.to_string())
-    }
-
     // Handle cleanup
     pub fn shutdown(&self) -> Result<(), String> {
         self.tx.send(LuaMessage::Die).map_err(|e| e.to_string())
@@ -37,10 +31,25 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     std::thread::spawn(move || {
         let lua = Lua::new();
 
+        // Physical window may not match logical size, e.g. with mac resolution scaling
+        const DEFAULT_SCALE: f64 = 1.0; // fallback to 1.0 if we can't get monitor info
+        let scale_factor = window.current_monitor().map_or(DEFAULT_SCALE, |m| {
+            m.map_or(DEFAULT_SCALE, |mon| mon.scale_factor())
+        });
+
         // give lua window size info
-        // TODO not hardcoded
-        lua.globals().set("window_width", 1280).unwrap();
-        lua.globals().set("window_height", 720).unwrap();
+        let window_size = window
+            .inner_size()
+            .expect("There should be a working window with a size...");
+        let width_scaled = window_size.width as f64 / scale_factor;
+        let height_scaled = window_size.height as f64 / scale_factor;
+
+        lua.globals()
+            .set("window_width", width_scaled as u32)
+            .expect("Failed to set window_width Lua global");
+        lua.globals()
+            .set("window_height", height_scaled as u32)
+            .expect("Failed to set window_height Lua global");
 
         // let lua emit messages that TS can pick up
         let emit = move |_: &Lua, (evt, data): (String, LuaValue)| {
@@ -94,7 +103,10 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
 
 #[tauri::command]
 pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
-    state.tick(dt)
+    state
+        .tx
+        .send(LuaMessage::Tick(dt))
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
