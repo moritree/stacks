@@ -1,5 +1,6 @@
 use mlua::prelude::*;
 use serde_json::Value;
+use std::env;
 use std::sync::mpsc;
 use tauri::{Emitter, State, WebviewWindow};
 
@@ -86,7 +87,23 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
             )
             .expect("Couldn't set print global in Lua");
 
-        // load AND set global
+        // Set package path (module search path)
+        lua.load(&format!(
+            r#"package.path = package.path .. ";{}/?.lua""#,
+            env::current_dir()
+                .expect("Couldn't get current directory")
+                .join("lua")
+                .canonicalize()
+                .expect("Couldn't resolve lua directory path")
+                .into_os_string()
+                .into_string()
+                .expect("Couldn't resolve Lua directory path into string")
+        ))
+        .exec()
+        .expect("Couldn't set Lua package path");
+
+        // load scene AND set global
+        // Do this last to minimise risk of any code on .eval() not working
         let scene: LuaTable = lua
             .load(include_str!("../lua/scene.lua"))
             .eval()
