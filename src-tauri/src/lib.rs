@@ -1,5 +1,5 @@
 mod lua_init;
-use lua_init::{init_lua_thread, move_entity_randomly, tick};
+use lua_init::{init_lua_thread, move_entity, tick};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -24,7 +24,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![tick, move_entity_randomly])
+        .invoke_handler(tauri::generate_handler![tick, move_entity])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

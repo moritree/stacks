@@ -19,7 +19,7 @@ impl LuaState {
 pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
-    MoveEntityRandomly(String),
+    MoveEntity(String, f32, f32),
     Die,
 }
 
@@ -90,10 +90,10 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                     let update: LuaFunction = scene.get("update").unwrap();
                     update.call::<_, ()>(dt).unwrap(); // return unit type bc idc
                 }
-                LuaMessage::MoveEntityRandomly(id) => {
+                LuaMessage::MoveEntity(id, x, y) => {
                     let scene: LuaTable = lua.globals().get("scene").unwrap();
-                    let move_func: LuaFunction = scene.get("move_entity_randomly").unwrap();
-                    move_func.call::<_, ()>(id).unwrap();
+                    let move_func: LuaFunction = scene.get("move_entity").unwrap();
+                    move_func.call::<_, ()>((id, x, y)).unwrap();
                 }
                 LuaMessage::EmitEvent(evt, data) => w.emit(&evt, data).unwrap(),
                 LuaMessage::Die => break, // TODO trigger any shutdown code
@@ -113,9 +113,14 @@ pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn move_entity_randomly(state: State<'_, LuaState>, id: String) -> Result<(), String> {
+pub async fn move_entity(
+    state: State<'_, LuaState>,
+    id: String,
+    x: f32,
+    y: f32,
+) -> Result<(), String> {
     state
         .tx
-        .send(LuaMessage::MoveEntityRandomly(id))
+        .send(LuaMessage::MoveEntity(id, x, y))
         .map_err(|e| e.to_string())
 }

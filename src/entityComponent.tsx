@@ -28,7 +28,7 @@ function Text(id: string, obj: any) {
 }
 
 function move_randomly(id: string) {
-  invoke("move_entity_randomly", { id });
+  invoke("move_entity", { id: id, x: 69, y: 420 });
 }
 
 function Rect(id: string, obj: any) {
