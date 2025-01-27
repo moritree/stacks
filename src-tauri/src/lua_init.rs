@@ -156,7 +156,6 @@ pub async fn update_entity_property(
     key: String,
     data: Value,
 ) -> Result<(), String> {
-    println!("update_entity_property");
     state
         .tx
         .send(LuaMessage::UpdateEntityProperty(id, key, data))
