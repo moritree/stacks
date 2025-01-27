@@ -46,25 +46,32 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                 "window_width",
                 (window_size.width as f64 / scale_factor) as u32,
             )
-            .expect("Failed to set window_width Lua global");
+            .expect("Couldn't set window_width Lua global");
         lua.globals()
             .set(
                 "window_height",
                 (window_size.height as f64 / scale_factor) as u32,
             )
-            .expect("Failed to set window_height Lua global");
+            .expect("Couldn't set window_height Lua global");
 
         // let lua emit messages that TS can pick up
         let emit = move |_: &Lua, (evt, data): (String, LuaValue)| {
-            let json = serde_json::to_value(&data).unwrap();
+            let json = serde_json::to_value(&data).expect(&format!(
+                "Lua event {}: Couldn't convert data to valid JSON value.",
+                evt
+            ));
             event_tx
                 .send(LuaMessage::EmitEvent(evt, json))
                 .map_err(|e| mlua::Error::runtime(e.to_string()))?;
             Ok(())
         };
         lua.globals()
-            .set("emit", lua.create_function(emit).unwrap())
-            .unwrap();
+            .set(
+                "emit",
+                lua.create_function(emit)
+                    .expect("Couldn't create Lua emit function"),
+            )
+            .expect("Couldn't set emit global in Lua");
 
         // intercept & tag lua prints to stdout
         lua.globals()
@@ -74,32 +81,48 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                     println!("[lua] {}", msg);
                     Ok(())
                 })
-                .unwrap(),
+                .expect("Couldn't create Lua custom print function"),
             )
-            .unwrap();
+            .expect("Couldn't set print global in Lua");
 
         // load AND set global
-        let scene: LuaTable = lua.load(include_str!("../lua/scene.lua")).eval().unwrap();
-        lua.globals().set("scene", scene).unwrap();
+        let scene: LuaTable = lua
+            .load(include_str!("../lua/scene.lua"))
+            .eval()
+            .expect("Couldn't load lua scene file");
+        lua.globals()
+            .set("scene", scene)
+            .expect("Couldn't set scene global in Lua");
 
         // message processing loop
         while let Ok(msg) = rx.recv() {
             match msg {
                 LuaMessage::Tick(dt) => {
-                    let scene: LuaTable = lua.globals().get("scene").unwrap();
-                    let update: LuaFunction = scene.get("update").unwrap();
-                    update.call::<_, ()>(dt).unwrap(); // return unit type bc idc
+                    let scene: LuaTable =
+                        lua.globals().get("scene").expect("Couldn't get Lua scene");
+                    let update: LuaFunction = scene
+                        .get("update")
+                        .expect("Couldn't get Lua update function");
+                    update.call::<_, ()>(dt).expect("Failed calling update")
                 }
                 LuaMessage::UpdateEntityProperty(id, key, data) => {
-                    let scene: LuaTable = lua.globals().get("scene").unwrap();
+                    let scene: LuaTable =
+                        lua.globals().get("scene").expect("Couldn't get Lua scene");
                     let update_func: LuaFunction = scene
                         .get("update_entity_property")
-                        .expect("Couldn't find update_entity_property function");
+                        .expect("Couldn't get Lua update_entity_property function");
                     update_func
-                        .call::<_, ()>((id, key, json_value_to_lua(&lua, &data).unwrap()))
-                        .expect("Failed calling update_entity_property")
+                        .call::<_, ()>((
+                            id,
+                            key,
+                            json_value_to_lua(&lua, &data)
+                                .expect("Couldn't convert json data to Lua object"),
+                        ))
+                        .expect("Couldn't call update_entity_property")
                 }
-                LuaMessage::EmitEvent(evt, data) => w.emit(&evt, data).unwrap(),
+                LuaMessage::EmitEvent(evt, data) => w
+                    .emit(&evt, data)
+                    .expect(&format!("Couldn't emit event {}", evt)),
                 LuaMessage::Die => break, // TODO trigger any shutdown code
             }
         }
