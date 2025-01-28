@@ -41,7 +41,9 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
         .join("lua");
     println!(
         "Looking for Lua files in: {}",
-        resource_path.to_str().expect("WAAA")
+        resource_path
+            .to_str()
+            .expect("Couldn't resolve resource path to string")
     );
     let lua_dir = Path::new(&resource_path);
     let preload = lua
@@ -88,7 +90,6 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
             loaded.push(name);
         }
     }
-
     println!("Preloaded Lua modules: {:?}", loaded);
 
     Ok(())
