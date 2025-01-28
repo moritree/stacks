@@ -33,3 +33,6 @@ To build the application binary for your system:
 ```
 yarn tauri build
 ```
+
+> ### ⚠ Testing
+> *(@ me, in case I forget and lose time again)* Make sure to **test the production build** as well as dev mode!
