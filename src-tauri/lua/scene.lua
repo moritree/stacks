@@ -1,4 +1,4 @@
-print(Entity.type)
+require('Entity')
 
 -- Most basic possible scene
 local scene = {

@@ -25,6 +25,31 @@ pub enum LuaMessage {
     Die,
 }
 
+fn preload_lua_modules(lua: &Lua) -> LuaResult<()> {
+    // Define all modules to preload
+    // TODO: automatically search folder
+    let modules = [("Entity", include_str!("../lua/Entity.lua"))];
+
+    let preload = lua
+        .globals()
+        .get::<_, LuaTable>("package")?
+        .get::<_, LuaTable>("preload")?;
+
+    for (module_name, source) in modules {
+        let source = source.to_string();
+        preload.set(
+            module_name,
+            lua.create_function(move |lua, ()| -> LuaResult<LuaValue> {
+                lua.load(&source)
+                    .set_name(&format!("{}.lua", module_name))
+                    .eval()
+            })?,
+        )?;
+    }
+
+    Ok(())
+}
+
 /// Set up Lua environment
 pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     let (tx, rx) = mpsc::channel(); // create communication channel
@@ -97,7 +122,10 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
             .set("Entity", entity)
             .expect("Couldn't set entity global in Lua");
 
-        // load scene AND set global
+        // Preload modules
+        preload_lua_modules(&lua).expect("Failed to preload Lua modules");
+
+        // load scene
         // Do this last to minimise risk of any code on .eval() not working
         let scene: LuaTable = lua
             .load(include_str!("../lua/scene.lua"))
