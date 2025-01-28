@@ -27,7 +27,7 @@ pub enum LuaMessage {
     Die,
 }
 
-/// Runtime preload Lua modules as part of Lua initialization.
+/// Preload Lua modules (at runtime) as part of Lua initialization.
 ///
 /// If we need compile-time checks or recompilation when Lua files change, look into writing a build script.
 /// Runtime loading is probably more simple & flexible.
@@ -48,6 +48,8 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
         .globals()
         .get::<_, LuaTable>("package")?
         .get::<_, LuaTable>("preload")?;
+
+    let mut loaded = Vec::new();
 
     // Scan the lua directory for .lua files
     for entry in fs::read_dir(lua_dir).expect("Failed to read lua directory") {
@@ -83,10 +85,11 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
                         .eval()
                 })?,
             )?;
-
-            println!("Preloaded Lua module: {}", name);
+            loaded.push(name);
         }
     }
+
+    println!("Preloaded Lua modules: {:?}", loaded);
 
     Ok(())
 }
@@ -101,7 +104,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
         let lua = Lua::new();
 
         // Physical window may not match logical size, e.g. with mac resolution scaling
-        const DEFAULT_SCALE: f64 = 1.0; // fallback to 1.0 if we can't get monitor info
+        const DEFAULT_SCALE: f64 = 1.0; // fallback to 1.0 scale if we can't get monitor info
         let scale_factor = window.current_monitor().map_or(DEFAULT_SCALE, |m| {
             m.map_or(DEFAULT_SCALE, |mon| mon.scale_factor())
         });
@@ -153,15 +156,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                 .expect("Couldn't create Lua custom print function"),
             )
             .expect("Couldn't set print global in Lua");
-
-        // Load Entity.lua manually first :/
-        let entity: LuaTable = lua
-            .load(include_str!("../resources/lua/Entity.lua"))
-            .eval()
-            .expect("Couldn't load lua entity file");
-        lua.globals()
-            .set("Entity", entity)
-            .expect("Couldn't set entity global in Lua");
 
         // Preload modules
         preload_lua_modules(window, &lua).expect("Failed to preload Lua modules");
