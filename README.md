@@ -6,7 +6,11 @@
 [![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=fff)](https://vite.dev/)
 
 A Tauri (Rust) app, using TypeScript with Preact for the frontend and Lua for model (and scripting, later).
-So WIP, I'm not even going to explain what this is for yet.
+
+So deeply WIP, I'm not even going to explain what this is for yet.
+
+> ### ⚠ Testing
+> *(@ me, in case I forget and lose time again)* Make sure to **test the production build** as well as dev mode!
 
 # Run locally
 1. Clone the repository
