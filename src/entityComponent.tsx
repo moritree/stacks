@@ -15,11 +15,11 @@ export default function entityComponent([id, entity]: [string, any]): any {
 function Text(id: string, obj: any) {
   return (
     <div
+      class="entity text"
       id={id}
       style={{
-        position: "absolute",
-        left: obj.pos.x,
-        top: obj.pos.y,
+        "--x": `${obj.pos.x}px`,
+        "--y": `${obj.pos.y}px`,
       }}
     >
       {obj.content}
@@ -38,14 +38,14 @@ function move_randomly(id: string) {
 function Rect(id: string, obj: any) {
   return (
     <div
+      class="entity rect"
       id={id}
       style={{
-        position: "absolute",
-        left: obj.pos.x,
-        top: obj.pos.y,
-        width: obj.dimension.x,
-        height: obj.dimension.y,
-        backgroundColor: `rgb(${obj.color.r}, ${obj.color.g}, ${obj.color.b})`,
+        "--x": `${obj.pos.x}px`,
+        "--y": `${obj.pos.y}px`,
+        "--width": `${obj.dimension.x}px`,
+        "--height": `${obj.dimension.y}px`,
+        "--color": `rgb(${obj.color.r}, ${obj.color.g}, ${obj.color.b})`,
       }}
       onClick={() => move_randomly(id)}
     />

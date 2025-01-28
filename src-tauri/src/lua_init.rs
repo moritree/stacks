@@ -4,6 +4,7 @@ use std::env;
 use std::sync::mpsc;
 use tauri::{Emitter, State, WebviewWindow};
 
+/// Hold a reference to the Lua thread communication channel
 #[derive(Clone)]
 pub struct LuaState {
     tx: mpsc::Sender<LuaMessage>,
@@ -18,6 +19,7 @@ impl LuaState {
 
 /// Messages to Lua thread
 pub enum LuaMessage {
+    /// Game loop tick with the given time difference.
     Tick(f64),
     EmitEvent(String, Value),
     UpdateEntityProperty(String, String, Value),

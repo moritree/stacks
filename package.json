@@ -12,6 +12,7 @@
   "dependencies": {
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-opener": "^2",
+    "less": "^4.2.2",
     "preact": "^10.25.1"
   },
   "devDependencies": {
