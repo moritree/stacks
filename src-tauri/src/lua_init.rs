@@ -1,7 +1,9 @@
 use mlua::prelude::*;
 use serde_json::Value;
+use std::fs;
+use std::path::Path;
 use std::sync::mpsc;
-use tauri::{Emitter, State, WebviewWindow};
+use tauri::{Emitter, Manager, State, WebviewWindow};
 
 /// Hold a reference to the Lua thread communication channel
 #[derive(Clone)]
@@ -25,26 +27,65 @@ pub enum LuaMessage {
     Die,
 }
 
-fn preload_lua_modules(lua: &Lua) -> LuaResult<()> {
-    // Define all modules to preload
-    // TODO: automatically search folder
-    let modules = [("Entity", include_str!("../lua/Entity.lua"))];
-
+/// Runtime preload Lua modules as part of Lua initialization.
+///
+/// If we need compile-time checks or recompilation when Lua files change, look into writing a build script.
+/// Runtime loading is probably more simple & flexible.
+fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
+    let resource_path = window
+        .app_handle()
+        .path()
+        .resource_dir()
+        .expect("Failed to get resource dir")
+        .join("resources")
+        .join("lua");
+    println!(
+        "Looking for Lua files in: {}",
+        resource_path.to_str().expect("WAAA")
+    );
+    let lua_dir = Path::new(&resource_path);
     let preload = lua
         .globals()
         .get::<_, LuaTable>("package")?
         .get::<_, LuaTable>("preload")?;
 
-    for (module_name, source) in modules {
-        let source = source.to_string();
-        preload.set(
-            module_name,
-            lua.create_function(move |lua, ()| -> LuaResult<LuaValue> {
-                lua.load(&source)
-                    .set_name(&format!("{}.lua", module_name))
-                    .eval()
-            })?,
-        )?;
+    // Scan the lua directory for .lua files
+    for entry in fs::read_dir(lua_dir).expect("Failed to read lua directory") {
+        let entry = entry.expect("Failed to read directory entry");
+        let path = entry.path();
+
+        // Get all the strings we need upfront
+        let file_name = match (path.file_stem(), path.extension()) {
+            (Some(stem), Some(ext)) => {
+                if ext == "lua" {
+                    stem.to_str().map(|s| s.to_string())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        };
+
+        if let Some(name) = file_name {
+            // Skip scene.lua since we load it separately, as the root file
+            if name == "scene" {
+                continue;
+            }
+
+            let source = fs::read_to_string(&path).expect("Failed to read lua file");
+            let module_name = name.clone(); // Clone for the closure
+
+            preload.set(
+                name.as_str(),
+                lua.create_function(move |lua, ()| -> LuaResult<LuaValue> {
+                    lua.load(&source)
+                        .set_name(&format!("{}.lua", module_name))
+                        .eval()
+                })?,
+            )?;
+
+            println!("Preloaded Lua module: {}", name);
+        }
     }
 
     Ok(())
@@ -115,7 +156,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
 
         // Load Entity.lua manually first :/
         let entity: LuaTable = lua
-            .load(include_str!("../lua/Entity.lua"))
+            .load(include_str!("../resources/lua/Entity.lua"))
             .eval()
             .expect("Couldn't load lua entity file");
         lua.globals()
@@ -123,12 +164,12 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
             .expect("Couldn't set entity global in Lua");
 
         // Preload modules
-        preload_lua_modules(&lua).expect("Failed to preload Lua modules");
+        preload_lua_modules(window, &lua).expect("Failed to preload Lua modules");
 
         // load scene
         // Do this last to minimise risk of any code on .eval() not working
         let scene: LuaTable = lua
-            .load(include_str!("../lua/scene.lua"))
+            .load(include_str!("../resources/lua/scene.lua"))
             .eval()
             .expect("Couldn't load lua scene file");
         lua.globals()
