@@ -7,6 +7,10 @@ import Moveable from "preact-moveable";
 export default function App() {
   const [entities, setEntities] = useState<any>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedInitialPosition, setSelectedInitialPosition] = useState<{
+    x: number;
+    y: number;
+  }>({ x: 0, y: 0 });
 
   useEffect(() => {
     let lastTime = performance.now();
@@ -39,16 +43,17 @@ export default function App() {
   // Get the selected entity if any
   const selectedEntity = selectedId ? entities[selectedId] : null;
 
+  // Calculate new position when entity is dragged
   const calculateNewPosition = (transform: string) => {
     // transform will be in the format "translate(Xpx, Ypx)"
     const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     if (matches) {
       return {
-        x: selectedEntity.pos.x + parseFloat(matches[1]),
-        y: selectedEntity.pos.y + parseFloat(matches[2]),
+        x: selectedInitialPosition.x + parseFloat(matches[1]),
+        y: selectedInitialPosition.y + parseFloat(matches[2]),
       };
     }
-    console.warn("Drag transform format couldn't be parsed", transform);
+    console.error("Drag transform format couldn't be parsed", transform);
     return selectedEntity.pos; // fallback
   };
 
@@ -59,7 +64,10 @@ export default function App() {
           key={id}
           id={id}
           entity={entity}
-          onSelect={() => setSelectedId(id)}
+          onSelect={(pos) => {
+            setSelectedId(id);
+            setSelectedInitialPosition(pos);
+          }}
           isSelected={id === selectedId}
         />
       ))}
@@ -69,7 +77,6 @@ export default function App() {
           draggable={true}
           onDrag={({ transform }) => {
             // Update position through backend
-            // TODO: correct dong
             invoke("update_entity_property", {
               id: selectedId,
               key: "pos",

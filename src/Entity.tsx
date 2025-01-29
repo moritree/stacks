@@ -3,7 +3,7 @@ import { Component } from "preact";
 type Props = {
   id: String;
   entity: any;
-  onSelect: () => void;
+  onSelect: (pos: { x: number; y: number }) => void;
   isSelected: boolean;
 };
 
@@ -62,7 +62,7 @@ export default class Entity extends Component<Props> {
         onMouseDown={(e) => {
           if (!this.entity.draggable) return;
           e.stopPropagation();
-          this.props.onSelect();
+          this.props.onSelect(this.entity.pos);
         }}
       >
         {this.props.entity.content && this.entity.content}

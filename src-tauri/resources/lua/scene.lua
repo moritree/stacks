@@ -35,6 +35,7 @@ function scene.update_entity_property(id, key, data)
         print(string.format("Warning: %s is not an existing property on entity %s. Updating anyway lol", key, id))
     end
     scene.entities[id][key] = data
+    scene.update(0) -- temp
 end
 
 return scene
