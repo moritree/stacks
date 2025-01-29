@@ -69,9 +69,11 @@ export default function App() {
           key={id}
           id={id}
           entity={entity}
-          onSelect={(pos) => {
-            setSelectedId(id);
-            setSelectedInitialPosition(pos);
+          onSelect={(pos, selectable) => {
+            if (selectable) {
+              setSelectedId(id);
+              setSelectedInitialPosition(pos);
+            } else setSelectedId(null);
           }}
           isSelected={id === selectedId}
         />
