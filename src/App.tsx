@@ -58,7 +58,12 @@ export default function App() {
   };
 
   return (
-    <div>
+    <div
+      class="background"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setSelectedId(null);
+      }}
+    >
       {Object.entries(entities).map(([id, entity]) => (
         <Entity
           key={id}
