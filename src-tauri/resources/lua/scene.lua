@@ -1,24 +1,25 @@
-require('Entity')
+local Entity = require('Entity')
 
 -- Most basic possible scene
 local scene = {
     entities = {
-        test = {
+        test1 = Entity:new({
             type = "text",
             pos = { x = 100, y = 100 },
             content = "vibing"
-        },
-        test2 = {
+        }),
+        test2 = Entity:new({
             type = "text",
             pos = { x = 200, y = 100 },
-            content = "u can do it"
-        },
-        test3 = {
+            content = "u can do it",
+            draggable = true
+        }),
+        test3 = Entity:new({
             type = "rect",
             pos = { x = 100, y = 200 },
             dimension = { x = 200, y = 100 },
             color = { r = 255, g = 0, b = 0 }
-        }
+        })
     }
 }
 

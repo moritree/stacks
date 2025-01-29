@@ -1,28 +1,37 @@
 import { invoke } from "@tauri-apps/api/core";
 
 export default function entityComponent([id, entity]: [string, any]): any {
+  let style;
   switch (entity.type) {
     case "text":
-      return Text(id, entity);
+      style = {
+        "--x": `${entity.pos.x}px`,
+        "--y": `${entity.pos.y}px`,
+      };
+      break;
     case "rect":
-      return Rect(id, entity);
+      style = {
+        "--x": `${entity.pos.x}px`,
+        "--y": `${entity.pos.y}px`,
+        "--width": `${entity.dimension.x}px`,
+        "--height": `${entity.dimension.y}px`,
+        "--color": `rgb(${entity.color.r}, ${entity.color.g}, ${entity.color.b})`,
+      };
+      break;
     default:
-      console.warn("Invalid entity", id, entity);
+      console.warn("Invalid entity type", id, entity.type);
       return <></>;
   }
-}
 
-function Text(id: string, obj: any) {
   return (
     <div
-      class="entity text"
+      class={"entity " + entity.type}
       id={id}
-      style={{
-        "--x": `${obj.pos.x}px`,
-        "--y": `${obj.pos.y}px`,
-      }}
+      style={style}
+      draggable={entity.draggable}
+      onClick={() => move_randomly(id)}
     >
-      {obj.content}
+      {entity.content && entity.content}
     </div>
   );
 }
@@ -33,21 +42,4 @@ function move_randomly(id: string) {
     key: "pos",
     data: { x: 69, y: 420 },
   });
-}
-
-function Rect(id: string, obj: any) {
-  return (
-    <div
-      class="entity rect"
-      id={id}
-      style={{
-        "--x": `${obj.pos.x}px`,
-        "--y": `${obj.pos.y}px`,
-        "--width": `${obj.dimension.x}px`,
-        "--height": `${obj.dimension.y}px`,
-        "--color": `rgb(${obj.color.r}, ${obj.color.g}, ${obj.color.b})`,
-      }}
-      onClick={() => move_randomly(id)}
-    />
-  );
 }
