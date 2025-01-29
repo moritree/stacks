@@ -31,21 +31,19 @@ export default class Entity extends Component<Props> {
   }
 
   updateStyle() {
+    this.style = {
+      "--x": `${this.entity.pos.x}px`,
+      "--y": `${this.entity.pos.y}px`,
+    };
     switch (this.entity.type) {
       case "text":
-        this.style = {
-          "--x": `${this.entity.pos.x}px`,
-          "--y": `${this.entity.pos.y}px`,
-        };
         break;
       case "rect":
-        this.style = {
-          "--x": `${this.entity.pos.x}px`,
-          "--y": `${this.entity.pos.y}px`,
+        this.style.assign({
           "--width": `${this.entity.dimension.x}px`,
           "--height": `${this.entity.dimension.y}px`,
           "--color": `rgb(${this.entity.color.r}, ${this.entity.color.g}, ${this.entity.color.b})`,
-        };
+        });
         break;
       default:
         console.warn("Invalid entity type", this.id, this.entity.type);
