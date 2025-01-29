@@ -39,11 +39,14 @@ export default class Entity extends Component<Props> {
       case "text":
         break;
       case "rect":
-        this.style.assign({
-          "--width": `${this.entity.dimension.x}px`,
-          "--height": `${this.entity.dimension.y}px`,
-          "--color": `rgb(${this.entity.color.r}, ${this.entity.color.g}, ${this.entity.color.b})`,
-        });
+        this.style = {
+          ...this.style,
+          ...{
+            "--width": `${this.entity.dimension.x}px`,
+            "--height": `${this.entity.dimension.y}px`,
+            "--color": `rgb(${this.entity.color.r}, ${this.entity.color.g}, ${this.entity.color.b})`,
+          },
+        };
         break;
       default:
         console.warn("Invalid entity type", this.id, this.entity.type);
