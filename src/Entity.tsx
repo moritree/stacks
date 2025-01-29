@@ -1,9 +1,10 @@
-import { invoke } from "@tauri-apps/api/core";
 import { Component } from "preact";
 
 type Props = {
   id: String;
   entity: any;
+  onSelect: () => void;
+  isSelected: boolean;
 };
 
 export default class Entity extends Component<Props> {
@@ -51,22 +52,17 @@ export default class Entity extends Component<Props> {
     }
   }
 
-  move_randomly = () => {
-    invoke("update_entity_property", {
-      id: this.id,
-      key: "pos",
-      data: { x: 69, y: 420 },
-    });
-  };
-
   render() {
     return (
       <div
-        class={"entity " + this.entity.type}
+        class={`entity ${this.entity.type} ${this.props.isSelected ? "selected" : ""}`}
         id={this.id.toString()}
         style={this.style}
-        draggable={this.entity.draggable}
-        onClick={this.move_randomly}
+        onMouseDown={(e) => {
+          if (!this.entity.draggable) return;
+          e.stopPropagation();
+          this.props.onSelect();
+        }}
       >
         {this.props.entity.content && this.entity.content}
       </div>

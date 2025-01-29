@@ -2,9 +2,11 @@ import { useEffect, useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import Entity from "./Entity";
+import Moveable from "preact-moveable";
 
 export default function App() {
   const [entities, setEntities] = useState<any>({});
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     let lastTime = performance.now();
@@ -34,11 +36,48 @@ export default function App() {
     };
   }, []);
 
+  // Get the selected entity if any
+  const selectedEntity = selectedId ? entities[selectedId] : null;
+
+  const calculateNewPosition = (transform: string) => {
+    // transform will be in the format "translate(Xpx, Ypx)"
+    const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+    if (matches) {
+      return {
+        x: selectedEntity.pos.x + parseFloat(matches[1]),
+        y: selectedEntity.pos.y + parseFloat(matches[2]),
+      };
+    }
+    console.warn("Drag transform format couldn't be parsed", transform);
+    return selectedEntity.pos; // fallback
+  };
+
   return (
     <div>
       {Object.entries(entities).map(([id, entity]) => (
-        <Entity id={id} entity={entity} />
+        <Entity
+          key={id}
+          id={id}
+          entity={entity}
+          onSelect={() => setSelectedId(id)}
+          isSelected={id === selectedId}
+        />
       ))}
+      {selectedEntity && (
+        <Moveable
+          target={`#${selectedId}`}
+          draggable={true}
+          onDrag={({ transform }) => {
+            // Update position through backend
+            // TODO: correct dong
+            invoke("update_entity_property", {
+              id: selectedId,
+              key: "pos",
+              data: calculateNewPosition(transform),
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
