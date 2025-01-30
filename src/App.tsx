@@ -63,6 +63,12 @@ export default function App() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(null);
       }}
+      onContextMenu={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+          invoke("open_context_menu");
+        }
+      }}
     >
       {Object.entries(entities).map(([id, entity]) => (
         <Entity

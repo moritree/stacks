@@ -1,4 +1,6 @@
+mod context_menu;
 mod lua_init;
+use context_menu::open_context_menu;
 use lua_init::{init_lua_thread, tick, update_entity_property};
 use tauri::Manager;
 
@@ -24,7 +26,11 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![tick, update_entity_property])
+        .invoke_handler(tauri::generate_handler![
+            tick,
+            update_entity_property,
+            open_context_menu
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
