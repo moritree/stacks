@@ -12,6 +12,7 @@ local scene = {
             type = "text",
             pos = { x = 200, y = 100 },
             content = "u can do it",
+            selectable = true,
             draggable = true
         }),
         test3 = Entity:new({

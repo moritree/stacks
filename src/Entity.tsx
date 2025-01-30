@@ -56,7 +56,7 @@ export default class Entity extends Component<Props> {
   render() {
     return (
       <div
-        class={`entity ${this.entity.type} ${this.props.isSelected ? "selected" : ""}`}
+        class={`entity ${this.entity.type} ${this.props.entity.selectable ? "selectable" : ""} ${this.props.isSelected ? "selected" : ""}`}
         id={this.id.toString()}
         style={this.style}
         onMouseDown={(e) => {
