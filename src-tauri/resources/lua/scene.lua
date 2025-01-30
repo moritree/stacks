@@ -19,13 +19,7 @@ local scene = {
             type = "rect",
             pos = { x = 100, y = 200 },
             dimension = { x = 200, y = 100 },
-            color = { r = 171, g = 121, b = 212 }
-        }),
-        test4 = Entity:new({
-            type = "rect",
-            pos = { x = 300, y = 200 },
-            dimension = { x = 200, y = 100 },
-            color = { r = 45, g = 45, b = 45 }
+            color = "#ff0000"
         })
     }
 }

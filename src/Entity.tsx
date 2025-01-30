@@ -44,7 +44,7 @@ export default class Entity extends Component<Props> {
           ...{
             "--width": `${this.entity.dimension.x}px`,
             "--height": `${this.entity.dimension.y}px`,
-            "--color": `rgb(${this.entity.color.r}, ${this.entity.color.g}, ${this.entity.color.b})`,
+            "--color": `${this.entity.color}`,
           },
         };
         break;
