@@ -1,3 +1,5 @@
+@import 'themes';
+
 @font-face {
     font-family: "Merriweather";
     src: url("../fonts/Merriweather-Regular.ttf") format("truetype");
@@ -9,9 +11,8 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-}
-
-* {
+    background-color: var(--background-color);
+    color: var(--text-color);
     font: 18px "Merriweather", sans-serif;
     cursor: default;
     box-sizing: border-box;
