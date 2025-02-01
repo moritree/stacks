@@ -9,7 +9,7 @@ use tauri::{
 struct MyContextMenu<R: Runtime>(Menu<R>);
 
 #[tauri::command]
-pub fn open_context_menu<R: Runtime>(window: tauri::Window<R>) {
+pub fn open_context_menu<R: Runtime>(window: tauri::Window<R>, id: String) {
     // check if we already created and stored the window
     if let Some(context_menu) = window.try_state::<MyContextMenu<R>>() {
         // if stored, then just show it
@@ -18,17 +18,14 @@ pub fn open_context_menu<R: Runtime>(window: tauri::Window<R>) {
         // if not, create the menu
         let context_menu = Menu::with_items(
             &window,
-            &[
-                &MenuItem::with_id(&window, "open_file", "Open File", true, None::<&str>).unwrap(),
-                &MenuItem::with_id(
-                    &window,
-                    "open_folder",
-                    "Open File Folder",
-                    true,
-                    None::<&str>,
-                )
-                .unwrap(),
-            ],
+            &[&MenuItem::with_id(
+                &window,
+                "delete_entity",
+                "Delete Entity",
+                true,
+                None::<&str>,
+            )
+            .unwrap()],
         )
         .unwrap();
 

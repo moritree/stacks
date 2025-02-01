@@ -1,4 +1,5 @@
 import { Component } from "preact";
+import { invoke } from "@tauri-apps/api/core";
 
 type Props = {
   id: String;
@@ -65,6 +66,12 @@ export default class Entity extends Component<Props> {
         onMouseDown={(e) => {
           e.stopPropagation();
           this.props.onSelect(this.entity.pos, this.entity.draggable);
+        }}
+        onContextMenu={(e) => {
+          if (e.target === e.currentTarget) {
+            e.preventDefault();
+            invoke("open_context_menu", { id: this.id });
+          }
         }}
       >
         {this.props.entity.content && this.entity.content}
