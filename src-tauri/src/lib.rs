@@ -2,6 +2,7 @@ mod context_menu;
 mod lua_init;
 use context_menu::open_context_menu;
 use lua_init::{init_lua_thread, tick, update_entity_property};
+use tauri::menu::MenuId;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,6 +21,13 @@ pub fn run() {
                 if let tauri::WindowEvent::Destroyed = event {
                     let _ = state_clone.shutdown();
                 }
+            });
+
+            app.on_menu_event(|_, event| match event.id() {
+                id if id == &MenuId::from("delete_entity") => {
+                    println!("Delete entity clicked!");
+                }
+                _ => {}
             });
 
             app.manage(state);
