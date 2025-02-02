@@ -1,5 +1,5 @@
 import { Component } from "preact";
-import { listen } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import { Menu } from "@tauri-apps/api/menu";
 
 type Props = {
@@ -10,7 +10,15 @@ type Props = {
 };
 
 const menuPromise = Menu.new({
-  items: [{ id: "delete_entity_menu_item", text: "Delete Entity" }],
+  items: [
+    {
+      id: "delete_entity",
+      text: "Delete Entity",
+      action: (_: string) => {
+        emit("delete_entity");
+      },
+    },
+  ],
 });
 
 async function clickHandler(event: Event) {
@@ -98,6 +106,7 @@ export default class Entity extends Component<Props> {
         }}
         onContextMenu={(e) => {
           clickHandler(e);
+          emit("context_menu_id", this.id);
         }}
       >
         {this.props.entity.content && this.entity.content}

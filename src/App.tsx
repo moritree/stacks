@@ -7,6 +7,7 @@ import Moveable from "preact-moveable";
 interface State {
   entities: any;
   selectedId: string | null;
+  contextMenuId: string | null;
   selectedInitialPosition: {
     x: number;
     y: number;
@@ -14,7 +15,9 @@ interface State {
 }
 
 export default class App extends Component<{}, State> {
-  private unlisten?: () => void;
+  private updateListener?: () => void;
+  private contextMenuListener?: () => void;
+  private deleteListener?: () => void;
   private animationFrameId?: number;
 
   private get selectedEntity() {
@@ -26,6 +29,7 @@ export default class App extends Component<{}, State> {
   state: State = {
     entities: {},
     selectedId: null,
+    contextMenuId: null,
     selectedInitialPosition: { x: 0, y: 0 },
   };
 
@@ -42,17 +46,28 @@ export default class App extends Component<{}, State> {
     this.animationFrameId = requestAnimationFrame(tick);
 
     // setup listener and immediately start handling updates
-    this.setupListener();
+    this.setupUpdateListener();
+    this.setupContextMenuListener();
   }
 
   componentWillUnmount() {
-    if (this.unlisten) this.unlisten();
+    if (this.updateListener) this.updateListener();
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
   }
 
-  private async setupListener() {
-    this.unlisten = await listen<any>("scene_update", (e) => {
+  private async setupUpdateListener() {
+    this.updateListener = await listen<any>("scene_update", (e) => {
       this.setState({ entities: e.payload });
+    });
+  }
+
+  private async setupContextMenuListener() {
+    this.updateListener = await listen<any>("context_menu_id", (e) => {
+      this.setState({ contextMenuId: e.payload });
+    });
+
+    this.deleteListener = await listen<any>("delete_entity", (_) => {
+      console.log("Delete entity", this.state.contextMenuId);
     });
   }
 
