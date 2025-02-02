@@ -1,18 +1,29 @@
-import { useEffect, useState } from "preact/hooks";
+import { Component } from "preact";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import Entity from "./Entity";
 import Moveable from "preact-moveable";
 
-export default function App() {
-  const [entities, setEntities] = useState<any>({});
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedInitialPosition, setSelectedInitialPosition] = useState<{
+interface State {
+  entities: any;
+  selectedId: string | null;
+  selectedInitialPosition: {
     x: number;
     y: number;
-  }>({ x: 0, y: 0 });
+  };
+}
 
-  useEffect(() => {
+export default class App extends Component<{}, State> {
+  private unlisten?: () => void;
+  private animationFrameId?: number;
+
+  state: State = {
+    entities: {},
+    selectedId: null,
+    selectedInitialPosition: { x: 0, y: 0 },
+  };
+
+  componentDidMount() {
     let lastTime = performance.now();
 
     const tick = () => {
@@ -20,78 +31,97 @@ export default function App() {
       const dt = (now - lastTime) / 1000;
       lastTime = now;
       invoke("tick", { dt });
-      requestAnimationFrame(tick);
+      this.animationFrameId = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
+    this.animationFrameId = requestAnimationFrame(tick);
 
     // setup listener and immediately start handling updates
-    let unlisten: () => void;
-    const setup = async () => {
-      unlisten = await listen<any>("scene_update", (e) => {
-        setEntities(e.payload);
-      });
-    };
+    this.setupListener();
+  }
 
-    setup();
+  componentWillUnmount() {
+    if (this.unlisten) this.unlisten();
+    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+  }
 
-    // clean up listener on unmount
-    return () => {
-      if (unlisten) unlisten();
-    };
-  }, []);
+  private async setupListener() {
+    this.unlisten = await listen<any>("scene_update", (e) => {
+      this.setState({ entities: e.payload });
+    });
+  }
 
-  // Get the selected entity if any
-  const selectedEntity = selectedId ? entities[selectedId] : null;
+  private calculateNewPosition(transform: string) {
+    const selectedEntity = this.state.selectedId
+      ? this.state.entities[this.state.selectedId]
+      : null;
 
-  // Calculate new position when entity is dragged
-  const calculateNewPosition = (transform: string) => {
     // transform will be in the format "translate(Xpx, Ypx)"
     const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     if (matches) {
       return {
-        x: selectedInitialPosition.x + parseFloat(matches[1]),
-        y: selectedInitialPosition.y + parseFloat(matches[2]),
+        x: this.state.selectedInitialPosition.x + parseFloat(matches[1]),
+        y: this.state.selectedInitialPosition.y + parseFloat(matches[2]),
       };
     }
     console.error("Drag transform format couldn't be parsed", transform);
-    return selectedEntity.pos; // fallback
+    return selectedEntity?.pos; // fallback
+  }
+
+  private handleBackgroundClick = (e: MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      this.setState({ selectedId: null });
+    }
   };
 
-  return (
-    <div
-      class="background"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setSelectedId(null);
-      }}
-    >
-      {Object.entries(entities).map(([id, entity]) => (
-        <Entity
-          key={id}
-          id={id}
-          entity={entity}
-          onSelect={(pos, selectable) => {
-            if (selectable) {
-              setSelectedId(id);
-              setSelectedInitialPosition(pos);
-            } else setSelectedId(null);
-          }}
-          isSelected={id === selectedId}
-        />
-      ))}
-      {selectedEntity && (
-        <Moveable
-          target={`#${selectedId}`}
-          draggable={true}
-          onDrag={({ transform }) => {
-            // Update position through backend
-            invoke("update_entity_property", {
-              id: selectedId,
-              key: "pos",
-              data: calculateNewPosition(transform),
-            });
-          }}
-        />
-      )}
-    </div>
-  );
+  private handleEntitySelect = (
+    id: string,
+    pos: { x: number; y: number },
+    selectable: boolean,
+  ) => {
+    if (selectable) {
+      this.setState({
+        selectedId: id,
+        selectedInitialPosition: pos,
+      });
+    } else {
+      this.setState({ selectedId: null });
+    }
+  };
+
+  private handleDrag = ({ transform }: { transform: string }) => {
+    // Update position through backend
+    invoke("update_entity_property", {
+      id: this.state.selectedId,
+      key: "pos",
+      data: this.calculateNewPosition(transform),
+    });
+  };
+
+  render() {
+    const { entities, selectedId } = this.state;
+    const selectedEntity = selectedId ? entities[selectedId] : null;
+
+    return (
+      <div class="background" onClick={this.handleBackgroundClick}>
+        {Object.entries(entities).map(([id, entity]) => (
+          <Entity
+            key={id}
+            id={id}
+            entity={entity}
+            onSelect={(pos, selectable) =>
+              this.handleEntitySelect(id, pos, selectable)
+            }
+            isSelected={id === selectedId}
+          />
+        ))}
+        {selectedEntity && (
+          <Moveable
+            target={`#${selectedId}`}
+            draggable={true}
+            onDrag={this.handleDrag}
+          />
+        )}
+      </div>
+    );
+  }
 }
