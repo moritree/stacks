@@ -52,6 +52,8 @@ export default class App extends Component<{}, State> {
 
   componentWillUnmount() {
     if (this.updateListener) this.updateListener();
+    if (this.contextMenuListener) this.contextMenuListener();
+    if (this.deleteListener) this.deleteListener();
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
   }
 
@@ -61,6 +63,11 @@ export default class App extends Component<{}, State> {
     });
   }
 
+  /**
+   * Listen for context menu events.
+   * Done here, at the scene level, rather than in each entity,
+   * so we only need to deal with one listener & one ID check.
+   */
   private async setupContextMenuListener() {
     this.updateListener = await listen<any>("context_menu_id", (e) => {
       this.setState({ contextMenuId: e.payload });
