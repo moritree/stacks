@@ -17,6 +17,12 @@ export default class App extends Component<{}, State> {
   private unlisten?: () => void;
   private animationFrameId?: number;
 
+  private get selectedEntity() {
+    return this.state.selectedId
+      ? this.state.entities[this.state.selectedId]
+      : null;
+  }
+
   state: State = {
     entities: {},
     selectedId: null,
@@ -51,10 +57,6 @@ export default class App extends Component<{}, State> {
   }
 
   private calculateNewPosition(transform: string) {
-    const selectedEntity = this.state.selectedId
-      ? this.state.entities[this.state.selectedId]
-      : null;
-
     // transform will be in the format "translate(Xpx, Ypx)"
     const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     if (matches) {
@@ -64,7 +66,7 @@ export default class App extends Component<{}, State> {
       };
     }
     console.error("Drag transform format couldn't be parsed", transform);
-    return selectedEntity?.pos; // fallback
+    return this.selectedEntity?.pos; // fallback
   }
 
   private handleBackgroundClick = (e: MouseEvent) => {
