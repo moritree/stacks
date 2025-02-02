@@ -15,9 +15,7 @@ interface State {
 }
 
 export default class App extends Component<{}, State> {
-  private updateListener?: () => void;
-  private contextMenuListener?: () => void;
-  private deleteListener?: () => void;
+  private listeners: (() => void)[] = [];
   private animationFrameId?: number;
 
   private get selectedEntity() {
@@ -51,16 +49,15 @@ export default class App extends Component<{}, State> {
   }
 
   componentWillUnmount() {
-    if (this.updateListener) this.updateListener();
-    if (this.contextMenuListener) this.contextMenuListener();
-    if (this.deleteListener) this.deleteListener();
+    this.listeners.forEach((listener) => listener());
     if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
   }
 
   private async setupUpdateListener() {
-    this.updateListener = await listen<any>("scene_update", (e) => {
+    const unsubscribe = await listen<any>("scene_update", (e) => {
       this.setState({ entities: e.payload });
     });
+    this.listeners.push(unsubscribe);
   }
 
   /**
@@ -69,13 +66,15 @@ export default class App extends Component<{}, State> {
    * so we only need to deal with one listener & one ID check.
    */
   private async setupContextMenuListener() {
-    this.updateListener = await listen<any>("context_menu_id", (e) => {
+    const unsubscribeId = await listen<any>("context_menu_id", (e) => {
       this.setState({ contextMenuId: e.payload });
     });
+    this.listeners.push(unsubscribeId);
 
-    this.deleteListener = await listen<any>("delete_entity", (_) => {
+    const unsubscribeDelete = await listen<any>("delete_entity", (_) => {
       console.log("Delete entity", this.state.contextMenuId);
     });
+    this.listeners.push(unsubscribeDelete);
   }
 
   private calculateNewPosition(transform: string) {
