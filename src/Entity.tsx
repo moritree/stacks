@@ -1,5 +1,7 @@
 import { Component } from "preact";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { Menu } from "@tauri-apps/api/menu";
 
 type Props = {
   id: String;
@@ -8,10 +10,21 @@ type Props = {
   isSelected: boolean;
 };
 
+const menuPromise = Menu.new({
+  items: [{ id: "delete_entity_menu_item", text: "Delete Entity" }],
+});
+
+async function clickHandler(event: Event) {
+  event.preventDefault();
+  const menu = await menuPromise;
+  menu.popup();
+}
+
 export default class Entity extends Component<Props> {
   id: String;
   entity: any;
   style: any = {};
+  private unlistenPromise: Promise<() => void> | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -24,10 +37,27 @@ export default class Entity extends Component<Props> {
     this.updateStyle();
   }
 
+  componentDidMount(): void {
+    // Setup context menu listener
+    this.unlistenPromise = listen<string>("menu-event", (event) => {
+      if (!event.payload.startsWith("ctx")) return;
+      switch (event.payload) {
+        default:
+          console.log("Unimplemented application menu id:", event.payload);
+      }
+    });
+  }
+
   componentDidUpdate(prevProps: Props) {
     if (this.props.entity !== prevProps.entity) {
       this.entity = this.props.entity;
       this.updateStyle();
+    }
+  }
+
+  componentWillUnmount(): void {
+    if (this.unlistenPromise) {
+      this.unlistenPromise.then((unlisten) => unlisten());
     }
   }
 
@@ -68,10 +98,11 @@ export default class Entity extends Component<Props> {
           this.props.onSelect(this.entity.pos, this.entity.draggable);
         }}
         onContextMenu={(e) => {
-          if (e.target === e.currentTarget) {
-            e.preventDefault();
-            invoke("open_context_menu", { id: this.id });
-          }
+          // if (e.target === e.currentTarget) {
+          //   e.preventDefault();
+          //   invoke("open_context_menu", { id: this.id });
+          // }
+          clickHandler(e);
         }}
       >
         {this.props.entity.content && this.entity.content}
