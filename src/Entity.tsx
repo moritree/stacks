@@ -14,14 +14,13 @@ const menuPromise = Menu.new({
     {
       id: "delete_entity",
       text: "Delete Entity",
-      action: (_: string) => {
-        emit("delete_entity");
-      },
+      action: async (_: string) => await emit("delete_entity"),
     },
   ],
 });
 
-async function clickHandler(event: Event) {
+async function contextMenuClickHandler(event: Event, id: String) {
+  emit("context_menu_id", id);
   event.preventDefault();
   const menu = await menuPromise;
   menu.popup();
@@ -105,8 +104,7 @@ export default class Entity extends Component<Props> {
           this.props.onSelect(this.entity.pos, this.entity.draggable);
         }}
         onContextMenu={(e) => {
-          clickHandler(e);
-          emit("context_menu_id", this.id);
+          contextMenuClickHandler(e, this.id);
         }}
       >
         {this.props.entity.content && this.entity.content}

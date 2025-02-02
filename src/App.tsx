@@ -46,6 +46,7 @@ export default class App extends Component<{}, State> {
     // setup listener and immediately start handling updates
     this.setupUpdateListener();
     this.setupContextMenuListener();
+    this.setupDeleteListener();
   }
 
   componentWillUnmount() {
@@ -66,15 +67,17 @@ export default class App extends Component<{}, State> {
    * so we only need to deal with one listener & one ID check.
    */
   private async setupContextMenuListener() {
-    const unsubscribeId = await listen<any>("context_menu_id", (e) => {
+    const unsubscribe = await listen<any>("context_menu_id", (e) => {
       this.setState({ contextMenuId: e.payload });
     });
-    this.listeners.push(unsubscribeId);
+    this.listeners.push(unsubscribe);
+  }
 
-    const unsubscribeDelete = await listen<any>("delete_entity", (_) => {
-      console.log("Delete entity", this.state.contextMenuId);
+  private async setupDeleteListener() {
+    const unsubscribe = await listen<any>("delete_entity", (_) => {
+      invoke("delete_entity", { id: this.state.contextMenuId });
     });
-    this.listeners.push(unsubscribeDelete);
+    this.listeners.push(unsubscribe);
   }
 
   private calculateNewPosition(transform: string) {

@@ -39,4 +39,13 @@ function scene.update_entity_property(id, key, data)
     scene.update(0) -- temp
 end
 
+function scene.delete_entity(id)
+    print("delete_entity")
+    if scene.entities[id] ~= nil then
+        scene.entities[id] = nil
+    else
+        print(string.format("Warning: Can't delete entity %s, this id does not exist on the scene", id))
+    end
+end
+
 return scene
