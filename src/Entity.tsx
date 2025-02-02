@@ -1,5 +1,4 @@
 import { Component } from "preact";
-import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { Menu } from "@tauri-apps/api/menu";
 
@@ -98,10 +97,6 @@ export default class Entity extends Component<Props> {
           this.props.onSelect(this.entity.pos, this.entity.draggable);
         }}
         onContextMenu={(e) => {
-          // if (e.target === e.currentTarget) {
-          //   e.preventDefault();
-          //   invoke("open_context_menu", { id: this.id });
-          // }
           clickHandler(e);
         }}
       >
