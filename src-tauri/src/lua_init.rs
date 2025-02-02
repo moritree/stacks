@@ -24,6 +24,7 @@ pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
     UpdateEntityProperty(String, String, Value),
+    DeleteEntity(String),
     Die,
 }
 
@@ -197,6 +198,17 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                         ))
                         .expect("Couldn't call update_entity_property")
                 }
+                LuaMessage::DeleteEntity(id) => {
+                    println!("DELETE ENTITY MESSAGE");
+                    let scene: LuaTable =
+                        lua.globals().get("scene").expect("Couldn't get Lua scene");
+                    let update_func: LuaFunction = scene
+                        .get("delete_entity")
+                        .expect("Couldn't get Lua delete_entity function");
+                    update_func
+                        .call::<_, ()>(id)
+                        .expect("Couldn't call delete_entity")
+                }
                 LuaMessage::EmitEvent(evt, data) => w
                     .emit(&evt, data)
                     .expect(&format!("Couldn't emit event {}", evt)),
@@ -259,5 +271,14 @@ pub async fn update_entity_property(
     state
         .tx
         .send(LuaMessage::UpdateEntityProperty(id, key, data))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn delete_entity(state: State<'_, LuaState>, id: String) -> Result<(), String> {
+    println!("DELETE ENTITY COMMAND");
+    state
+        .tx
+        .send(LuaMessage::DeleteEntity(id))
         .map_err(|e| e.to_string())
 }
