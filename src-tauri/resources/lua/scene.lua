@@ -43,6 +43,8 @@ function scene.delete_entity(id)
     print("delete_entity")
     if scene.entities[id] ~= nil then
         scene.entities[id] = nil
+        -- print("Serializing")
+        -- print(require("serpent").dump(scene.entities))
     else
         print(string.format("Warning: Can't delete entity %s, this id does not exist on the scene", id))
     end
