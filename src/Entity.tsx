@@ -9,21 +9,20 @@ type Props = {
   isSelected: boolean;
 };
 
-const menuPromise = Menu.new({
-  items: [
-    {
-      id: "delete_entity",
-      text: "Delete Entity",
-      action: async (_: string) => await emit("delete_entity"),
-    },
-  ],
-});
-
-async function contextMenuClickHandler(event: Event, id: String) {
+async function handleContextMenu(event: Event, id: String) {
   emit("context_menu_id", id);
   event.preventDefault();
-  const menu = await menuPromise;
-  menu.popup();
+  (
+    await Menu.new({
+      items: [
+        {
+          id: "delete_entity",
+          text: "Delete Entity",
+          action: async (_: string) => await emit("delete_entity"),
+        },
+      ],
+    })
+  ).popup();
 }
 
 export default class Entity extends Component<Props> {
@@ -104,7 +103,7 @@ export default class Entity extends Component<Props> {
           this.props.onSelect(this.entity.pos, this.entity.draggable);
         }}
         onContextMenu={(e) => {
-          contextMenuClickHandler(e, this.id);
+          handleContextMenu(e, this.id);
         }}
       >
         {this.props.entity.content && this.entity.content}

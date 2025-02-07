@@ -1,8 +1,9 @@
 import { Component } from "preact";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import Entity from "./Entity";
 import Moveable from "preact-moveable";
+import { Menu } from "@tauri-apps/api/menu";
 
 interface State {
   entities: any;
@@ -12,6 +13,21 @@ interface State {
     x: number;
     y: number;
   };
+}
+
+async function handleContextMenu(event: Event) {
+  event.preventDefault();
+  (
+    await Menu.new({
+      items: [
+        {
+          id: "save_scene",
+          text: "Save Scene",
+          action: async (_: string) => await invoke("save_scene"),
+        },
+      ],
+    })
+  ).popup();
 }
 
 export default class App extends Component<{}, State> {
@@ -128,7 +144,13 @@ export default class App extends Component<{}, State> {
     const selectedEntity = selectedId ? entities[selectedId] : null;
 
     return (
-      <div class="background" onClick={this.handleBackgroundClick}>
+      <div
+        class="background"
+        onClick={this.handleBackgroundClick}
+        onContextMenu={(e) =>
+          e.target === e.currentTarget && handleContextMenu(e)
+        }
+      >
         {Object.entries(entities).map(([id, entity]) => (
           <Entity
             key={id}

@@ -1,5 +1,5 @@
 mod lua_init;
-use lua_init::{delete_entity, init_lua_thread, tick, update_entity_property};
+use lua_init::{delete_entity, init_lua_thread, save_scene, tick, update_entity_property};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -27,7 +27,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             tick,
             update_entity_property,
-            delete_entity
+            delete_entity,
+            save_scene
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
