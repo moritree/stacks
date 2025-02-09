@@ -1,5 +1,5 @@
-mod lua_init;
-use lua_init::{delete_entity, init_lua_thread, save_scene, tick, update_entity_property};
+mod lua_setup;
+use lua_setup::{delete_entity, init_lua_thread, save_scene, tick, update_entity_property};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
