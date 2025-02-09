@@ -187,14 +187,18 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
         // Preload modules
         preload_lua_modules(window, &lua).expect("Failed to preload Lua modules");
 
-        // load scene
-        // Do this last to minimise risk of any code on .eval() not working
-        let scene: LuaTable = lua
+        // load main scene
+        let lua_main: LuaTable = lua // Do this last to minimise risk of any code on .eval() not working
             .load(include_str!("../resources/lua/main.lua"))
             .eval()
             .expect("Couldn't load lua scene file");
         lua.globals()
-            .set("currentScene", scene)
+            .set(
+                "currentScene",
+                lua_main
+                    .get::<_, mlua::Table>("scene")
+                    .expect("Couldn't get Lua scene"),
+            )
             .expect("Couldn't set scene global in Lua");
 
         // message processing loop
