@@ -1,4 +1,6 @@
+mod file_info;
 mod lua_setup;
+use file_info::file_exists;
 use lua_setup::{
     delete_entity, init_lua_thread, load_scene, save_scene, tick, update_entity_property,
 };
@@ -31,7 +33,8 @@ pub fn run() {
             update_entity_property,
             delete_entity,
             save_scene,
-            load_scene
+            load_scene,
+            file_exists
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

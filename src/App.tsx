@@ -17,6 +17,9 @@ interface State {
 
 async function handleContextMenu(event: Event) {
   event.preventDefault();
+
+  const fileExists = await invoke<boolean>("file_exists", { path: "test.txt" });
+
   (
     await Menu.new({
       items: [
@@ -29,6 +32,7 @@ async function handleContextMenu(event: Event) {
           id: "load_scene",
           text: "Load Scene",
           action: async (_: string) => await invoke("load_scene"),
+          enabled: fileExists,
         },
       ],
     })
