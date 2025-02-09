@@ -71,7 +71,7 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
                 if let Some(module_name) = get_module_path(&dir, &path) {
                     // Skip scene.lua since we load it separately
                     // Skip any modules that are already loaded (remove this, see what happens, do better later)
-                    if module_name == "scene" || loaded.contains(&module_name) {
+                    if module_name == "main" || loaded.contains(&module_name) {
                         continue;
                     }
 
@@ -190,32 +190,39 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
         // load scene
         // Do this last to minimise risk of any code on .eval() not working
         let scene: LuaTable = lua
-            .load(include_str!("../resources/lua/scene.lua"))
+            .load(include_str!("../resources/lua/main.lua"))
             .eval()
             .expect("Couldn't load lua scene file");
         lua.globals()
-            .set("scene", scene)
+            .set("currentScene", scene)
             .expect("Couldn't set scene global in Lua");
 
         // message processing loop
         while let Ok(msg) = rx.recv() {
             match msg {
                 LuaMessage::Tick(dt) => {
-                    let scene: LuaTable =
-                        lua.globals().get("scene").expect("Couldn't get Lua scene");
+                    let scene: LuaTable = lua
+                        .globals()
+                        .get("currentScene")
+                        .expect("Couldn't get Lua scene");
                     let update: LuaFunction = scene
                         .get("update")
                         .expect("Couldn't get Lua update function");
-                    update.call::<_, ()>(dt).expect("Failed calling update")
+                    update
+                        .call::<_, ()>((scene, dt))
+                        .expect("Failed calling update")
                 }
                 LuaMessage::UpdateEntityProperty(id, key, data) => {
-                    let scene: LuaTable =
-                        lua.globals().get("scene").expect("Couldn't get Lua scene");
+                    let scene: LuaTable = lua
+                        .globals()
+                        .get("currentScene")
+                        .expect("Couldn't get Lua scene");
                     let update_func: LuaFunction = scene
                         .get("update_entity_property")
                         .expect("Couldn't get Lua update_entity_property function");
                     update_func
                         .call::<_, ()>((
+                            scene,
                             id,
                             key,
                             json_value_to_lua(&lua, &data)
@@ -225,36 +232,42 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                 }
                 LuaMessage::DeleteEntity(id) => {
                     println!("DELETE ENTITY MESSAGE");
-                    let scene: LuaTable =
-                        lua.globals().get("scene").expect("Couldn't get Lua scene");
+                    let scene: LuaTable = lua
+                        .globals()
+                        .get("currentScene")
+                        .expect("Couldn't get Lua scene");
                     let update_func: LuaFunction = scene
                         .get("delete_entity")
                         .expect("Couldn't get Lua delete_entity function");
                     update_func
-                        .call::<_, ()>(id)
+                        .call::<_, ()>((scene, id))
                         .expect("Couldn't call delete_entity")
                 }
                 LuaMessage::EmitEvent(evt, data) => w
                     .emit(&evt, data)
                     .expect(&format!("Couldn't emit event {}", evt)),
                 LuaMessage::SaveScene(path) => {
-                    let scene: LuaTable =
-                        lua.globals().get("scene").expect("Couldn't get Lua scene");
+                    let scene: LuaTable = lua
+                        .globals()
+                        .get("currentScene")
+                        .expect("Couldn't get Lua scene");
                     let save_func: LuaFunction = scene
                         .get("save_scene")
                         .expect("Couldn't get Lua save_scene function");
                     save_func
-                        .call::<_, ()>(path)
+                        .call::<_, ()>((scene, path))
                         .expect("Couldn't call save_scene")
                 }
                 LuaMessage::LoadScene(path) => {
-                    let scene: LuaTable =
-                        lua.globals().get("scene").expect("Couldn't get Lua scene");
+                    let scene: LuaTable = lua
+                        .globals()
+                        .get("currentScene")
+                        .expect("Couldn't get Lua scene");
                     let load_func: LuaFunction = scene
                         .get("load_scene")
                         .expect("Couldn't get Lua load_scene function");
                     load_func
-                        .call::<_, ()>(path)
+                        .call::<_, ()>((scene, path))
                         .expect("Couldn't call load_scene")
                 }
                 LuaMessage::Die => break, // TODO trigger any shutdown code

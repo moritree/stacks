@@ -1,61 +1,46 @@
-local Entity = require('Entity')
-
--- Most basic possible scene
-local scene = {
-    entities = {
-        test1 = Entity:new({
-            type = "text",
-            pos = { x = 100, y = 100 },
-            content = "vibing"
-        }),
-        test2 = Entity:new({
-            type = "text",
-            pos = { x = 200, y = 100 },
-            content = "u can do it",
-            selectable = true,
-            draggable = true
-        }),
-        test3 = Entity:new({
-            type = "rect",
-            pos = { x = 100, y = 200 },
-            dimension = { x = 200, y = 100 },
-            color = "#ff0000"
-        })
-    }
+local Scene = {
+    entities = {}
 }
 
-function scene.update(dt)
-    emit("scene_update", scene.entities)
+function Scene:new(o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
 end
 
-function scene.update_entity_property(id, key, data)
-    if scene.entities[id] == nil then
+function Scene:update(dt)
+    emit("scene_update", self.entities)
+end
+
+function Scene:update_entity_property(id, key, data)
+    if self.entities[id] == nil then
         print(string.format("Error: %s is not a valid entity ID", id))
         return
-    elseif scene.entities[id][key] == nil then
+    elseif self.entities[id][key] == nil then
         print(string.format("Warning: %s is not an existing property on entity %s. Updating anyway lol", key, id))
     end
-    scene.entities[id][key] = data
-    scene.update(0) -- temp
+    self.entities[id][key] = data
+    self:update(0) -- temp
 end
 
-function scene.delete_entity(id)
+function Scene:delete_entity(id)
     print("delete_entity")
-    if scene.entities[id] ~= nil then
-        scene.entities[id] = nil
+    if self.entities[id] ~= nil then
+        self.entities[id] = nil
     else
         print(string.format("Warning: Can't delete entity %s, this id does not exist on the scene", id))
     end
 end
 
-function scene.save_scene(path)
+function Scene:save_scene(path)
     print(string.format("save_scene to %s", path))
     local file = assert(io.open(path, "w"), "Couldn't open file")
-    file:write(require("serpent").dump(scene.entities))
+    file:write(require("serpent").dump(self.entities))
     file:close()
 end
 
-function scene.load_scene(path)
+function Scene:load_scene(path)
     print("load_scene")
     local file = io.open(path, "r")
     if not file then
@@ -68,11 +53,11 @@ function scene.load_scene(path)
 
     local success, loaded_entities = require("serpent").load(content)
     if success then
-        scene.entities = loaded_entities
-        scene.update(0) -- temp
+        self.entities = loaded_entities
+        self:update(0) -- temp
     else
         print("Error loading scene: " .. tostring(loaded_entities))
     end
 end
 
-return scene
+return Scene
