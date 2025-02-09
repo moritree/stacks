@@ -55,4 +55,19 @@ function scene.save_scene(filename)
     file:close()
 end
 
+function scene.load_scene(filename)
+    print("load_scene")
+    local file = assert(io.open("test.txt", "r"), "Couldn't open file")
+    local content = file:read("*all")
+    file:close()
+
+    local success, loaded_entities = require("serpent").load(content)
+    if success then
+        scene.entities = loaded_entities
+        scene.update(0) -- temp
+    else
+        print("Error loading scene: " .. tostring(loaded_entities))
+    end
+end
+
 return scene

@@ -25,6 +25,11 @@ async function handleContextMenu(event: Event) {
           text: "Save Scene",
           action: async (_: string) => await invoke("save_scene"),
         },
+        {
+          id: "load_scene",
+          text: "Load Scene",
+          action: async (_: string) => await invoke("load_scene"),
+        },
       ],
     })
   ).popup();

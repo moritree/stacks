@@ -1,5 +1,7 @@
 mod lua_setup;
-use lua_setup::{delete_entity, init_lua_thread, save_scene, tick, update_entity_property};
+use lua_setup::{
+    delete_entity, init_lua_thread, load_scene, save_scene, tick, update_entity_property,
+};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -28,7 +30,8 @@ pub fn run() {
             tick,
             update_entity_property,
             delete_entity,
-            save_scene
+            save_scene,
+            load_scene
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

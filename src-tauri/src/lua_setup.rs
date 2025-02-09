@@ -26,6 +26,7 @@ pub enum LuaMessage {
     UpdateEntityProperty(String, String, Value),
     DeleteEntity(String),
     SaveScene,
+    LoadScene,
     Die,
 }
 
@@ -246,6 +247,16 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                         .call::<_, ()>(())
                         .expect("Couldn't call save_scene")
                 }
+                LuaMessage::LoadScene => {
+                    let scene: LuaTable =
+                        lua.globals().get("scene").expect("Couldn't get Lua scene");
+                    let load_func: LuaFunction = scene
+                        .get("load_scene")
+                        .expect("Couldn't get Lua load_scene function");
+                    load_func
+                        .call::<_, ()>(())
+                        .expect("Couldn't call load_scene")
+                }
                 LuaMessage::Die => break, // TODO trigger any shutdown code
             }
         }
@@ -321,5 +332,13 @@ pub async fn save_scene(state: State<'_, LuaState>) -> Result<(), String> {
     state
         .tx
         .send(LuaMessage::SaveScene)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn load_scene(state: State<'_, LuaState>) -> Result<(), String> {
+    state
+        .tx
+        .send(LuaMessage::LoadScene)
         .map_err(|e| e.to_string())
 }
