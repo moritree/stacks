@@ -1,11 +1,9 @@
 use mlua::prelude::*;
 use serde_json::Value;
+use std::fs;
 use std::path::Path;
 use std::sync::mpsc;
-use std::{fs, path::PathBuf};
 use tauri::{Emitter, Manager, State, WebviewWindow};
-
-const LUA_ROOT: &str = "main";
 
 /// Hold a reference to the Lua thread communication channel
 #[derive(Clone)]
@@ -71,15 +69,13 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
                 scan_directory(&path, preload, lua, loaded)?;
             } else {
                 if let Some(module_name) = get_module_path(&dir, &path) {
-                    // Skip root file since we load it separately
+                    // Skip scene.lua since we load it separately
                     // Skip any modules that are already loaded (remove this, see what happens, do better later)
-                    if module_name == LUA_ROOT || loaded.contains(&module_name) {
-                        println!("Skipping {}", module_name);
+                    if module_name == "scene" || loaded.contains(&module_name) {
                         continue;
                     }
 
-                    let source = fs::read_to_string(&path)
-                        .expect(&format!("Failed to read lua file {}", module_name));
+                    let source = fs::read_to_string(&path).expect("Failed to read lua file");
                     let module_name_clone = module_name.clone();
 
                     preload.set(
@@ -191,22 +187,14 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
         // Preload modules
         preload_lua_modules(window, &lua).expect("Failed to preload Lua modules");
 
-        // load root file
+        // load scene
         // Do this last to minimise risk of any code on .eval() not working
-        let mut lua_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        lua_path.push("resources");
-        lua_path.push("lua");
-        lua_path.push(format!("{}.lua", LUA_ROOT));
-
-        // Read the file contents
-        let lua_content = fs::read_to_string(lua_path).expect("Failed to read Lua file");
-
-        let lua_root: LuaTable = lua
-            .load(&lua_content)
+        let scene: LuaTable = lua
+            .load(include_str!("../resources/lua/scene.lua"))
             .eval()
-            .expect("Couldn't load root lua file");
+            .expect("Couldn't load lua scene file");
         lua.globals()
-            .set("scene", lua_root)
+            .set("scene", scene)
             .expect("Couldn't set scene global in Lua");
 
         // message processing loop
