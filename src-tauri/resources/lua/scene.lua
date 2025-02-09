@@ -57,7 +57,12 @@ end
 
 function scene.load_scene(filename)
     print("load_scene")
-    local file = assert(io.open("test.txt", "r"), "Couldn't open file")
+    local file = io.open("test.txt", "r")
+    if not file then
+        print("Error loading scene: couldn't open test.txt")
+        return
+    end
+
     local content = file:read("*all")
     file:close()
 
