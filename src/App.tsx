@@ -4,7 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import Entity from "./Entity";
 import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
-import { save } from "@tauri-apps/plugin-dialog";
+import { save, open } from "@tauri-apps/plugin-dialog";
 
 interface State {
   entities: any;
@@ -18,8 +18,6 @@ interface State {
 
 async function handleContextMenu(event: Event) {
   event.preventDefault();
-
-  const fileExists = await invoke<boolean>("file_exists", { path: "test.txt" });
 
   (
     await Menu.new({
@@ -42,8 +40,13 @@ async function handleContextMenu(event: Event) {
         {
           id: "load_scene",
           text: "Load Scene",
-          action: async (_: string) => await invoke("load_scene"),
-          enabled: fileExists,
+          action: async (_: string) =>
+            await invoke("load_scene", {
+              path: await open({
+                multiple: false,
+                directory: false,
+              }),
+            }),
         },
       ],
     })

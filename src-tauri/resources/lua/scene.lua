@@ -55,9 +55,9 @@ function scene.save_scene(path)
     file:close()
 end
 
-function scene.load_scene(filename)
+function scene.load_scene(path)
     print("load_scene")
-    local file = io.open("test.txt", "r")
+    local file = io.open(path, "r")
     if not file then
         print("Error loading scene: couldn't open test.txt")
         return
