@@ -47,7 +47,7 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
             .to_str()
             .expect("Couldn't resolve resource path to string")
     );
-    let lua_dir = Path::new(&resource_path);
+
     let preload = lua
         .globals()
         .get::<_, LuaTable>("package")?
@@ -55,46 +55,69 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
 
     let mut loaded = Vec::new();
 
-    // Scan the lua directory for .lua files
-    for entry in fs::read_dir(lua_dir).expect("Failed to read lua directory") {
+    // Start recursive scan from the root lua directory
+    scan_directory(&resource_path, &preload, lua, &mut loaded)?;
+
+    println!("Preloaded Lua modules: {:?}", loaded);
+    Ok(())
+}
+
+fn scan_directory(
+    dir: &Path,
+    preload: &LuaTable,
+    lua: &Lua,
+    loaded: &mut Vec<String>,
+) -> LuaResult<()> {
+    for entry in fs::read_dir(dir).expect("Failed to read directory") {
         let entry = entry.expect("Failed to read directory entry");
         let path = entry.path();
 
-        // Get all the strings we need upfront
-        let file_name = match (path.file_stem(), path.extension()) {
-            (Some(stem), Some(ext)) => {
-                if ext == "lua" {
-                    stem.to_str().map(|s| s.to_string())
-                } else {
-                    None
+        if path.is_dir() {
+            scan_directory(&path, preload, lua, loaded)?;
+        } else {
+            if let Some(module_name) = get_module_path(&dir, &path) {
+                // Skip scene.lua since we load it separately
+                // Skip any modules that are already loaded (remove this, see what happens, do better later)
+                if module_name == "scene" || loaded.contains(&module_name) {
+                    continue;
                 }
+
+                let source = fs::read_to_string(&path).expect("Failed to read lua file");
+                let module_name_clone = module_name.clone();
+
+                preload.set(
+                    module_name.as_str(),
+                    lua.create_function(move |lua, ()| -> LuaResult<LuaValue> {
+                        lua.load(&source)
+                            .set_name(&format!("{}.lua", module_name_clone))
+                            .eval()
+                    })?,
+                )?;
+                loaded.push(module_name);
             }
-            _ => None,
-        };
-
-        if let Some(name) = file_name {
-            // Skip scene.lua since we load it separately, as the root file
-            if name == "scene" {
-                continue;
-            }
-
-            let source = fs::read_to_string(&path).expect("Failed to read lua file");
-            let module_name = name.clone(); // Clone for the closure
-
-            preload.set(
-                name.as_str(),
-                lua.create_function(move |lua, ()| -> LuaResult<LuaValue> {
-                    lua.load(&source)
-                        .set_name(&format!("{}.lua", module_name))
-                        .eval()
-                })?,
-            )?;
-            loaded.push(name);
         }
     }
-    println!("Preloaded Lua modules: {:?}", loaded);
-
     Ok(())
+}
+
+fn get_module_path(base_path: &Path, file_path: &Path) -> Option<String> {
+    if let (Some(ext), true) = (file_path.extension(), file_path.is_file()) {
+        if ext == "lua" {
+            // strip the base_path and leading separator
+            if let Ok(relative) = file_path.strip_prefix(base_path) {
+                let relative = relative.to_str()?;
+                // remove leading separator if it exists
+                let relative = relative.trim_start_matches(std::path::MAIN_SEPARATOR);
+                // remove .lua extension and convert separators to dots
+                return Some(
+                    relative
+                        .trim_end_matches(".lua")
+                        .replace(std::path::MAIN_SEPARATOR, "."),
+                );
+            }
+        }
+    }
+    None
 }
 
 /// Set up Lua environment
