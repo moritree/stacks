@@ -25,7 +25,7 @@ pub enum LuaMessage {
     EmitEvent(String, Value),
     UpdateEntityProperty(String, String, Value),
     DeleteEntity(String),
-    SaveScene,
+    SaveScene(String),
     LoadScene,
     Die,
 }
@@ -237,14 +237,14 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                 LuaMessage::EmitEvent(evt, data) => w
                     .emit(&evt, data)
                     .expect(&format!("Couldn't emit event {}", evt)),
-                LuaMessage::SaveScene => {
+                LuaMessage::SaveScene(path) => {
                     let scene: LuaTable =
                         lua.globals().get("scene").expect("Couldn't get Lua scene");
                     let save_func: LuaFunction = scene
                         .get("save_scene")
                         .expect("Couldn't get Lua save_scene function");
                     save_func
-                        .call::<_, ()>(())
+                        .call::<_, ()>(path)
                         .expect("Couldn't call save_scene")
                 }
                 LuaMessage::LoadScene => {
@@ -328,10 +328,10 @@ pub async fn delete_entity(state: State<'_, LuaState>, id: String) -> Result<(),
 }
 
 #[tauri::command]
-pub async fn save_scene(state: State<'_, LuaState>) -> Result<(), String> {
+pub async fn save_scene(state: State<'_, LuaState>, path: String) -> Result<(), String> {
     state
         .tx
-        .send(LuaMessage::SaveScene)
+        .send(LuaMessage::SaveScene(path))
         .map_err(|e| e.to_string())
 }
 

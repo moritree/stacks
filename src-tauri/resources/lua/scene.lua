@@ -48,9 +48,9 @@ function scene.delete_entity(id)
     end
 end
 
-function scene.save_scene(filename)
-    print("save_scene")
-    local file = assert(io.open("test.txt", "w"), "Couldn't open file")
+function scene.save_scene(path)
+    print(string.format("save_scene to %s", path))
+    local file = assert(io.open(path, "w"), "Couldn't open file")
     file:write(require("serpent").dump(scene.entities))
     file:close()
 end

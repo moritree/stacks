@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import Entity from "./Entity";
 import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
+import { save } from "@tauri-apps/plugin-dialog";
 
 interface State {
   entities: any;
@@ -26,7 +27,17 @@ async function handleContextMenu(event: Event) {
         {
           id: "save_scene",
           text: "Save Scene",
-          action: async (_: string) => await invoke("save_scene"),
+          action: async (_: string) =>
+            await invoke("save_scene", {
+              path: await save({
+                filters: [
+                  {
+                    name: "scene",
+                    extensions: ["txt"],
+                  },
+                ],
+              }),
+            }),
         },
         {
           id: "load_scene",
