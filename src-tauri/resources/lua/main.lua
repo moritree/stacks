@@ -6,7 +6,8 @@ return {
             test1 = Entity:new({
                 type = "text",
                 pos = { x = 100, y = 100 },
-                content = "vibing"
+                content = "vibing",
+                on_click = function(self) self.pos = { x = 200, y = 200 } end
             }),
             test2 = Entity:new({
                 type = "text",

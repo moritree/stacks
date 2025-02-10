@@ -35,7 +35,7 @@ export default class Entity extends Component<Props> {
     this.id = this.props.id;
     this.entity = this.props.entity;
 
-    console.log("Construct", this.id, this.entity);
+    console.log(this.entity);
 
     this.updateStyle();
   }
@@ -82,6 +82,12 @@ export default class Entity extends Component<Props> {
         onMouseDown={(e) => {
           e.stopPropagation();
           this.props.onSelect(this.entity.pos, this.entity.draggable);
+        }}
+        onClick={(e) => {
+          if (this.entity.on_click) {
+            e.preventDefault();
+            invoke("run_script", { id: this.id, function: "on_click" });
+          }
         }}
         onContextMenu={(e) => {
           handleContextMenu(e, this.id);

@@ -27,6 +27,7 @@ pub enum LuaMessage {
     DeleteEntity(String),
     SaveScene(String),
     LoadScene(String),
+    RunScript(String, String),
     Die,
 }
 
@@ -234,7 +235,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                         .expect("Couldn't call update_entity_property")
                 }
                 LuaMessage::DeleteEntity(id) => {
-                    println!("DELETE ENTITY MESSAGE");
                     let scene: LuaTable = lua
                         .globals()
                         .get("currentScene")
@@ -272,6 +272,22 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                     load_func
                         .call::<_, ()>((scene, path))
                         .expect("Couldn't call load_scene")
+                }
+                LuaMessage::RunScript(id, function) => {
+                    let scene: LuaTable = lua
+                        .globals()
+                        .get("currentScene")
+                        .expect("Couldn't get Lua scene");
+                    let entity: LuaTable = scene
+                        .get::<_, LuaTable>("entities")
+                        .expect("Couldn't get entities table from scene")
+                        .get::<_, LuaTable>(id.clone())
+                        .expect("Couldn't get entity");
+                    let script: LuaFunction =
+                        entity.get(function).expect("Couldn't get script function");
+                    script
+                        .call::<_, ()>((entity, id))
+                        .expect("Couldn't call script");
                 }
                 LuaMessage::Die => break, // TODO trigger any shutdown code
             }
@@ -356,5 +372,17 @@ pub async fn load_scene(state: State<'_, LuaState>, path: String) -> Result<(), 
     state
         .tx
         .send(LuaMessage::LoadScene(path))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn run_script(
+    state: State<'_, LuaState>,
+    id: String,
+    function: String,
+) -> Result<(), String> {
+    state
+        .tx
+        .send(LuaMessage::RunScript(id, function))
         .map_err(|e| e.to_string())
 }
