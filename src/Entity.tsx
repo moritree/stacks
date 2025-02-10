@@ -1,6 +1,6 @@
 import { Component } from "preact";
-import { emit, listen } from "@tauri-apps/api/event";
 import { Menu } from "@tauri-apps/api/menu";
+import { invoke } from "@tauri-apps/api/core";
 
 type Props = {
   id: String;
@@ -10,7 +10,6 @@ type Props = {
 };
 
 async function handleContextMenu(event: Event, id: String) {
-  emit("context_menu_id", id);
   event.preventDefault();
   (
     await Menu.new({
@@ -18,7 +17,7 @@ async function handleContextMenu(event: Event, id: String) {
         {
           id: "delete_entity",
           text: "Delete Entity",
-          action: async (_: string) => await emit("delete_entity"),
+          action: async (_: string) => invoke("delete_entity", { id: id }),
         },
       ],
     })
@@ -29,7 +28,6 @@ export default class Entity extends Component<Props> {
   id: String;
   entity: any;
   style: any = {};
-  private unlistenPromise: Promise<() => void> | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -42,27 +40,10 @@ export default class Entity extends Component<Props> {
     this.updateStyle();
   }
 
-  componentDidMount(): void {
-    // Setup context menu listener
-    this.unlistenPromise = listen<string>("menu-event", (event) => {
-      if (!event.payload.startsWith("ctx")) return;
-      switch (event.payload) {
-        default:
-          console.log("Unimplemented application menu id:", event.payload);
-      }
-    });
-  }
-
   componentDidUpdate(prevProps: Props) {
     if (this.props.entity !== prevProps.entity) {
       this.entity = this.props.entity;
       this.updateStyle();
-    }
-  }
-
-  componentWillUnmount(): void {
-    if (this.unlistenPromise) {
-      this.unlistenPromise.then((unlisten) => unlisten());
     }
   }
 

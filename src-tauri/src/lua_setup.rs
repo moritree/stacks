@@ -69,8 +69,7 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
                 scan_directory(&path, preload, lua, loaded)?;
             } else {
                 if let Some(module_name) = get_module_path(&dir, &path) {
-                    // Skip scene.lua since we load it separately
-                    // Skip any modules that are already loaded (remove this, see what happens, do better later)
+                    // Skip main.lua since we load it separately
                     if module_name == "main" || loaded.contains(&module_name) {
                         continue;
                     }

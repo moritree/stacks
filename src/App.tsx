@@ -9,7 +9,6 @@ import { save, open } from "@tauri-apps/plugin-dialog";
 interface State {
   entities: any;
   selectedId: string | null;
-  contextMenuId: string | null;
   selectedInitialPosition: {
     x: number;
     y: number;
@@ -18,7 +17,6 @@ interface State {
 
 async function handleContextMenu(event: Event) {
   event.preventDefault();
-
   (
     await Menu.new({
       items: [
@@ -66,7 +64,6 @@ export default class App extends Component<{}, State> {
   state: State = {
     entities: {},
     selectedId: null,
-    contextMenuId: null,
     selectedInitialPosition: { x: 0, y: 0 },
   };
 
@@ -84,8 +81,6 @@ export default class App extends Component<{}, State> {
 
     // setup listener and immediately start handling updates
     this.setupUpdateListener();
-    this.setupContextMenuListener();
-    this.setupDeleteListener();
   }
 
   componentWillUnmount() {
@@ -96,25 +91,6 @@ export default class App extends Component<{}, State> {
   private async setupUpdateListener() {
     const unsubscribe = await listen<any>("scene_update", (e) => {
       this.setState({ entities: e.payload });
-    });
-    this.listeners.push(unsubscribe);
-  }
-
-  /**
-   * Listen for context menu events.
-   * Done here, at the scene level, rather than in each entity,
-   * so we only need to deal with one listener & one ID check.
-   */
-  private async setupContextMenuListener() {
-    const unsubscribe = await listen<any>("context_menu_id", (e) => {
-      this.setState({ contextMenuId: e.payload });
-    });
-    this.listeners.push(unsubscribe);
-  }
-
-  private async setupDeleteListener() {
-    const unsubscribe = await listen<any>("delete_entity", (_) => {
-      invoke("delete_entity", { id: this.state.contextMenuId });
     });
     this.listeners.push(unsubscribe);
   }
