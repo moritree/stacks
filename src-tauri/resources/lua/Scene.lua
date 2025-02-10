@@ -60,7 +60,9 @@ function Scene:load_scene(path)
     local content = file:read("*all")
     file:close()
 
-    local success, loaded_entities = require("serpent").load(content)
+    -- safe mode off to load functions
+    -- TODO how do I handle security?
+    local success, loaded_entities = require("serpent").load(content, { safe = false })
     if success then
         self.entities = loaded_entities
         self:update(0) -- temp
