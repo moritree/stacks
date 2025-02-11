@@ -144,7 +144,7 @@ export default class Scene extends Component<{}, SceneState> {
 
     return (
       <div
-        class="background"
+        class="scene"
         onClick={this.handleBackgroundClick}
         onContextMenu={(e) =>
           e.target === e.currentTarget && handleContextMenu(e)

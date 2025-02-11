@@ -13,9 +13,10 @@
     "windows": [
       {
         "title": "stacks",
-        "width": 1280,
-        "height": 720,
-        "resizable": false
+        "minWidth": 1380,
+        "minHeight": 720,
+        "maxHeight": 720,
+        "resizable": true
       }
     ],
     "security": {
