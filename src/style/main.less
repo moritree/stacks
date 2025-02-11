@@ -16,12 +16,25 @@ html, body {
     font: 18px "Merriweather", sans-serif;
     cursor: default;
     box-sizing: border-box;
+
+    // one of these does the thing (disabling selecting text)
+    user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
-.app-container {
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.top-app-container {
     display: flex;
     width: 100%;
-    height: 100vh;
+    height: 720px;
 }
 
 .inspector {
@@ -36,4 +49,11 @@ html, body {
     width: 1280px;
     height: 720px;
     flex: 0 0 auto;
+}
+
+.bottom-space {
+    background-color: var(--secondary-color);
+    border-top: 1px solid var(--border-color);
+    height: 100%;
+    flex: 1;
 }

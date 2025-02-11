@@ -14,8 +14,7 @@
       {
         "title": "stacks",
         "minWidth": 1380,
-        "minHeight": 720,
-        "maxHeight": 720,
+        "minHeight": 800,
         "resizable": true
       }
     ],

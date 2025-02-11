@@ -21,6 +21,18 @@ return {
                 pos = { x = 100, y = 200 },
                 dimension = { x = 200, y = 100 },
                 color = "#ff0000"
+            }),
+            top_left = Entity:new({
+                type = "rect",
+                pos = { x = 0, y = 0 },
+                dimension = { x = 10, y = 10 },
+                color = "#00ff00"
+            }),
+            bottom_right = Entity:new({
+                type = "rect",
+                pos = { x = 1270, y = 710 },
+                dimension = { x = 10, y = 10 },
+                color = "#0000ff"
             })
         }
     })
