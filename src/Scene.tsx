@@ -6,15 +6,6 @@ import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open } from "@tauri-apps/plugin-dialog";
 
-interface State {
-  entities: any;
-  selectedId: string | null;
-  selectedInitialPosition: {
-    x: number;
-    y: number;
-  };
-}
-
 async function handleContextMenu(event: Event) {
   event.preventDefault();
   (
@@ -51,7 +42,16 @@ async function handleContextMenu(event: Event) {
   ).popup();
 }
 
-export default class App extends Component<{}, State> {
+interface SceneState {
+  entities: any;
+  selectedId: string | null;
+  selectedInitialPosition: {
+    x: number;
+    y: number;
+  };
+}
+
+export default class Scene extends Component<{}, SceneState> {
   private listeners: (() => void)[] = [];
   private animationFrameId?: number;
 
@@ -61,7 +61,7 @@ export default class App extends Component<{}, State> {
       : null;
   }
 
-  state: State = {
+  state: SceneState = {
     entities: {},
     selectedId: null,
     selectedInitialPosition: { x: 0, y: 0 },

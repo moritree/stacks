@@ -1,5 +1,5 @@
 import { render } from "preact";
 import "./style/entity.less";
-import App from "./App";
+import Scene from "./Scene";
 
-render(<App />, document.getElementById("root")!);
+render(<Scene />, document.getElementById("root")!);
