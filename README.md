@@ -6,12 +6,9 @@
 [![Preact](https://img.shields.io/badge/Preact-673AB8?logo=preact&logoColor=fff)](https://preactjs.com/)
 [![Tauri](https://img.shields.io/badge/Tauri-24C8D8?logo=tauri&logoColor=fff)](https://v2.tauri.app/)
 
-A Tauri (Rust) app, using TypeScript with Preact for the frontend and Lua for model (and scripting, later).
+A Tauri (Rust) app, using TypeScript with Preact for the frontend and Lua for model & scripting.
 
 So deeply WIP, I'm not even going to explain what this is for yet.
-
-> ### ⚠ Testing
-> *(@ me, in case I forget and lose time again)* Make sure to **test the production build** as well as dev mode!
 
 # Run locally
 1. Clone the repository
