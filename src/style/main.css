@@ -1,12 +1,31 @@
-@import 'themes';
-@import "tailwindcss";
-
 @font-face {
     font-family: "Merriweather";
     src: url("../fonts/Merriweather-Regular.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }
+
+/* THEME */
+
+:root {
+    --background-color: #ffffff;
+    --text-color: #333333;
+    --primary-color: #2196f3;
+    --secondary-color: #f5f5f5;
+    --border-color: #e0e0e0;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #1a1a1a;
+        --text-color: #ffffff;
+        --primary-color: #ae79d4;
+        --secondary-color: #2d2d2d;
+        --border-color: #404040;
+    }
+}
+
+/* MAIN */
 
 html, body {
     margin: 0;
@@ -17,8 +36,6 @@ html, body {
     font: 18px "Merriweather", sans-serif;
     cursor: default;
     box-sizing: border-box;
-
-    // one of these does the thing (disabling selecting text)
     user-select: none;
     -moz-user-select: none;
     -khtml-user-select: none;
@@ -48,7 +65,7 @@ html, body {
 }
 
 .moveable-box {
-    z-index: 0!important;
+    z-index: 0 !important;
 }
 
 .scene {
@@ -63,4 +80,26 @@ html, body {
     height: 100%;
     flex: 1;
     z-index: 10;
+}
+
+/* ENTITIES */
+
+.entity {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+}
+
+.entity.rect {
+    width: var(--width);
+    height: var(--height);
+    background-color: var(--color);
+}
+
+.selectable {
+    cursor: pointer;
+}
+
+.selectable.selected.draggable {
+    cursor: move;
 }
