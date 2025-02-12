@@ -166,6 +166,7 @@ export default class Scene extends Component<{}, SceneState> {
             target={`#${selectedId}`}
             draggable={true}
             onDrag={this.handleDrag}
+            className="moveable-box"
           />
         )}
       </div>
