@@ -1,5 +1,3 @@
-local deep_copy = require('deep_copy')
-
 local Scene = {
     entities = {}
 }
@@ -13,7 +11,7 @@ end
 
 function Scene:update(dt)
     -- can't serialize functions!
-    local entities_copy = deep_copy(self.entities)
+    local entities_copy = require('deep_copy')(self.entities)
     for _, entity in pairs(entities_copy) do
         for property, value in pairs(entity) do
             if type(value) == "function" then entity[property] = true end
