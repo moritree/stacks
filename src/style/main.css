@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
     font-family: "Merriweather";
     src: url("../fonts/Merriweather-Regular.ttf") format("truetype");
@@ -27,13 +31,16 @@
 
 /* MAIN */
 
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     overflow: hidden;
     background-color: var(--background-color);
     color: var(--text-color);
-    font: 18px "Merriweather", sans-serif;
+    font:
+        18px "Merriweather",
+        sans-serif;
     cursor: default;
     box-sizing: border-box;
     user-select: none;
@@ -41,45 +48,6 @@ html, body {
     -khtml-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
-}
-
-.app {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
-
-.top-app-container {
-    display: flex;
-    width: 100%;
-    height: 720px;
-}
-
-.inspector {
-    min-width: 100px;
-    padding: 20px;
-    background-color: var(--secondary-color);
-    border-left: 1px solid var(--border-color);
-    flex: 1;
-    z-index: 10;
-}
-
-.moveable-box {
-    z-index: 0 !important;
-}
-
-.scene {
-    width: 1280px;
-    height: 720px;
-    flex: 0 0 auto;
-}
-
-.bottom-space {
-    background-color: var(--secondary-color);
-    border-top: 1px solid var(--border-color);
-    height: 100%;
-    flex: 1;
-    z-index: 10;
 }
 
 /* ENTITIES */

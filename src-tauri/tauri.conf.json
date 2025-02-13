@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "stacks",
-        "minWidth": 1380,
-        "minHeight": 800,
+        "minWidth": 700,
+        "minHeight": 400,
         "resizable": true
       }
     ],
