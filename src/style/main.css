@@ -31,23 +31,13 @@
 
 /* MAIN */
 
-html,
-body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    font:
-        18px "Merriweather",
-        sans-serif;
-    cursor: default;
-    box-sizing: border-box;
-    user-select: none;
-    -moz-user-select: none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+@theme {
+    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-serif: Merriweather, Georgia, Cambria, "Times New Roman", Times,
+        serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace; /* ... */
 }
 
 /* ENTITIES */
