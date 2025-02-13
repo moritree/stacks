@@ -29,35 +29,26 @@
     }
 }
 
-/* MAIN */
-
 @theme {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --font-serif: Merriweather, Georgia, Cambria, "Times New Roman", Times,
-        serif;
+    --font-sans: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji",
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --font-serif: Merriweather, Georgia, Cambria, "Times New Roman", serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace; /* ... */
+        "Liberation Mono", "Courier New", monospace;
 }
 
-/* ENTITIES */
+@layer components {
+    .entity.rect {
+        width: var(--width);
+        height: var(--height);
+        background-color: var(--color);
+    }
 
-.entity {
-    position: absolute;
-    left: var(--x);
-    top: var(--y);
-}
+    .entity.selectable {
+        cursor: pointer;
+    }
 
-.entity.rect {
-    width: var(--width);
-    height: var(--height);
-    background-color: var(--color);
-}
-
-.selectable {
-    cursor: pointer;
-}
-
-.selectable.selected.draggable {
-    cursor: move;
+    .entity.selectable.selected.draggable {
+        cursor: move;
+    }
 }

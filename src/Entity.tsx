@@ -73,7 +73,7 @@ export default class Entity extends Component<Props> {
   render() {
     return (
       <div
-        class={`entity ${this.entity.type}
+        class={`absolute left-(--x) top-(--y) entity ${this.entity.type}
           ${this.props.entity.selectable ? " selectable" : ""}
           ${this.props.isSelected ? " selected" : ""}
           ${this.props.entity.draggable ? " draggable" : ""}`}
