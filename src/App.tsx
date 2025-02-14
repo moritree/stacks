@@ -5,7 +5,7 @@ import Inspector from "./Inspector";
 export default class App extends Component {
   render() {
     return (
-      <div class="flex flex-col h-screen z-10">
+      <div class="flex flex-col z-10 h-screen w-screen">
         <div class="flex w-full h-[720px]">
           <Scene />
           <Inspector />
