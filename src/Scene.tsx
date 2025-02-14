@@ -144,7 +144,7 @@ export default class Scene extends Component<{}, SceneState> {
 
     return (
       <div
-        class="scene"
+        class="w-[1280px] h-full flex-none z-0"
         onClick={this.handleBackgroundClick}
         onContextMenu={(e) =>
           e.target === e.currentTarget && handleContextMenu(e)
@@ -166,7 +166,7 @@ export default class Scene extends Component<{}, SceneState> {
             target={`#${selectedId}`}
             draggable={true}
             onDrag={this.handleDrag}
-            className="moveable-box"
+            className="[z-index:0!important]"
           />
         )}
       </div>

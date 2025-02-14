@@ -1,0 +1,52 @@
+@tailwind utilities;
+
+@font-face {
+    font-family: "Merriweather";
+    src: url("../fonts/Merriweather-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* THEME */
+
+:root {
+    --background-color: #ffffff;
+    --text-color: #333333;
+    --primary-color: #2196f3;
+    --secondary-color: #f5f5f5;
+    --border-color: #e0e0e0;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #1a1a1a;
+        --text-color: #ffffff;
+        --primary-color: #ae79d4;
+        --secondary-color: #2d2d2d;
+        --border-color: #404040;
+    }
+}
+
+@theme {
+    --font-sans: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji",
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --font-serif: Merriweather, Georgia, Cambria, "Times New Roman", serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+}
+
+@layer components {
+    .entity.rect {
+        width: var(--width);
+        height: var(--height);
+        background-color: var(--color);
+    }
+
+    .entity.selectable {
+        cursor: pointer;
+    }
+
+    .entity.selectable.selected.draggable {
+        cursor: move;
+    }
+}
