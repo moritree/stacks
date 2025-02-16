@@ -144,7 +144,7 @@ export default class Scene extends Component<{}, SceneState> {
 
     return (
       <div
-        class="w-[1280px] h-full flex-none z-0"
+        class="w-(--scene-width) h-full flex-none z-0"
         onClick={this.handleBackgroundClick}
         onContextMenu={(e) =>
           e.target === e.currentTarget && handleContextMenu(e)

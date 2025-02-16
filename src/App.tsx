@@ -6,7 +6,7 @@ export default class App extends Component {
   render() {
     return (
       <div class="flex flex-col z-10 h-screen w-screen">
-        <div class="flex w-full h-[720px]">
+        <div class="flex w-full h-(--scene-height)">
           <Scene />
           <Inspector />
         </div>

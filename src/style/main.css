@@ -27,6 +27,27 @@
     }
 }
 
+:root {
+    --scene-width: 320px;
+    --scene-height: 180px;
+}
+
+/* tailwind md breakpoint */
+@media (width >= 768px) {
+    :root {
+        --scene-width: 640px;
+        --scene-height: 360px;
+    }
+}
+
+/* tailwind xl breakpoint */
+@media (width >= 1280px) {
+    :root {
+        --scene-width: 960px;
+        --scene-height: 540px;
+    }
+}
+
 @theme {
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji",
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
