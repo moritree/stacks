@@ -49,8 +49,8 @@ export default class Entity extends Component<Props> {
 
   updateStyle() {
     this.style = {
-      "--x": `${this.entity.pos.x}px`,
-      "--y": `${this.entity.pos.y}px`,
+      "--x": `calc(${this.entity.pos.x}px * var(--scene-scale))`,
+      "--y": `calc(${this.entity.pos.y}px * var(--scene-scale))`,
     };
     switch (this.entity.type) {
       case "text":
@@ -59,8 +59,8 @@ export default class Entity extends Component<Props> {
         this.style = {
           ...this.style,
           ...{
-            "--width": `${this.entity.dimension.x}px`,
-            "--height": `${this.entity.dimension.y}px`,
+            "--width": `calc(${this.entity.dimension.x}px * var(--scene-scale))`,
+            "--height": `calc(${this.entity.dimension.y}px * var(--scene-scale))`,
             "--color": `${this.entity.color}`,
           },
         };
@@ -73,7 +73,7 @@ export default class Entity extends Component<Props> {
   render() {
     return (
       <div
-        class={`absolute left-(--x) top-(--y) entity ${this.entity.type}
+        class={`absolute left-(--x) top-(--y) text-[calc(1em*var(--scene-scale))] entity ${this.entity.type}
           ${this.props.entity.selectable ? " selectable" : ""}
           ${this.props.isSelected ? " selected" : ""}
           ${this.props.entity.draggable ? " draggable" : ""}`}
