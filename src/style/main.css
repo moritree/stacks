@@ -28,23 +28,22 @@
 }
 
 :root {
-    --scene-width: 320px;
-    --scene-height: 180px;
+    --scene-scale: 0.25;
+    --scene-width: calc(1280px * var(--scene-scale));
+    --scene-height: calc(720px * var(--scene-scale));
 }
 
 /* tailwind md breakpoint */
 @media (width >= 768px) {
     :root {
-        --scene-width: 640px;
-        --scene-height: 360px;
+        --scene-scale: 0.5;
     }
 }
 
 /* tailwind xl breakpoint */
 @media (width >= 1280px) {
     :root {
-        --scene-width: 960px;
-        --scene-height: 540px;
+        --scene-scale: 0.75;
     }
 }
 
