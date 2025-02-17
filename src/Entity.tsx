@@ -49,8 +49,8 @@ export default class Entity extends Component<Props> {
 
   updateStyle() {
     this.style = {
-      "--x": `calc(${this.entity.pos.x}px * var(--scene-scale))`,
-      "--y": `calc(${this.entity.pos.y}px * var(--scene-scale))`,
+      "--x": `${this.entity.pos.x}px`,
+      "--y": `${this.entity.pos.y}px`,
     };
     switch (this.entity.type) {
       case "text":
@@ -59,8 +59,8 @@ export default class Entity extends Component<Props> {
         this.style = {
           ...this.style,
           ...{
-            "--width": `calc(${this.entity.dimension.x}px * var(--scene-scale))`,
-            "--height": `calc(${this.entity.dimension.y}px * var(--scene-scale))`,
+            "--width": `${this.entity.dimension.x}px`,
+            "--height": `${this.entity.dimension.y}px`,
             "--color": `${this.entity.color}`,
           },
         };

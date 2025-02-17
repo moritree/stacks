@@ -27,26 +27,6 @@
     }
 }
 
-:root {
-    --scene-scale: 0.25;
-    --scene-width: calc(1280px * var(--scene-scale));
-    --scene-height: calc(720px * var(--scene-scale));
-}
-
-/* tailwind md breakpoint */
-@media (width >= 768px) {
-    :root {
-        --scene-scale: 0.5;
-    }
-}
-
-/* tailwind xl breakpoint */
-@media (width >= 1280px) {
-    :root {
-        --scene-scale: 0.75;
-    }
-}
-
 @theme {
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji",
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
