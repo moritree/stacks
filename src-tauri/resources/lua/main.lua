@@ -28,10 +28,16 @@ return {
                 dimension = { x = 10, y = 10 },
                 color = "#00ff00"
             }),
+            center = Entity:new({
+                type = "rect",
+                pos = { x = 635, y = 355 },
+                dimension = { x = 10, y = 10 },
+                color = "#00ffff"
+            }),
             bottom_right = Entity:new({
                 type = "rect",
-                pos = { x = 1270, y = 710 },
-                dimension = { x = 10, y = 10 },
+                pos = { x = 800, y = 240 },
+                dimension = { x = 80, y = 80 },
                 color = "#0000ff"
             })
         }

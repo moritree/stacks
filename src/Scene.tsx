@@ -109,8 +109,10 @@ export default class Scene extends Component<{}, SceneState> {
         width: Math.round(SCENE_BASE_SIZE.width * newScale),
         height: Math.round(SCENE_BASE_SIZE.height * newScale),
       });
-      // TODO: scene scale CSS var
-      // TODO: use scene scale CSS to scale entities
+      document.documentElement.style.setProperty(
+        `--scene-scale`,
+        newScale + "",
+      );
     });
     this.listeners.push(unsubscribe);
   }

@@ -46,22 +46,10 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
             m.map_or(DEFAULT_SCALE, |mon| mon.scale_factor())
         });
 
-        // give lua window size info
-        let window_size = window
-            .inner_size()
-            .expect("There should be a working window with a size...");
+        // give lua scale factor info
         lua.globals()
-            .set(
-                "window_width",
-                (window_size.width as f64 / scale_factor) as u32,
-            )
-            .expect("Couldn't set window_width Lua global");
-        lua.globals()
-            .set(
-                "window_height",
-                (window_size.height as f64 / scale_factor) as u32,
-            )
-            .expect("Couldn't set window_height Lua global");
+            .set("window_scale", scale_factor)
+            .expect("Couldn't set window_scale Lua global");
 
         // let lua emit messages that TS can pick up
         let emit = move |_: &Lua, (evt, data): (String, LuaValue)| {

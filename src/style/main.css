@@ -16,8 +16,7 @@
     --primary-color: #2196f3;
     --secondary-color: #f5f5f5;
     --border-color: #e0e0e0;
-    --scene-scale-x: 1;
-    --scene-scale-y: 1;
+    --scene-scale: 1;
 }
 
 @media (prefers-color-scheme: dark) {
