@@ -105,10 +105,12 @@ export default class Scene extends Component<{}, SceneState> {
     const unsubscribe = await listen<any>("tauri://resize", (e) => {
       console.log("TAURI RESIZE", e);
       const newScale = e.payload.width / SCENE_BASE_SIZE.width;
-
+      invoke("resize_window", {
+        width: Math.round(SCENE_BASE_SIZE.width * newScale),
+        height: Math.round(SCENE_BASE_SIZE.height * newScale),
+      });
       // TODO: scene scale CSS var
       // TODO: use scene scale CSS to scale entities
-      // TODO: invoke Rust to resize height to match
     });
     this.listeners.push(unsubscribe);
   }

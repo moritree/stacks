@@ -386,3 +386,14 @@ pub async fn run_script(
         .send(LuaMessage::RunScript(id, function))
         .map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn resize_window(
+    window: tauri::WebviewWindow,
+    width: u16,
+    height: u16,
+) -> Result<(), String> {
+    window
+        .set_size(tauri::PhysicalSize::new(width, height))
+        .map_err(|e| e.to_string())
+}
