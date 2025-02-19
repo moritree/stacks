@@ -6,6 +6,11 @@ import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open } from "@tauri-apps/plugin-dialog";
 
+const SCENE_BASE_SIZE = {
+  width: 1280,
+  height: 720,
+};
+
 async function handleContextMenu(event: Event) {
   event.preventDefault();
   (
@@ -81,6 +86,7 @@ export default class Scene extends Component<{}, SceneState> {
 
     // setup listener and immediately start handling updates
     this.setupUpdateListener();
+    this.setupResizeListener();
   }
 
   componentWillUnmount() {
@@ -91,6 +97,14 @@ export default class Scene extends Component<{}, SceneState> {
   private async setupUpdateListener() {
     const unsubscribe = await listen<any>("scene_update", (e) => {
       this.setState({ entities: e.payload });
+    });
+    this.listeners.push(unsubscribe);
+  }
+
+  private async setupResizeListener() {
+    const unsubscribe = await listen<any>("tauri://resize", (e) => {
+      console.log("TAURI RESIZE", e);
+      // TODO: scene scale
     });
     this.listeners.push(unsubscribe);
   }
@@ -146,9 +160,9 @@ export default class Scene extends Component<{}, SceneState> {
       <div
         class="w-[1280px] h-[720px] flex-none z-0"
         onClick={this.handleBackgroundClick}
-        onContextMenu={(e) =>
-          e.target === e.currentTarget && handleContextMenu(e)
-        }
+        // onContextMenu={(e) =>
+        //   e.target === e.currentTarget && handleContextMenu(e)
+        // }
       >
         {Object.entries(entities).map(([id, entity]) => (
           <Entity
