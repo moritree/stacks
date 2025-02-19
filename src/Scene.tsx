@@ -104,7 +104,11 @@ export default class Scene extends Component<{}, SceneState> {
   private async setupResizeListener() {
     const unsubscribe = await listen<any>("tauri://resize", (e) => {
       console.log("TAURI RESIZE", e);
-      // TODO: scene scale
+      const newScale = e.payload.width / SCENE_BASE_SIZE.width;
+
+      // TODO: scene scale CSS var
+      // TODO: use scene scale CSS to scale entities
+      // TODO: invoke Rust to resize height to match
     });
     this.listeners.push(unsubscribe);
   }
@@ -160,9 +164,9 @@ export default class Scene extends Component<{}, SceneState> {
       <div
         class="w-[1280px] h-[720px] flex-none z-0"
         onClick={this.handleBackgroundClick}
-        // onContextMenu={(e) =>
-        //   e.target === e.currentTarget && handleContextMenu(e)
-        // }
+        onContextMenu={(e) =>
+          e.target === e.currentTarget && handleContextMenu(e)
+        }
       >
         {Object.entries(entities).map(([id, entity]) => (
           <Entity
