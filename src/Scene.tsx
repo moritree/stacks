@@ -5,6 +5,7 @@ import Entity from "./Entity";
 import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open } from "@tauri-apps/plugin-dialog";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 const SCENE_BASE_SIZE = {
   width: 1280,
@@ -103,6 +104,15 @@ export default class Scene extends Component<{}, SceneState> {
 
   private async setupResizeListener() {
     const unsubscribe = await listen<any>("tauri://resize", async (e) => {
+      // Do nothing if the window being resized is a different one
+      // Yes this is janky and I should write a better solution
+      const thisWindowSize = await WebviewWindow.getCurrent().size();
+      if (
+        thisWindowSize.width != e.payload.width ||
+        thisWindowSize.height != e.payload.height
+      )
+        return;
+
       const scaleFactor: number = await invoke("window_scale");
 
       const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
