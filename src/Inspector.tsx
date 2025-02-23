@@ -1,7 +1,7 @@
 import { Component, render } from "preact";
 import "./style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
-import { Info } from "preact-feather";
+import { Info, Loader } from "preact-feather";
 
 interface InspectorState {
   entity?: any;
@@ -31,9 +31,13 @@ export default class Inspector extends Component<{}, InspectorState> {
   }
 
   render() {
-    if (!this.state.entity) return <div class="w-screen h-screen"></div>;
+    if (!this.state.entity)
+      return (
+        <div class="w-screen h-screen flex flex-col justify-center">
+          <Loader class="w-screen h-10" />
+        </div>
+      );
 
-    console.log("Entity", this.state.entity, this.state.id);
     return (
       <div class="w-screen h-screen flex flex-col m-1">
         <span class="inline-flex items-center ">
