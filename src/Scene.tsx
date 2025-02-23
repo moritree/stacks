@@ -184,9 +184,9 @@ export default class Scene extends Component<{}, SceneState> {
       <div
         class="w-full h-full flex-none z-0 bg-red-500"
         onClick={this.handleBackgroundClick}
-        // onContextMenu={(e) =>
-        //   e.target === e.currentTarget && handleContextMenu(e)
-        // }
+        onContextMenu={(e) =>
+          e.target === e.currentTarget && handleContextMenu(e)
+        }
       >
         {Object.entries(entities).map(([id, entity]) => (
           <Entity
