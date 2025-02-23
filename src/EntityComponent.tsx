@@ -64,7 +64,7 @@ type EntityProps = {
   isSelected: boolean;
 };
 
-export default class Entity extends Component<EntityProps> {
+export default class EntityComponent extends Component<EntityProps> {
   id: string;
   entity: any;
   style: any = {};

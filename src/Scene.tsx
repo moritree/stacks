@@ -1,7 +1,7 @@
 import { Component } from "preact";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import Entity from "./Entity";
+import EntityComponent from "./EntityComponent";
 import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open } from "@tauri-apps/plugin-dialog";
@@ -191,7 +191,7 @@ export default class Scene extends Component<{}, SceneState> {
         // }
       >
         {Object.entries(entities).map(([id, entity]) => (
-          <Entity
+          <EntityComponent
             key={id}
             id={id}
             entity={entity}
