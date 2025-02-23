@@ -46,6 +46,8 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
             m.map_or(DEFAULT_SCALE, |mon| mon.scale_factor())
         });
 
+        println!("Scale factor: {}", scale_factor);
+
         // give lua scale factor info
         lua.globals()
             .set("window_scale", scale_factor)

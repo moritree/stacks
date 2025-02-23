@@ -36,8 +36,8 @@ return {
             }),
             bottom_right = Entity:new({
                 type = "rect",
-                pos = { x = 800, y = 240 },
-                dimension = { x = 80, y = 80 },
+                pos = { x = 1270, y = 710 },
+                dimension = { x = 10, y = 10 },
                 color = "#0000ff"
             })
         }

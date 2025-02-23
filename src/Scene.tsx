@@ -103,15 +103,29 @@ export default class Scene extends Component<{}, SceneState> {
 
   private async setupResizeListener() {
     const unsubscribe = await listen<any>("tauri://resize", (e) => {
-      console.log("TAURI RESIZE", e);
+      const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
+      const windowHeight = e.payload.height; // gives us the full window dimensions
+
+      // Calculate title bar height dynamically
+      const titleBarHeight = windowHeight / 2 - contentHeight;
+
       const newScale = e.payload.width / SCENE_BASE_SIZE.width;
+      console.log("SCALE", newScale);
+      console.log("TITLE BAR", titleBarHeight);
+
+      const newWidth = Math.round(SCENE_BASE_SIZE.width * newScale);
+      const newHeight = Math.round(
+        SCENE_BASE_SIZE.height * newScale + titleBarHeight * 2,
+      );
+      console.log(newWidth, newHeight);
+
       invoke("resize_window", {
-        width: Math.round(SCENE_BASE_SIZE.width * newScale),
-        height: Math.round(SCENE_BASE_SIZE.height * newScale),
+        width: newWidth,
+        height: newHeight,
       });
       document.documentElement.style.setProperty(
         `--scene-scale`,
-        newScale + "",
+        newScale / 2 + "",
       );
     });
     this.listeners.push(unsubscribe);
@@ -166,11 +180,11 @@ export default class Scene extends Component<{}, SceneState> {
 
     return (
       <div
-        class="w-[1280px] h-[720px] flex-none z-0"
+        class="w-full h-full flex-none z-0 bg-red-500"
         onClick={this.handleBackgroundClick}
-        onContextMenu={(e) =>
-          e.target === e.currentTarget && handleContextMenu(e)
-        }
+        // onContextMenu={(e) =>
+        //   e.target === e.currentTarget && handleContextMenu(e)
+        // }
       >
         {Object.entries(entities).map(([id, entity]) => (
           <Entity
