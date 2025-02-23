@@ -40,17 +40,9 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     std::thread::spawn(move || {
         let lua = Lua::new();
 
-        // Physical window may not match logical size, e.g. with mac resolution scaling
-        const DEFAULT_SCALE: f64 = 1.0; // fallback to 1.0 scale if we can't get monitor info
-        let scale_factor = window.current_monitor().map_or(DEFAULT_SCALE, |m| {
-            m.map_or(DEFAULT_SCALE, |mon| mon.scale_factor())
-        });
-
-        println!("Scale factor: {}", scale_factor);
-
         // give lua scale factor info
         lua.globals()
-            .set("window_scale", scale_factor)
+            .set("window_scale", window_scale(window.clone()))
             .expect("Couldn't set window_scale Lua global");
 
         // let lua emit messages that TS can pick up
@@ -386,4 +378,12 @@ pub async fn resize_window(
     window
         .set_size(tauri::PhysicalSize::new(width, height))
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn window_scale(window: tauri::WebviewWindow) -> f64 {
+    const DEFAULT_SCALE: f64 = 1.0; // fallback to 1.0 scale if we can't get monitor info
+    return window.current_monitor().map_or(DEFAULT_SCALE, |m| {
+        m.map_or(DEFAULT_SCALE, |mon| mon.scale_factor())
+    });
 }

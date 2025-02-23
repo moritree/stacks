@@ -1,7 +1,7 @@
 mod lua_setup;
 use lua_setup::{
     delete_entity, init_lua_thread, load_scene, resize_window, run_script, save_scene, tick,
-    update_entity_property,
+    update_entity_property, window_scale,
 };
 use tauri::Manager;
 
@@ -35,7 +35,8 @@ pub fn run() {
             save_scene,
             load_scene,
             run_script,
-            resize_window
+            resize_window,
+            window_scale
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

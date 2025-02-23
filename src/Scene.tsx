@@ -102,12 +102,14 @@ export default class Scene extends Component<{}, SceneState> {
   }
 
   private async setupResizeListener() {
-    const unsubscribe = await listen<any>("tauri://resize", (e) => {
+    const unsubscribe = await listen<any>("tauri://resize", async (e) => {
+      const scaleFactor: number = await invoke("window_scale");
+
       const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
       const windowHeight = e.payload.height; // gives us the full window dimensions
 
       // Calculate title bar height dynamically
-      const titleBarHeight = windowHeight / 2 - contentHeight;
+      const titleBarHeight = windowHeight / scaleFactor - contentHeight;
 
       const newScale = e.payload.width / SCENE_BASE_SIZE.width;
       console.log("SCALE", newScale);
@@ -115,7 +117,7 @@ export default class Scene extends Component<{}, SceneState> {
 
       const newWidth = Math.round(SCENE_BASE_SIZE.width * newScale);
       const newHeight = Math.round(
-        SCENE_BASE_SIZE.height * newScale + titleBarHeight * 2,
+        SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
       );
       console.log(newWidth, newHeight);
 
@@ -125,7 +127,7 @@ export default class Scene extends Component<{}, SceneState> {
       });
       document.documentElement.style.setProperty(
         `--scene-scale`,
-        newScale / 2 + "",
+        newScale / scaleFactor + "",
       );
     });
     this.listeners.push(unsubscribe);
