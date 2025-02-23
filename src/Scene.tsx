@@ -107,23 +107,15 @@ export default class Scene extends Component<{}, SceneState> {
 
       const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
       const windowHeight = e.payload.height; // gives us the full window dimensions
-
-      // Calculate title bar height dynamically
-      const titleBarHeight = windowHeight / scaleFactor - contentHeight;
+      const titleBarHeight = windowHeight / scaleFactor - contentHeight; // Calculate title bar height dynamically
 
       const newScale = e.payload.width / SCENE_BASE_SIZE.width;
-      console.log("SCALE", newScale);
-      console.log("TITLE BAR", titleBarHeight);
-
-      const newWidth = Math.round(SCENE_BASE_SIZE.width * newScale);
-      const newHeight = Math.round(
-        SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
-      );
-      console.log(newWidth, newHeight);
 
       invoke("resize_window", {
-        width: newWidth,
-        height: newHeight,
+        width: Math.round(SCENE_BASE_SIZE.width * newScale),
+        height: Math.round(
+          SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
+        ),
       });
       document.documentElement.style.setProperty(
         `--scene-scale`,
