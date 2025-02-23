@@ -1,7 +1,6 @@
 import { Component } from "preact";
 import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 type Props = {
   id: String;
@@ -23,38 +22,14 @@ async function handleContextMenu(event: Event, id: String) {
         {
           id: "inspect",
           text: "Inspect",
-          action: async () => openInspector(),
+          action: () => openInspector(),
         },
       ],
     })
   ).popup();
 }
 
-async function openInspector() {
-  // If window already exists, focus instead of creating a new one
-  const existing = await WebviewWindow.getByLabel("inspector");
-  if (existing) {
-    existing.setFocus();
-    return;
-  }
-
-  // Create new inspector window
-  console.log("Creating new inspector window...");
-  const inspectorWindow = new WebviewWindow("inspector", {
-    title: "Inspector",
-    url: "inspector.html",
-    width: 300,
-    height: 600,
-    resizable: true,
-  });
-
-  inspectorWindow.once("tauri://created", () => {
-    console.log("Inspector window created");
-  });
-  inspectorWindow.once("tauri://error", (e) => {
-    console.error("Inspector webview had ERROR!", e);
-  });
-}
+function openInspector() {}
 
 export default class Entity extends Component<Props> {
   id: String;
@@ -66,6 +41,8 @@ export default class Entity extends Component<Props> {
 
     this.id = this.props.id;
     this.entity = this.props.entity;
+
+    console.log(this.entity);
 
     this.updateStyle();
   }
