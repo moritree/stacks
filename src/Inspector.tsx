@@ -30,6 +30,15 @@ export default class Inspector extends Component<{}, InspectorState> {
     this.entityUpdateListener = unsubscribe;
   }
 
+  private field(key: string, val: any) {
+    return (
+      <tr>
+        <td>{key}</td>
+        <td>{val.toString()}</td>
+      </tr>
+    );
+  }
+
   render() {
     if (!this.state.entity)
       return (
@@ -40,10 +49,15 @@ export default class Inspector extends Component<{}, InspectorState> {
 
     return (
       <div class="w-screen h-screen flex flex-col m-1">
-        <span class="inline-flex items-center ">
+        <span class="inline-flex items-center pb-1">
           <Info class="pr-1" />
           <h1>{this.state.id}</h1>
         </span>
+        <table class="table-auto">
+          {Object.entries(this.state.entity).map(([key, val]) =>
+            this.field(key, val),
+          )}
+        </table>
       </div>
     );
   }
