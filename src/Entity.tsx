@@ -2,16 +2,9 @@ import { Component } from "preact";
 import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { emitTo, once } from "@tauri-apps/api/event";
+import { emitTo } from "@tauri-apps/api/event";
 
-type Props = {
-  id: String;
-  entity: any;
-  onSelect: (pos: { x: number; y: number }, selectable: boolean) => void;
-  isSelected: boolean;
-};
-
-async function handleContextMenu(event: Event, entity: any) {
+async function handleContextMenu(event: Event, entity: any, id: string) {
   event.preventDefault();
   (
     await Menu.new({
@@ -19,32 +12,31 @@ async function handleContextMenu(event: Event, entity: any) {
         {
           id: "delete_entity",
           text: "Delete Entity",
-          action: async (_: string) =>
-            invoke("delete_entity", { id: entity.id }),
+          action: async (_: string) => invoke("delete_entity", { id: id }),
         },
         {
           id: "inspect",
           text: "Inspect",
-          action: async () => openInspector(entity),
+          action: async () => openInspector(entity, id),
         },
       ],
     })
   ).popup();
 }
 
-async function openInspector(entity: any) {
+async function openInspector(entity: any, id: string) {
   // If window already exists, focus & update instead of creating a new one
   const existing = await WebviewWindow.getByLabel("inspector");
   if (existing) {
     emitTo("inspector", "update_entity", {
       entity: entity,
+      id: id,
     });
     existing.setFocus();
     return;
   }
 
   // Create new inspector window
-  console.log("Creating new inspector window...");
   const inspectorWindow = new WebviewWindow("inspector", {
     title: "Inspector",
     url: "inspector.html",
@@ -56,6 +48,7 @@ async function openInspector(entity: any) {
   inspectorWindow.once("mounted", () => {
     emitTo("inspector", "update_entity", {
       entity: entity,
+      id: id,
     });
   });
 
@@ -64,12 +57,19 @@ async function openInspector(entity: any) {
   });
 }
 
-export default class Entity extends Component<Props> {
-  id: String;
+type EntityProps = {
+  id: string;
+  entity: any;
+  onSelect: (pos: { x: number; y: number }, selectable: boolean) => void;
+  isSelected: boolean;
+};
+
+export default class Entity extends Component<EntityProps> {
+  id: string;
   entity: any;
   style: any = {};
 
-  constructor(props: Props) {
+  constructor(props: EntityProps) {
     super(props);
 
     this.id = this.props.id;
@@ -78,7 +78,7 @@ export default class Entity extends Component<Props> {
     this.updateStyle();
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: EntityProps) {
     if (this.props.entity !== prevProps.entity) {
       this.entity = this.props.entity;
       this.updateStyle();
@@ -128,7 +128,7 @@ export default class Entity extends Component<Props> {
           }
         }}
         onContextMenu={(e) => {
-          handleContextMenu(e, this.entity);
+          handleContextMenu(e, this.entity, this.id);
         }}
       >
         {this.props.entity.content && this.entity.content}
