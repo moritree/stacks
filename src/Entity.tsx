@@ -2,6 +2,7 @@ import { Component } from "preact";
 import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { emitTo, once } from "@tauri-apps/api/event";
 
 type Props = {
   id: String;
@@ -10,7 +11,7 @@ type Props = {
   isSelected: boolean;
 };
 
-async function handleContextMenu(event: Event, id: String) {
+async function handleContextMenu(event: Event, entity: any) {
   event.preventDefault();
   (
     await Menu.new({
@@ -18,22 +19,26 @@ async function handleContextMenu(event: Event, id: String) {
         {
           id: "delete_entity",
           text: "Delete Entity",
-          action: async (_: string) => invoke("delete_entity", { id: id }),
+          action: async (_: string) =>
+            invoke("delete_entity", { id: entity.id }),
         },
         {
           id: "inspect",
           text: "Inspect",
-          action: async () => openInspector(),
+          action: async () => openInspector(entity),
         },
       ],
     })
   ).popup();
 }
 
-async function openInspector() {
-  // If window already exists, focus instead of creating a new one
+async function openInspector(entity: any) {
+  // If window already exists, focus & update instead of creating a new one
   const existing = await WebviewWindow.getByLabel("inspector");
   if (existing) {
+    emitTo("inspector", "update_entity", {
+      entity: entity,
+    });
     existing.setFocus();
     return;
   }
@@ -48,9 +53,12 @@ async function openInspector() {
     resizable: true,
   });
 
-  inspectorWindow.once("tauri://created", () => {
-    console.log("Inspector window created");
+  inspectorWindow.once("mounted", () => {
+    emitTo("inspector", "update_entity", {
+      entity: entity,
+    });
   });
+
   inspectorWindow.once("tauri://error", (e) => {
     console.error("Inspector webview had ERROR!", e);
   });
@@ -120,7 +128,7 @@ export default class Entity extends Component<Props> {
           }
         }}
         onContextMenu={(e) => {
-          handleContextMenu(e, this.id);
+          handleContextMenu(e, this.entity);
         }}
       >
         {this.props.entity.content && this.entity.content}
