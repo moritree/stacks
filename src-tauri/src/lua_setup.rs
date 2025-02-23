@@ -42,11 +42,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
         .spawn(move || {
             let lua = Lua::new();
 
-            // give lua scale factor info
-            lua.globals()
-                .set("window_scale", window_scale(window.clone()))
-                .expect("Couldn't set window_scale Lua global");
-
             // let lua emit messages that TS can pick up
             let emit = move |_: &Lua, (evt, data): (String, LuaValue)| {
                 let json = serde_json::to_value(&data).expect(&format!(
