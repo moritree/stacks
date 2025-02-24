@@ -3,6 +3,7 @@ import "./style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Info, Loader } from "preact-feather";
 import { Entity } from "./entity/entity";
+import { invoke } from "@tauri-apps/api/core";
 
 interface InspectorState {
   entity?: Entity;
@@ -33,9 +34,42 @@ export default class Inspector extends Component<{}, InspectorState> {
     let component = val.toString();
     if (key == "pos" || key == "dimension") {
       component = (
-        <span class="flex flex-row">
-          x: {val.x} y: {val.y}{" "}
-        </span>
+        <div class="flex flex-col">
+          <label class="pr-2">
+            x:{" "}
+            <input
+              type="number"
+              step={10}
+              class="max-w-16"
+              value={val.x}
+              onInput={(e) =>
+                invoke("update_entity_property", {
+                  id: this.state.entity!.id,
+                  key: key,
+                  data: { x: e.currentTarget.value, y: val.y },
+                })
+              }
+              maxLength={5}
+            />
+          </label>
+          <label class="pr-2">
+            y:{" "}
+            <input
+              type="number"
+              step={10}
+              class="max-w-16"
+              value={val.y}
+              onInput={(e) =>
+                invoke("update_entity_property", {
+                  id: this.state.entity!.id,
+                  key: key,
+                  data: { x: val.x, y: e.currentTarget.value },
+                })
+              }
+              maxLength={5}
+            />
+          </label>
+        </div>
       );
     }
 
