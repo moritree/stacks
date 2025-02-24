@@ -4,6 +4,7 @@ import { emit, listen } from "@tauri-apps/api/event";
 import { Info, Loader } from "preact-feather";
 import { Entity } from "./entity/entity";
 import { invoke } from "@tauri-apps/api/core";
+import { HexColorPicker } from "react-colorful";
 
 interface InspectorState {
   entity?: Entity;
@@ -70,6 +71,19 @@ export default class Inspector extends Component<{}, InspectorState> {
             />
           </label>
         </div>
+      );
+    } else if (key == "color") {
+      component = (
+        <HexColorPicker
+          color={val}
+          onChange={(col) =>
+            invoke("update_entity_property", {
+              id: this.state.entity!.id,
+              key: key,
+              data: col.toString(),
+            })
+          }
+        />
       );
     }
 
