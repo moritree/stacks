@@ -3,8 +3,9 @@ import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
+import { Entity } from "./entity";
 
-async function handleContextMenu(event: Event, entity: any, id: string) {
+async function handleContextMenu(event: Event, entity: Entity) {
   event.preventDefault();
   (
     await Menu.new({
@@ -12,26 +13,24 @@ async function handleContextMenu(event: Event, entity: any, id: string) {
         {
           id: "delete_entity",
           text: "Delete Entity",
-          action: async (_: string) => invoke("delete_entity", { id: id }),
+          action: async (_: string) =>
+            invoke("delete_entity", { id: entity.id }),
         },
         {
           id: "inspect",
           text: "Inspect",
-          action: async () => openInspector(entity, id),
+          action: async () => openInspector(entity),
         },
       ],
     })
   ).popup();
 }
 
-async function openInspector(entity: any, id: string) {
+async function openInspector(entity: Entity) {
   // If window already exists, focus & update instead of creating a new one
   const existing = await WebviewWindow.getByLabel("inspector");
   if (existing) {
-    emitTo("inspector", "update_entity", {
-      entity: entity,
-      id: id,
-    });
+    emitTo("inspector", "update_entity", { entity: entity });
     existing.setFocus();
     return;
   }
@@ -46,10 +45,7 @@ async function openInspector(entity: any, id: string) {
   });
 
   inspectorWindow.once("mounted", () => {
-    emitTo("inspector", "update_entity", {
-      entity: entity,
-      id: id,
-    });
+    emitTo("inspector", "update_entity", { entity: entity });
   });
 
   inspectorWindow.once("tauri://error", (e) => {
@@ -57,30 +53,26 @@ async function openInspector(entity: any, id: string) {
   });
 }
 
-type EntityProps = {
+interface EntityProps {
   id: string;
   entity: any;
   onSelect: (pos: { x: number; y: number }, selectable: boolean) => void;
   isSelected: boolean;
-};
+}
 
 export default class EntityComponent extends Component<EntityProps> {
-  id: string;
-  entity: any;
+  entity: Entity;
   style: any = {};
 
   constructor(props: EntityProps) {
     super(props);
-
-    this.id = this.props.id;
-    this.entity = this.props.entity;
-
+    this.entity = { ...{ id: this.props.id }, ...this.props.entity };
     this.updateStyle();
   }
 
   componentDidUpdate(prevProps: EntityProps) {
     if (this.props.entity !== prevProps.entity) {
-      this.entity = this.props.entity;
+      this.entity = { ...{ id: this.props.id }, ...this.props.entity };
       this.updateStyle();
     }
   }
@@ -103,8 +95,6 @@ export default class EntityComponent extends Component<EntityProps> {
           },
         };
         break;
-      default:
-        console.warn("Invalid entity type", this.id, this.entity.type);
     }
   }
 
@@ -115,23 +105,24 @@ export default class EntityComponent extends Component<EntityProps> {
           ${this.props.entity.selectable ? " selectable" : ""}
           ${this.props.isSelected ? " selected" : ""}
           ${this.props.entity.draggable ? " draggable" : ""}`}
-        id={this.id.toString()}
+        id={this.entity.id}
         style={this.style}
         onMouseDown={(e) => {
           e.stopPropagation();
-          this.props.onSelect(this.entity.pos, this.entity.draggable);
+          this.props.onSelect(this.entity.pos, !!this.entity.draggable);
         }}
         onClick={(e) => {
+          e.stopPropagation();
           if (this.entity.on_click) {
             e.preventDefault();
-            invoke("run_script", { id: this.id, function: "on_click" });
+            invoke("run_script", { id: this.entity.id, function: "on_click" });
           }
         }}
         onContextMenu={(e) => {
-          handleContextMenu(e, this.entity, this.id);
+          handleContextMenu(e, this.entity);
         }}
       >
-        {this.props.entity.content && this.entity.content}
+        {this.entity.type == "text" && this.entity.content}
       </div>
     );
   }

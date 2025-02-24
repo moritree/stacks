@@ -1,7 +1,7 @@
 import { Component } from "preact";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import EntityComponent from "./EntityComponent";
+import EntityComponent from "./entity/entity-component";
 import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open } from "@tauri-apps/plugin-dialog";
@@ -159,7 +159,9 @@ export default class Scene extends Component<{}, SceneState> {
     pos: { x: number; y: number },
     selectable: boolean,
   ) => {
+    console.log("handleEntitySelect", id, pos, selectable);
     if (selectable) {
+      console.log("Selected", id);
       this.setState({
         selectedId: id,
         selectedInitialPosition: pos,

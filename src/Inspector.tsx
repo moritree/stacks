@@ -2,10 +2,10 @@ import { Component, render } from "preact";
 import "./style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Info, Loader } from "preact-feather";
+import { Entity } from "./entity/entity";
 
 interface InspectorState {
-  entity?: any;
-  id?: String;
+  entity?: Entity;
 }
 
 export default class Inspector extends Component<{}, InspectorState> {
@@ -23,20 +23,29 @@ export default class Inspector extends Component<{}, InspectorState> {
   }
 
   private async setupEntityUpdateListener() {
-    const unsubscribe = await listen<any>("update_entity", (e) => {
-      console.log("update_entity received", e.payload);
-      this.setState({ entity: e.payload.entity, id: e.payload.id });
-    });
+    const unsubscribe = await listen<any>("update_entity", (e) =>
+      this.setState({ entity: e.payload.entity }),
+    );
     this.entityUpdateListener = unsubscribe;
   }
 
   private field(key: string, val: any) {
-    return (
-      <tr>
-        <td>{key}</td>
-        <td>{val.toString()}</td>
-      </tr>
-    );
+    let component = val.toString();
+    if (key == "pos" || key == "dimension") {
+      component = (
+        <span class="flex flex-row">
+          x: {val.x} y: {val.y}{" "}
+        </span>
+      );
+    }
+
+    if (true)
+      return (
+        <tr>
+          <td>{key}</td>
+          <td>{component}</td>
+        </tr>
+      );
   }
 
   render() {
@@ -51,7 +60,7 @@ export default class Inspector extends Component<{}, InspectorState> {
       <div class="w-screen h-screen flex flex-col m-1">
         <span class="inline-flex items-center pb-1">
           <Info class="pr-1" />
-          <h1>{this.state.id}</h1>
+          <h1>{this.state.entity.id}</h1>
         </span>
         <table class="table-auto">
           {Object.entries(this.state.entity).map(([key, val]) =>
