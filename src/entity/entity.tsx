@@ -16,7 +16,6 @@ export interface TextEntity {
 
 interface BaseEntity {
   id: string;
-  type: string;
   pos: Coordinate;
   draggable?: Boolean;
   on_click?: Boolean;
