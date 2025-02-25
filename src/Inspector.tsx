@@ -1,18 +1,23 @@
 import { Component, render } from "preact";
 import "./style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
-import { Info, Loader } from "preact-feather";
+import { Info, Loader, MinusCircle, PlusCircle } from "preact-feather";
 import { Entity } from "./entity/entity";
 import { invoke } from "@tauri-apps/api/core";
 import { HexColorPicker } from "react-colorful";
 
 interface InspectorState {
   entity?: Entity;
+  colorPickerOpen: Boolean;
 }
 
 export default class Inspector extends Component<{}, InspectorState> {
   private entityUpdateListener: () => void = () => {
     return;
+  };
+
+  state: InspectorState = {
+    colorPickerOpen: false,
   };
 
   componentDidMount() {
@@ -32,7 +37,19 @@ export default class Inspector extends Component<{}, InspectorState> {
   }
 
   private field(key: string, val: any) {
-    let component = val.toString();
+    let component = (
+      <input
+        class="max-w-full"
+        value={val}
+        onInput={(e) =>
+          invoke("update_entity_property", {
+            id: this.state.entity!.id,
+            key: key,
+            data: e.currentTarget.value,
+          })
+        }
+      />
+    );
     if (key == "pos" || key == "dimension") {
       component = (
         <div class="flex flex-col">
@@ -74,16 +91,34 @@ export default class Inspector extends Component<{}, InspectorState> {
       );
     } else if (key == "color") {
       component = (
-        <HexColorPicker
-          color={val}
-          onChange={(col) =>
-            invoke("update_entity_property", {
-              id: this.state.entity!.id,
-              key: key,
-              data: col.toString(),
-            })
-          }
-        />
+        <div class="flex flex-col">
+          <button
+            class="flex flex-row items-center"
+            onClick={() =>
+              this.setState({ colorPickerOpen: !this.state.colorPickerOpen })
+            }
+          >
+            {this.state.colorPickerOpen ? (
+              <MinusCircle class="pr-2" />
+            ) : (
+              <PlusCircle class="pr-2" />
+            )}
+            <div class="w-4 h-4" style={{ "background-color": val }} />
+            <p class="pl-2">{val}</p>
+          </button>
+          {this.state.colorPickerOpen && (
+            <HexColorPicker
+              color={val}
+              onChange={(col) =>
+                invoke("update_entity_property", {
+                  id: this.state.entity!.id,
+                  key: key,
+                  data: col.toString(),
+                })
+              }
+            />
+          )}
+        </div>
       );
     }
 
