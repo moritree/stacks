@@ -19,10 +19,17 @@ async function handleContextMenu(event: Event, id: String) {
           text: "Delete Entity",
           action: async (_: string) => invoke("delete_entity", { id: id }),
         },
+        {
+          id: "inspect",
+          text: "Inspect",
+          action: () => openInspector(),
+        },
       ],
     })
   ).popup();
 }
+
+function openInspector() {}
 
 export default class Entity extends Component<Props> {
   id: String;
