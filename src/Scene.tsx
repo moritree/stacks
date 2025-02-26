@@ -1,6 +1,6 @@
 import { Component } from "preact";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
 import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
@@ -133,6 +133,9 @@ export default class Scene extends Component<{}, SceneState> {
       );
     });
     this.listeners.push(unsubscribe);
+
+    const windowSize = await WebviewWindow.getCurrent().size();
+    emit("tauri://resize", windowSize);
   }
 
   private calculateNewPosition(transform: string) {
@@ -188,9 +191,9 @@ export default class Scene extends Component<{}, SceneState> {
       <div
         class="w-screen h-screen z-0"
         onClick={this.handleBackgroundClick}
-        // onContextMenu={(e) =>
-        //   e.target === e.currentTarget && handleContextMenu(e)
-        // }
+        onContextMenu={(e) =>
+          e.target === e.currentTarget && handleContextMenu(e)
+        }
       >
         {Object.entries(entities).map(([id, entity]) => (
           <EntityComponent
