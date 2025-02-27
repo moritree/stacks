@@ -14,7 +14,9 @@ function Scene:update(dt)
     local entities_copy = require('deep_copy')(self.entities)
     for _, entity in pairs(entities_copy) do
         for property, value in pairs(entity) do
-            if type(value) == "function" then entity[property] = true end
+            if type(value) == "function" then
+                entity[property] = true
+            end
         end
     end
     emit("scene_update", entities_copy)

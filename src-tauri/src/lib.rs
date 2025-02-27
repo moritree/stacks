@@ -1,7 +1,7 @@
 mod lua_setup;
 use lua_setup::{
-    delete_entity, init_lua_thread, load_scene, resize_window, run_script, save_scene, tick,
-    update_entity_property, window_scale,
+    delete_entity, init_lua_thread, load_scene, load_script, resize_window, run_script, save_scene,
+    tick, update_entity_property, window_scale,
 };
 use tauri::Manager;
 
@@ -28,6 +28,7 @@ pub fn run() {
             delete_entity,
             save_scene,
             load_scene,
+            load_script,
             run_script,
             resize_window,
             window_scale
