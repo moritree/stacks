@@ -14,7 +14,9 @@ function Scene:update(dt)
     local entities_copy = require('deep_copy')(self.entities)
     for _, entity in pairs(entities_copy) do
         for property, value in pairs(entity) do
-            if type(value) == "function" then entity[property] = true end
+            if type(value) == "function" then
+                entity[property] = true
+            end
         end
     end
     emit("scene_update", entities_copy)
@@ -28,6 +30,16 @@ function Scene:update_entity_property(id, key, data)
         print(string.format("Warning: %s is not an existing property on entity %s. Updating anyway lol", key, id))
     end
     self.entities[id][key] = data
+    self:update(0) -- temp
+end
+
+function Scene:update_entity_properties(id, data)
+    if self.entities[id] == nil then
+        print(string.format("Error: %s is not a valid entity ID", id))
+        return
+    end
+
+    for k, v in pairs(data) do self.entities[id][k] = v end
     self:update(0) -- temp
 end
 
