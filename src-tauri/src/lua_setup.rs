@@ -169,43 +169,16 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .globals()
                             .get("currentScene")
                             .expect("Couldn't get Lua scene");
-                        let entity: LuaTable = scene
-                            .get::<_, LuaTable>("entities")
-                            .expect("Couldn't get entities table from scene")
-                            .get::<_, LuaTable>(id.clone())
-                            .expect("Couldn't get entity");
-
                         let scripts_module: LuaTable = lua
                             .load(fs::read_to_string(path).expect("Couldn't load file to string"))
                             .eval()
                             .expect("Couldn't load into table");
-
                         let update_func: LuaFunction = scene
                             .get("update_entity_properties")
                             .expect("Couldn't get Lua update_entity_properties function");
                         update_func
                             .call::<_, ()>((scene, id, scripts_module))
                             .expect("Couldn't call update_entity_property")
-
-                        // let source = fs::read_to_string(&path).expect("Failed to read lua file");
-                        // let module_name_clone = module_name.clone();
-
-                        // preload.set(
-                        //     module_name.as_str(),
-                        //     lua.create_function(move |lua, ()| -> LuaResult<LuaValue> {
-                        //         lua.load(&source)
-                        //             .set_name(&format!("{}.lua", module_name_clone))
-                        //             .eval()
-                        //     })?,
-                        // )?;
-
-                        // let scripts: LuaTable = lua.load(fs::read_to_string(path).expect("Couldn't load file to string")).eval()
-                        // let script: LuaFunction = lua
-                        //     .load(fs::read_to_string(path).expect("Couldn't load file to string"))
-                        //     .into_function()
-                        //     .expect("Couldn't load as function");
-                        // entity.set("on_click", script).expect("Couldn't set script");
-                        // println!("LoadScript success");
                     }
                     LuaMessage::RunScript(id, function) => {
                         println!("RunScript called");
