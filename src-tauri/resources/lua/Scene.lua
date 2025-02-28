@@ -33,6 +33,19 @@ function Scene:update_entity_property(id, key, data)
     self:update(0) -- temp
 end
 
+function Scene:update_entity_properties(id, data)
+    if self.entities[id] == nil then
+        print(string.format("Error: %s is not a valid entity ID", id))
+        return
+    end
+
+    for k, v in pairs(data) do
+        print(string.format("Updating %s", k))
+        self.entities[id][k] = v
+    end
+    self:update(0) -- temp
+end
+
 function Scene:delete_entity(id)
     print("delete_entity")
     if self.entities[id] ~= nil then
