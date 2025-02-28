@@ -39,10 +39,7 @@ function Scene:update_entity_properties(id, data)
         return
     end
 
-    for k, v in pairs(data) do
-        print(string.format("Updating %s", k))
-        self.entities[id][k] = v
-    end
+    for k, v in pairs(data) do self.entities[id][k] = v end
     self:update(0) -- temp
 end
 
