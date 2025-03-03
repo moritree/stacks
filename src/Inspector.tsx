@@ -64,7 +64,7 @@ export default class Inspector extends Component<{}, InspectorState> {
         value={JSON.stringify(this.state.entity!, null, 2)}
         onChange={this.handleChange}
         mode="javascript"
-        theme="cloud9_day"
+        theme="github_light_default"
       />
     );
   }
