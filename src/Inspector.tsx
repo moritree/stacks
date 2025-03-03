@@ -1,14 +1,16 @@
 import { Component, render } from "preact";
 import "./style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
-import { Info, Loader, MinusCircle, PlusCircle } from "preact-feather";
+import { Loader, MinusCircle, PlusCircle } from "preact-feather";
 import { Entity } from "./entity/entity";
 import { invoke } from "@tauri-apps/api/core";
 import { HexColorPicker } from "react-colorful";
+import { Editor } from "./ace-editor";
 
 interface InspectorState {
   entity?: Entity;
   colorPickerOpen: Boolean;
+  code: string;
 }
 
 export default class Inspector extends Component<{}, InspectorState> {
@@ -18,6 +20,7 @@ export default class Inspector extends Component<{}, InspectorState> {
 
   state: InspectorState = {
     colorPickerOpen: false,
+    code: "// Write your code here",
   };
 
   componentDidMount() {
@@ -34,6 +37,16 @@ export default class Inspector extends Component<{}, InspectorState> {
       this.setState({ entity: e.payload.entity }),
     );
     this.entityUpdateListener = unsubscribe;
+  }
+
+  handleChange(newVal: string) {
+    console.log(newVal);
+    try {
+      const parsedEntity = JSON.parse(newVal);
+      console.log(parsedEntity);
+    } catch {
+      console.log("Invalid JSON");
+    }
   }
 
   private field(key: string, val: any) {
@@ -140,17 +153,12 @@ export default class Inspector extends Component<{}, InspectorState> {
       );
 
     return (
-      <div class="w-screen h-screen flex flex-col m-1">
-        <span class="inline-flex items-center pb-1">
-          <Info class="pr-1" />
-          <h1>{this.state.entity.id}</h1>
-        </span>
-        <table class="table-auto">
-          {Object.entries(this.state.entity).map(([key, val]) =>
-            this.field(key, val),
-          )}
-        </table>
-      </div>
+      <Editor
+        value={JSON.stringify(this.state.entity!, null, 2)}
+        onChange={this.handleChange}
+        mode="javascript"
+        theme="github"
+      />
     );
   }
 }
