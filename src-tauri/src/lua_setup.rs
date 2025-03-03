@@ -24,6 +24,7 @@ pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
     UpdateEntityProperty(String, String, Value),
+    UpdateEntityProperties(String, Value),
     DeleteEntity(String),
     SaveScene(String),
     LoadScene(String),
@@ -120,6 +121,23 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                                 scene,
                                 id,
                                 key,
+                                json_value_to_lua(&lua, &data)
+                                    .expect("Couldn't convert json data to Lua object"),
+                            ))
+                            .expect("Couldn't call update_entity_property")
+                    }
+                    LuaMessage::UpdateEntityProperties(id, data) => {
+                        let scene: LuaTable = lua
+                            .globals()
+                            .get("currentScene")
+                            .expect("Couldn't get Lua scene");
+                        let update_func: LuaFunction = scene
+                            .get("update_entity_properties")
+                            .expect("Couldn't get Lua update_entity_properties function");
+                        update_func
+                            .call::<_, ()>((
+                                scene,
+                                id,
                                 json_value_to_lua(&lua, &data)
                                     .expect("Couldn't convert json data to Lua object"),
                             ))
@@ -346,6 +364,18 @@ pub async fn update_entity_property(
     state
         .tx
         .send(LuaMessage::UpdateEntityProperty(id, key, data))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn update_entity_properties(
+    state: State<'_, LuaState>,
+    id: String,
+    data: Value,
+) -> Result<(), String> {
+    state
+        .tx
+        .send(LuaMessage::UpdateEntityProperties(id, data))
         .map_err(|e| e.to_string())
 }
 
