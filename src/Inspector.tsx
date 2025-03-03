@@ -44,7 +44,6 @@ export default class Inspector extends Component<{}, InspectorState> {
       const parsedEntity = JSON.parse(newVal);
       this.setState({ entity: parsedEntity });
       const { id, ...rest } = parsedEntity;
-      console.log(id, rest);
       invoke("update_entity_properties", { id: id, data: rest });
     } catch (e) {
       console.log(e);
