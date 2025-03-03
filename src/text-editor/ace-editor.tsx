@@ -1,6 +1,5 @@
 import AceEditor from "react-ace";
 
-// Import the modes and themes you want to use
 import "ace-builds/src-noconflict/mode-javascript";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/theme-github";
@@ -13,6 +12,7 @@ interface EditorProps {
   theme?: string;
   width?: string;
   height?: string;
+  className?: string;
 }
 
 export const Editor = ({
@@ -21,7 +21,7 @@ export const Editor = ({
   mode = "javascript",
   theme = "github",
   width = "100%",
-  height = "500px",
+  height = "100vh",
 }: EditorProps) => {
   return (
     <AceEditor

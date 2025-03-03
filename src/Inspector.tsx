@@ -3,7 +3,7 @@ import "./style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Loader } from "preact-feather";
 import { Entity } from "./entity/entity";
-import { Editor } from "./ace-editor";
+import { Editor } from "./text-editor/ace-editor";
 
 interface InspectorState {
   entity?: Entity;
