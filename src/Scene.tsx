@@ -110,11 +110,13 @@ export default class Scene extends Component<{}, SceneState> {
       if (
         thisWindowSize.width != e.payload.width ||
         thisWindowSize.height != e.payload.height
-      )
+      ) {
         return;
+      }
+
+      this.setState({ selectedId: null });
 
       const scaleFactor: number = await invoke("window_scale");
-
       const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
       const windowHeight = e.payload.height; // gives us the full window dimensions
       const titleBarHeight = windowHeight / scaleFactor - contentHeight; // Calculate title bar height dynamically
