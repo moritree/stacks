@@ -12,7 +12,6 @@ pub struct LuaState {
 }
 
 impl LuaState {
-    // Handle cleanup
     pub fn shutdown(&self) -> Result<(), String> {
         self.tx.send(LuaMessage::Die).map_err(|e| e.to_string())
     }
@@ -23,7 +22,6 @@ pub enum LuaMessage {
     /// Game loop tick with the given time difference.
     Tick(f64),
     EmitEvent(String, Value),
-    UpdateEntityProperty(String, String, Value),
     UpdateEntityProperties(String, Value),
     DeleteEntity(String),
     SaveScene(String),
@@ -107,24 +105,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                         update
                             .call::<_, ()>((scene, dt))
                             .expect("Failed calling update")
-                    }
-                    LuaMessage::UpdateEntityProperty(id, key, data) => {
-                        let scene: LuaTable = lua
-                            .globals()
-                            .get("currentScene")
-                            .expect("Couldn't get Lua scene");
-                        let update_func: LuaFunction = scene
-                            .get("update_entity_property")
-                            .expect("Couldn't get Lua update_entity_property function");
-                        update_func
-                            .call::<_, ()>((
-                                scene,
-                                id,
-                                key,
-                                json_value_to_lua(&lua, &data)
-                                    .expect("Couldn't convert json data to Lua object"),
-                            ))
-                            .expect("Couldn't call update_entity_property")
                     }
                     LuaMessage::UpdateEntityProperties(id, data) => {
                         let scene: LuaTable = lua
@@ -224,9 +204,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
 }
 
 /// Preload Lua modules (at runtime) as part of Lua initialization.
-///
-/// If we need compile-time checks or recompilation when Lua files change, look into writing a build script.
-/// Runtime loading is probably more simple & flexible.
 fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
     fn get_module_path(base_path: &Path, file_path: &Path) -> Option<String> {
         if let (Some(ext), true) = (file_path.extension(), file_path.is_file()) {
@@ -361,9 +338,12 @@ pub async fn update_entity_property(
     key: String,
     data: Value,
 ) -> Result<(), String> {
+    let mut properties = serde_json::Map::new();
+    properties.insert(key, data);
+    let properties_value = Value::Object(properties);
     state
         .tx
-        .send(LuaMessage::UpdateEntityProperty(id, key, data))
+        .send(LuaMessage::UpdateEntityProperties(id, properties_value))
         .map_err(|e| e.to_string())
 }
 
