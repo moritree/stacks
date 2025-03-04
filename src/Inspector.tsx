@@ -14,13 +14,7 @@ interface InspectorState {
 }
 
 export default class Inspector extends Component<{}, InspectorState> {
-  private entityUpdateListener: () => void = () => {
-    return;
-  };
-
-  private themeChangeListener: () => void = () => {
-    return;
-  };
+  private listeners: (() => void)[] = [];
 
   state: InspectorState = {
     colorPickerOpen: false,
@@ -35,22 +29,21 @@ export default class Inspector extends Component<{}, InspectorState> {
   }
 
   componentWillUnmount() {
-    this.entityUpdateListener();
-    this.themeChangeListener();
+    this.listeners.forEach((listener) => listener());
   }
 
   private async setupEntityUpdateListener() {
     const unsubscribe = await listen<any>("update_entity", (e) =>
       this.setState({ entity: e.payload.entity }),
     );
-    this.entityUpdateListener = unsubscribe;
+    this.listeners.push(unsubscribe);
   }
 
   private async setupThemeChangeListener() {
     const unsubscribe = await getCurrentWindow().onThemeChanged(
       ({ payload: theme }) => this.updateTheme(theme),
     );
-    this.themeChangeListener = unsubscribe;
+    this.listeners.push(unsubscribe);
   }
 
   private async updateTheme(theme?: Theme) {
@@ -60,15 +53,11 @@ export default class Inspector extends Component<{}, InspectorState> {
   }
 
   handleChange = (newVal: string) => {
-    console.log(newVal);
     try {
-      const parsedEntity = JSON.parse(newVal);
-      this.setState({ entity: parsedEntity });
-      const { id, ...rest } = parsedEntity;
+      const { id, ...rest } = JSON.parse(newVal);
       invoke("update_entity_properties", { id: id, data: rest });
     } catch (e) {
-      console.log(e);
-      console.log("Invalid JSON");
+      console.log("Invalid JSON", e);
     }
   };
 
