@@ -84,10 +84,8 @@ export default class Scene extends Component<{}, SceneState> {
       this.animationFrameId = requestAnimationFrame(tick);
     };
     this.animationFrameId = requestAnimationFrame(tick);
-
-    // setup listener and immediately start handling updates
-    this.setupUpdateListener();
     this.setupResizeListener();
+    this.setupUpdateListener();
   }
 
   componentWillUnmount() {
@@ -137,11 +135,11 @@ export default class Scene extends Component<{}, SceneState> {
     this.listeners.push(unsubscribe);
 
     const windowSize = await WebviewWindow.getCurrent().size();
-    emit("tauri://resize", windowSize);
+    emit("tauri://resize", windowSize); // emit at setup
   }
 
   private calculateNewPosition(transform: string) {
-    // transform will be in the format "translate(Xpx, Ypx)"
+    // transform will be, annoyingly, in the format "translate(Xpx, Ypx)"
     const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     if (matches) {
       return {
@@ -152,12 +150,6 @@ export default class Scene extends Component<{}, SceneState> {
     console.error("Drag transform format couldn't be parsed", transform);
     return this.selectedEntity?.pos; // fallback
   }
-
-  private handleBackgroundClick = (e: MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      this.setState({ selectedId: null });
-    }
-  };
 
   private handleEntitySelect = (
     id: string,
@@ -192,7 +184,9 @@ export default class Scene extends Component<{}, SceneState> {
     return (
       <div
         class="w-screen h-screen z-0"
-        onClick={this.handleBackgroundClick}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) this.setState({ selectedId: null });
+        }}
         onContextMenu={(e) =>
           e.target === e.currentTarget && handleContextMenu(e)
         }
