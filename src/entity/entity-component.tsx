@@ -82,23 +82,9 @@ interface EntityProps {
 
 export default class EntityComponent extends Component<EntityProps> {
   entity: Entity;
-  style: any = {};
 
-  constructor(props: EntityProps) {
-    super(props);
-    this.entity = { ...{ id: this.props.id }, ...this.props.entity };
-    this.updateStyle();
-  }
-
-  componentDidUpdate(prevProps: EntityProps) {
-    if (this.props.entity !== prevProps.entity) {
-      this.entity = { ...{ id: this.props.id }, ...this.props.entity };
-      this.updateStyle();
-    }
-  }
-
-  updateStyle() {
-    this.style = {
+  private get style() {
+    let style = {
       "--x": `calc(${this.entity.pos.x}px * var(--scene-scale))`,
       "--y": `calc(${this.entity.pos.y}px * var(--scene-scale))`,
     };
@@ -106,8 +92,8 @@ export default class EntityComponent extends Component<EntityProps> {
       case "text":
         break;
       case "rect":
-        this.style = {
-          ...this.style,
+        style = {
+          ...style,
           ...{
             "--width": `calc(${this.entity.dimension.x}px * var(--scene-scale))`,
             "--height": `calc(${this.entity.dimension.y}px * var(--scene-scale))`,
@@ -115,6 +101,18 @@ export default class EntityComponent extends Component<EntityProps> {
           },
         };
         break;
+    }
+    return style;
+  }
+
+  constructor(props: EntityProps) {
+    super(props);
+    this.entity = { ...{ id: this.props.id }, ...this.props.entity };
+  }
+
+  componentDidUpdate(prevProps: EntityProps) {
+    if (this.props.entity !== prevProps.entity) {
+      this.entity = { ...{ id: this.props.id }, ...this.props.entity };
     }
   }
 
