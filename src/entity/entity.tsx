@@ -1,12 +1,7 @@
-export type Coordinate = {
-  x: number;
-  y: number;
-};
-
 export interface RectEntity {
   type: "rect";
   color: string;
-  dimension: Coordinate;
+  size: { width: number; height: number };
 }
 
 export interface TextEntity {
@@ -16,7 +11,7 @@ export interface TextEntity {
 
 interface BaseEntity {
   id: string;
-  pos: Coordinate;
+  pos: { x: number; y: number };
   draggable?: Boolean;
   on_click?: Boolean;
 }

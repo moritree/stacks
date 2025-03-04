@@ -95,8 +95,8 @@ export default class EntityComponent extends Component<EntityProps> {
         style = {
           ...style,
           ...{
-            "--width": `calc(${this.entity.dimension.x}px * var(--scene-scale))`,
-            "--height": `calc(${this.entity.dimension.y}px * var(--scene-scale))`,
+            "--width": `calc(${this.entity.size.width}px * var(--scene-scale))`,
+            "--height": `calc(${this.entity.size.height}px * var(--scene-scale))`,
             "--color": `${this.entity.color}`,
           },
         };

@@ -19,25 +19,25 @@ return {
             test3 = Entity:new({
                 type = "rect",
                 pos = { x = 100, y = 200 },
-                dimension = { x = 200, y = 100 },
+                size = { width = 200, height = 100 },
                 color = "#ff0000"
             }),
             top_left = Entity:new({
                 type = "rect",
                 pos = { x = 0, y = 0 },
-                dimension = { x = 10, y = 10 },
+                size = { width = 10, height = 10 },
                 color = "#00ff00"
             }),
             center = Entity:new({
                 type = "rect",
                 pos = { x = 635, y = 355 },
-                dimension = { x = 10, y = 10 },
+                size = { width = 10, height = 10 },
                 color = "#00ffff"
             }),
             bottom_right = Entity:new({
                 type = "rect",
                 pos = { x = 1270, y = 710 },
-                dimension = { x = 10, y = 10 },
+                size = { width = 10, height = 10 },
                 color = "#0000ff"
             })
         }
