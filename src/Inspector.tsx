@@ -5,11 +5,12 @@ import { Loader } from "preact-feather";
 import { Entity } from "./entity/entity";
 import { Editor } from "./text-editor/ace-editor";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 interface InspectorState {
   entity?: Entity;
   colorPickerOpen: Boolean;
-  code: string;
+  theme: string;
 }
 
 export default class Inspector extends Component<{}, InspectorState> {
@@ -17,18 +18,25 @@ export default class Inspector extends Component<{}, InspectorState> {
     return;
   };
 
+  private themeChangeListener: () => void = () => {
+    return;
+  };
+
   state: InspectorState = {
     colorPickerOpen: false,
-    code: "// Write your code here",
+    theme: "light",
   };
 
   componentDidMount() {
     this.setupEntityUpdateListener();
+    this.setupThemeChangeListener();
+    this.updateTheme();
     emit("mounted");
   }
 
   componentWillUnmount() {
     this.entityUpdateListener();
+    this.themeChangeListener();
   }
 
   private async setupEntityUpdateListener() {
@@ -36,6 +44,17 @@ export default class Inspector extends Component<{}, InspectorState> {
       this.setState({ entity: e.payload.entity }),
     );
     this.entityUpdateListener = unsubscribe;
+  }
+
+  private async setupThemeChangeListener() {
+    const unsubscribe = await getCurrentWindow().onThemeChanged(() => {
+      this.updateTheme();
+    });
+    this.themeChangeListener = unsubscribe;
+  }
+
+  private async updateTheme() {
+    this.setState({ theme: (await getCurrentWindow().theme()) || "light" });
   }
 
   handleChange = (newVal: string) => {
@@ -64,7 +83,9 @@ export default class Inspector extends Component<{}, InspectorState> {
         value={JSON.stringify(this.state.entity!, null, 2)}
         onChange={this.handleChange}
         mode="javascript"
-        theme="github_light_default"
+        theme={
+          this.state.theme == "light" ? "github_light_default" : "github_dark"
+        }
       />
     );
   }
