@@ -5,12 +5,12 @@ import { Loader } from "preact-feather";
 import { Entity } from "./entity/entity";
 import { Editor } from "./text-editor/ace-editor";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, Theme } from "@tauri-apps/api/window";
 
 interface InspectorState {
   entity?: Entity;
   colorPickerOpen: Boolean;
-  theme: string;
+  theme: Theme;
 }
 
 export default class Inspector extends Component<{}, InspectorState> {
@@ -47,14 +47,16 @@ export default class Inspector extends Component<{}, InspectorState> {
   }
 
   private async setupThemeChangeListener() {
-    const unsubscribe = await getCurrentWindow().onThemeChanged(() => {
-      this.updateTheme();
-    });
+    const unsubscribe = await getCurrentWindow().onThemeChanged(
+      ({ payload: theme }) => this.updateTheme(theme),
+    );
     this.themeChangeListener = unsubscribe;
   }
 
-  private async updateTheme() {
-    this.setState({ theme: (await getCurrentWindow().theme()) || "light" });
+  private async updateTheme(theme?: Theme) {
+    this.setState({
+      theme: theme || (await getCurrentWindow().theme()) || "light",
+    });
   }
 
   handleChange = (newVal: string) => {
