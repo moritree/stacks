@@ -68,6 +68,8 @@ async function openInspector(entity: Entity) {
     width: 300,
     height: 600,
     resizable: true,
+    minWidth: 200,
+    minHeight: 300,
   });
 
   inspectorWindow.once("mounted", () => {
