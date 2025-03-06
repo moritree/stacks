@@ -122,7 +122,6 @@ export default class Scene extends Component<{}, SceneState> {
 
       const newScale = e.payload.width / SCENE_BASE_SIZE.width;
       this.transformScale = scaleFactor / newScale;
-      console.log("SCALE", this.transformScale);
 
       invoke("resize_window", {
         width: Math.round(SCENE_BASE_SIZE.width * newScale),
@@ -145,7 +144,6 @@ export default class Scene extends Component<{}, SceneState> {
     // transform will be, annoyingly, in the format "translate(Xpx, Ypx)"
     const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     if (matches) {
-      console.log("TRANSLATE POS", matches[1], matches[2]);
       return {
         x:
           this.state.selectedInitialPosition.x +
@@ -164,9 +162,7 @@ export default class Scene extends Component<{}, SceneState> {
     pos: { x: number; y: number },
     selectable: boolean,
   ) => {
-    console.log("handleEntitySelect", id, pos, selectable);
     if (selectable) {
-      console.log("Selected", id);
       this.setState({
         selectedId: id,
         selectedInitialPosition: pos,
