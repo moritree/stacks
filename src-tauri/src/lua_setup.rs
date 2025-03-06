@@ -101,11 +101,11 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .get("currentScene")
                             .expect("Couldn't get Lua scene");
                         let update: LuaFunction = scene
-                            .get("update")
-                            .expect("Couldn't get Lua update function");
+                            .get("emit_update")
+                            .expect("Couldn't get Lua emit_update function");
                         update
                             .call::<_, ()>((scene, dt))
-                            .expect("Failed calling update")
+                            .expect("Failed calling emit_update")
                     }
                     LuaMessage::UpdateEntityProperties(id, data) => {
                         let scene: LuaTable = lua

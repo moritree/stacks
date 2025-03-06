@@ -9,7 +9,7 @@ function Scene:new(o)
     return o
 end
 
-function Scene:update(dt)
+function Scene:emit_update(dt)
     -- can't serialize functions!
     local entities_copy = require('deep_copy')(self.entities)
     for _, entity in pairs(entities_copy) do
@@ -29,7 +29,7 @@ function Scene:update_entity_properties(id, data)
     end
 
     for k, v in pairs(data) do self.entities[id][k] = v end
-    self:update(0) -- temp
+    self:emit_update(0) -- temp
 end
 
 function Scene:delete_entity(id)
@@ -74,7 +74,7 @@ function Scene:load_scene(path)
     local success, loaded_entities = require("serpent").load(content, { safe = false })
     if success then
         self.entities = loaded_entities
-        self:update(0) -- temp
+        self:emit_update(0) -- temp
     else
         print("Error loading scene: " .. tostring(loaded_entities))
     end
