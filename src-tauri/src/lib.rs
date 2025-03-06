@@ -2,8 +2,8 @@ mod frontend_commands;
 mod lua_setup;
 use frontend_commands::{resize_window, window_scale};
 use lua_setup::{
-    delete_entity, init_lua_thread, load_scene, load_script, run_script, save_scene, tick,
-    update_entity_properties, update_entity_property,
+    delete_entity, duplicate_entity, init_lua_thread, load_scene, load_script, run_script,
+    save_scene, tick, update_entity_properties, update_entity_property,
 };
 use tauri::Manager;
 
@@ -29,6 +29,7 @@ pub fn run() {
             update_entity_property,
             update_entity_properties,
             delete_entity,
+            duplicate_entity,
             save_scene,
             load_scene,
             load_script,

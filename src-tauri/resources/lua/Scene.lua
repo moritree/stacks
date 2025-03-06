@@ -33,11 +33,21 @@ function Scene:update_entity_properties(id, data)
 end
 
 function Scene:delete_entity(id)
-    print("delete_entity")
     if self.entities[id] ~= nil then
         self.entities[id] = nil
     else
         print(string.format("Warning: Can't delete entity %s, this id does not exist on the scene", id))
+    end
+end
+
+function Scene:duplicate_entity(id)
+    if self.entities[id] ~= nil then
+        local new_key = id .. "_clone"
+        self.entities[new_key] = require('deep_copy')(self.entities[id])
+        self.entities[new_key].pos.x = self.entities[new_key].pos.x + 15
+        self.entities[new_key].pos.y = self.entities[new_key].pos.y + 15
+    else
+        print(string.format("Warning: Can't duplicate entity %s, this id does not exist on the scene", id))
     end
 end
 

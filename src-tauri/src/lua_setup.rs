@@ -24,6 +24,7 @@ pub enum LuaMessage {
     EmitEvent(String, Value),
     UpdateEntityProperties(String, Value),
     DeleteEntity(String),
+    DuplicateEntity(String),
     SaveScene(String),
     LoadScene(String),
     LoadScript(String, String),
@@ -134,6 +135,18 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                         update_func
                             .call::<_, ()>((scene, id))
                             .expect("Couldn't call delete_entity")
+                    }
+                    LuaMessage::DuplicateEntity(id) => {
+                        let scene: LuaTable = lua
+                            .globals()
+                            .get("currentScene")
+                            .expect("Couldn't get Lua scene");
+                        let update_func: LuaFunction = scene
+                            .get("duplicate_entity")
+                            .expect("Couldn't get Lua duplicate_entity function");
+                        update_func
+                            .call::<_, ()>((scene, id))
+                            .expect("Couldn't call duplicate_entity")
                     }
                     LuaMessage::EmitEvent(evt, data) => w
                         .emit(&evt, data)
@@ -364,6 +377,14 @@ pub async fn delete_entity(state: State<'_, LuaState>, id: String) -> Result<(),
     state
         .tx
         .send(LuaMessage::DeleteEntity(id))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn duplicate_entity(state: State<'_, LuaState>, id: String) -> Result<(), String> {
+    state
+        .tx
+        .send(LuaMessage::DuplicateEntity(id))
         .map_err(|e| e.to_string())
 }
 

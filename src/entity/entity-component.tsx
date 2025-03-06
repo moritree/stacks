@@ -18,6 +18,12 @@ async function handleContextMenu(event: Event, entity: Entity) {
             invoke("delete_entity", { id: entity.id }),
         },
         {
+          id: "duplicate_entity",
+          text: "Duplicate Entity",
+          action: async (_: string) =>
+            invoke("duplicate_entity", { id: entity.id }),
+        },
+        {
           id: "inspect",
           text: "Inspect",
           action: async () => openInspector(entity),
