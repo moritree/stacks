@@ -60,6 +60,7 @@ interface SceneState {
 export default class Scene extends Component<{}, SceneState> {
   private listeners: (() => void)[] = [];
   private animationFrameId?: number;
+  private transformScale: number = 1;
 
   private get selectedEntity() {
     return this.state.selectedId
@@ -120,6 +121,8 @@ export default class Scene extends Component<{}, SceneState> {
       const titleBarHeight = windowHeight / scaleFactor - contentHeight; // Calculate title bar height dynamically
 
       const newScale = e.payload.width / SCENE_BASE_SIZE.width;
+      this.transformScale = scaleFactor / newScale;
+      console.log("SCALE", this.transformScale);
 
       invoke("resize_window", {
         width: Math.round(SCENE_BASE_SIZE.width * newScale),
@@ -142,9 +145,14 @@ export default class Scene extends Component<{}, SceneState> {
     // transform will be, annoyingly, in the format "translate(Xpx, Ypx)"
     const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     if (matches) {
+      console.log("TRANSLATE POS", matches[1], matches[2]);
       return {
-        x: this.state.selectedInitialPosition.x + parseFloat(matches[1]),
-        y: this.state.selectedInitialPosition.y + parseFloat(matches[2]),
+        x:
+          this.state.selectedInitialPosition.x +
+          parseFloat(matches[1]) * this.transformScale,
+        y:
+          this.state.selectedInitialPosition.y +
+          parseFloat(matches[2]) * this.transformScale,
       };
     }
     console.error("Drag transform format couldn't be parsed", transform);
