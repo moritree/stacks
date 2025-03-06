@@ -64,7 +64,7 @@ async function openInspector(entity: Entity) {
   // Create new inspector window
   const inspectorWindow = new WebviewWindow("inspector", {
     title: "Inspector",
-    url: "inspector.html",
+    url: "src/inspector/inspector.html",
     width: 300,
     height: 600,
     resizable: true,

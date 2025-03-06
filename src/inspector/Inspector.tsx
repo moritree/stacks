@@ -1,9 +1,9 @@
 import { Component, render } from "preact";
-import "./style/main.css";
+import "../style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Loader } from "preact-feather";
-import { Entity } from "./entity/entity";
-import { Editor } from "./text-editor/ace-editor";
+import { Entity } from "../entity/entity";
+import { Editor } from "../text-editor/ace-editor";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, Theme } from "@tauri-apps/api/window";
 
