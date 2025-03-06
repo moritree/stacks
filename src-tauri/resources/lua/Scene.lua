@@ -1,3 +1,6 @@
+local deep_copy = require('deep_copy')
+local serializer = require('serpent')
+
 local Scene = {
     entities = {}
 }
@@ -11,7 +14,7 @@ end
 
 function Scene:emit_update(dt)
     -- can't serialize functions!
-    local entities_copy = require('deep_copy')(self.entities)
+    local entities_copy = deep_copy(self.entities)
     for _, entity in pairs(entities_copy) do
         for property, value in pairs(entity) do
             if type(value) == "function" then
@@ -29,7 +32,7 @@ function Scene:update_entity_properties(id, data)
     end
 
     for k, v in pairs(data) do self.entities[id][k] = v end
-    self:emit_update(0) -- temp
+    self:emit_update(0)
 end
 
 function Scene:delete_entity(id)
@@ -43,7 +46,7 @@ end
 function Scene:duplicate_entity(id)
     if self.entities[id] ~= nil then
         local new_key = id .. "_clone"
-        self.entities[new_key] = require('deep_copy')(self.entities[id])
+        self.entities[new_key] = deep_copy(self.entities[id])
         self.entities[new_key].pos.x = self.entities[new_key].pos.x + 15
         self.entities[new_key].pos.y = self.entities[new_key].pos.y + 15
     else
@@ -54,7 +57,7 @@ end
 function Scene:save_scene(path)
     print(string.format("save_scene to %s", path))
     local file = assert(io.open(path, "w"), "Couldn't open file")
-    file:write(require("serpent").dump(self.entities))
+    file:write(serializer.dump(self.entities))
     file:close()
 end
 
@@ -71,10 +74,10 @@ function Scene:load_scene(path)
 
     -- safe mode off to load functions
     -- TODO how do I handle security?
-    local success, loaded_entities = require("serpent").load(content, { safe = false })
+    local success, loaded_entities = serializer.load(content, { safe = false })
     if success then
         self.entities = loaded_entities
-        self:emit_update(0) -- temp
+        self:emit_update(0)
     else
         print("Error loading scene: " .. tostring(loaded_entities))
     end
