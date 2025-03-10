@@ -13,8 +13,8 @@ function Scene:new(o)
 end
 
 function Scene:emit_update(dt)
-    -- can't serialize functions!
     local entities_copy = deep_copy(self.entities)
+    -- can't serialize functions! so just set them to "true" to let the frontend know there is a script
     for _, entity in pairs(entities_copy) do
         for property, value in pairs(entity) do
             if type(value) == "function" then
@@ -30,8 +30,8 @@ function Scene:update_entity_properties(id, data)
         print(string.format("Error: %s is not a valid entity ID", id))
         return
     end
-
     for k, v in pairs(data) do self.entities[id][k] = v end
+
     self:emit_update(0)
 end
 
