@@ -14,6 +14,7 @@
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-dialog": "~2",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-os": "~2",
     "@types/ace": "^0.0.52",
     "ace-builds": "^1.39.0",
     "preact": "^10.25.1",

@@ -6,11 +6,13 @@ import { Entity } from "../entity/entity";
 import { Editor } from "../text-editor/ace-editor";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, Theme } from "@tauri-apps/api/window";
+import { platform } from "@tauri-apps/plugin-os";
 
 interface InspectorState {
   entity?: Entity;
   colorPickerOpen: Boolean;
   theme: Theme;
+  contents: string;
 }
 
 export default class Inspector extends Component<{}, InspectorState> {
@@ -19,6 +21,7 @@ export default class Inspector extends Component<{}, InspectorState> {
   state: InspectorState = {
     colorPickerOpen: false,
     theme: "light",
+    contents: "",
   };
 
   componentDidMount() {
@@ -33,9 +36,15 @@ export default class Inspector extends Component<{}, InspectorState> {
   }
 
   private async setupEntityUpdateListener() {
-    const unsubscribe = await listen<any>("update_entity", (e) =>
-      this.setState({ entity: e.payload.entity }),
-    );
+    const unsubscribe = await listen<any>("update_entity", (e) => {
+      this.setState(
+        {
+          entity: e.payload.entity,
+          contents: JSON.stringify(e.payload.entity, null, 2),
+        },
+        () => this.updateWindowTitle(true),
+      );
+    });
     this.listeners.push(unsubscribe);
   }
 
@@ -52,13 +61,23 @@ export default class Inspector extends Component<{}, InspectorState> {
     });
   }
 
-  handleChange = (newVal: string) => {
+  private async updateWindowTitle(saved: boolean) {
+    getCurrentWindow().setTitle(this.state.entity!.id + (saved ? "" : " *"));
+  }
+
+  handleSave = () => {
     try {
-      const { id, ...rest } = JSON.parse(newVal);
+      const { id, ...rest } = JSON.parse(this.state.contents);
       invoke("update_entity_properties", { id: id, data: rest });
+      this.updateWindowTitle(true);
     } catch (e) {
       console.log("Invalid JSON", e);
     }
+  };
+
+  handleChange = (newVal: string) => {
+    this.state.contents = newVal;
+    this.updateWindowTitle(false);
   };
 
   render() {
@@ -70,14 +89,26 @@ export default class Inspector extends Component<{}, InspectorState> {
       );
 
     return (
-      <Editor
-        value={JSON.stringify(this.state.entity!, null, 2)}
-        onChange={this.handleChange}
-        mode="javascript"
-        theme={
-          this.state.theme == "light" ? "github_light_default" : "github_dark"
-        }
-      />
+      <div
+        class="w-screen h-screen"
+        onKeyUp={(e) => {
+          const os = platform();
+          if (
+            ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
+            e.code === "KeyS"
+          )
+            this.handleSave();
+        }}
+      >
+        <Editor
+          value={this.state.contents}
+          onChange={this.handleChange}
+          mode="javascript"
+          theme={
+            this.state.theme == "light" ? "github_light_default" : "github_dark"
+          }
+        />
+      </div>
     );
   }
 }
