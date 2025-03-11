@@ -6,6 +6,7 @@ import { Entity } from "../entity/entity";
 import { Editor } from "../text-editor/ace-editor";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, Theme } from "@tauri-apps/api/window";
+import { platform } from "@tauri-apps/plugin-os";
 
 interface InspectorState {
   entity?: Entity;
@@ -35,12 +36,13 @@ export default class Inspector extends Component<{}, InspectorState> {
   }
 
   private async setupEntityUpdateListener() {
-    const unsubscribe = await listen<any>("update_entity", (e) =>
+    const unsubscribe = await listen<any>("update_entity", (e) => {
       this.setState({
         entity: e.payload.entity,
         contents: JSON.stringify(e.payload.entity, null, 2),
-      }),
-    );
+      });
+      this.updateWindowTitle(true);
+    });
     this.listeners.push(unsubscribe);
   }
 
@@ -88,7 +90,12 @@ export default class Inspector extends Component<{}, InspectorState> {
       <div
         class="w-screen h-screen"
         onKeyUp={(e) => {
-          if (e.ctrlKey && e.code === "KeyS") this.handleSave();
+          const os = platform();
+          if (
+            ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
+            e.code === "KeyS"
+          )
+            this.handleSave();
         }}
       >
         <Editor
