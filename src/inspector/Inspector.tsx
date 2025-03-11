@@ -37,11 +37,13 @@ export default class Inspector extends Component<{}, InspectorState> {
 
   private async setupEntityUpdateListener() {
     const unsubscribe = await listen<any>("update_entity", (e) => {
-      this.setState({
-        entity: e.payload.entity,
-        contents: JSON.stringify(e.payload.entity, null, 2),
-      });
-      this.updateWindowTitle(true);
+      this.setState(
+        {
+          entity: e.payload.entity,
+          contents: JSON.stringify(e.payload.entity, null, 2),
+        },
+        () => this.updateWindowTitle(true),
+      );
     });
     this.listeners.push(unsubscribe);
   }
