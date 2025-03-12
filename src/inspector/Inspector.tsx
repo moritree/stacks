@@ -77,14 +77,22 @@ export default class Inspector extends Component<{}, InspectorState> {
           newId: id,
         })
           .finally(() =>
-            invoke("update_entity_properties", { id: id, data: rest }),
+            invoke("update_entity_properties", {
+              id: id,
+              data: rest,
+              complete: true,
+            }),
           )
           .finally(() => {
             this.state.entity!.id = id;
             this.updateWindowTitle(true);
           });
       } else {
-        invoke("update_entity_properties", { id: id, data: rest });
+        invoke("update_entity_properties", {
+          id: id,
+          data: rest,
+          complete: true,
+        });
         this.updateWindowTitle(true);
       }
     } catch (e) {

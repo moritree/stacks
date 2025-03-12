@@ -45,6 +45,16 @@ function Scene:update_entity_properties(id, data)
     self:emit_update(0)
 end
 
+function Scene:replace_entity(id, data)
+    if self.entities[id] == nil then
+        print(string.format("Error: Cannot overwrite entity, %s is not an existing entity ID", id))
+        return
+    end
+    self.entities[id] = data
+
+    self:emit_update(0)
+end
+
 function Scene:delete_entity(id)
     if self.entities[id] ~= nil then
         self.entities[id] = nil

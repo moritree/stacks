@@ -23,7 +23,7 @@ pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
     UpdateEntityId(String, String),
-    UpdateEntityProperties(String, Value),
+    UpdateEntityProperties(String, Value, bool),
     DeleteEntity(String),
     DuplicateEntity(String),
     SaveScene(String),
@@ -120,14 +120,18 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .call::<_, ()>((scene, original_id, new_id))
                             .expect("Couldn't call update_entity_property")
                     }
-                    LuaMessage::UpdateEntityProperties(id, data) => {
+                    LuaMessage::UpdateEntityProperties(id, data, complete) => {
                         let scene: LuaTable = lua
                             .globals()
                             .get("currentScene")
                             .expect("Couldn't get Lua scene");
+                        let mut function_name: &str = "update_entity_properties";
+                        if complete {
+                            function_name = "replace_entity";
+                        }
                         let update_func: LuaFunction = scene
-                            .get("update_entity_properties")
-                            .expect("Couldn't get Lua update_entity_properties function");
+                            .get(function_name)
+                            .expect(&format!("Couldn't get Lua {} function", function_name));
                         update_func
                             .call::<_, ()>((
                                 scene,
@@ -135,7 +139,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                                 json_value_to_lua(&lua, &data)
                                     .expect("Couldn't convert json data to Lua object"),
                             ))
-                            .expect("Couldn't call update_entity_property")
+                            .expect(&format!("Couldn't call {}", function_name))
                     }
                     LuaMessage::DeleteEntity(id) => {
                         let scene: LuaTable = lua
@@ -369,7 +373,11 @@ pub async fn update_entity_property(
     let properties_value = Value::Object(properties);
     state
         .tx
-        .send(LuaMessage::UpdateEntityProperties(id, properties_value))
+        .send(LuaMessage::UpdateEntityProperties(
+            id,
+            properties_value,
+            false,
+        ))
         .map_err(|e| e.to_string())
 }
 
@@ -390,10 +398,11 @@ pub async fn update_entity_properties(
     state: State<'_, LuaState>,
     id: String,
     data: Value,
+    complete: bool, // Whether this is the complete version of the updated entity. Will fully overwrite.
 ) -> Result<(), String> {
     state
         .tx
-        .send(LuaMessage::UpdateEntityProperties(id, data))
+        .send(LuaMessage::UpdateEntityProperties(id, data, complete))
         .map_err(|e| e.to_string())
 }
 
