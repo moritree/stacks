@@ -65,11 +65,27 @@ export default class Inspector extends Component<{}, InspectorState> {
     getCurrentWindow().setTitle(this.state.entity!.id + (saved ? "" : " *"));
   }
 
-  handleSave = () => {
+  handleSave = async () => {
     try {
       const { id, ...rest } = JSON.parse(this.state.contents);
-      invoke("update_entity_properties", { id: id, data: rest });
-      this.updateWindowTitle(true);
+
+      if (id !== this.state.entity!.id) {
+        // if ID is changed, we need a special operation to update it first
+        invoke("update_entity_id", {
+          originalId: this.state.entity!.id,
+          newId: id,
+        })
+          .finally(() =>
+            invoke("update_entity_properties", { id: id, data: rest }),
+          )
+          .finally(() => {
+            this.state.entity!.id = id;
+            this.updateWindowTitle(true);
+          });
+      } else {
+        invoke("update_entity_properties", { id: id, data: rest });
+        this.updateWindowTitle(true);
+      }
     } catch (e) {
       console.log("Invalid JSON", e);
     }
