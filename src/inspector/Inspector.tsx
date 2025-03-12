@@ -7,6 +7,7 @@ import { Editor } from "../text-editor/ace-editor";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, Theme } from "@tauri-apps/api/window";
 import { platform } from "@tauri-apps/plugin-os";
+import { message } from "@tauri-apps/plugin-dialog";
 
 interface InspectorState {
   entity?: Entity;
@@ -87,7 +88,10 @@ export default class Inspector extends Component<{}, InspectorState> {
         this.updateWindowTitle(true);
       }
     } catch (e) {
-      console.log("Invalid JSON", e);
+      await message("Invalid formatting", {
+        title: "Couldn't save entity",
+        kind: "error",
+      });
     }
   };
 
