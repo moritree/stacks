@@ -25,9 +25,19 @@ function Scene:emit_update(dt)
     emit("scene_update", entities_copy)
 end
 
+function Scene:update_entity_id(original_id, new_id)
+    if self.entities[original_id] == nil then
+        print(string.format("Error: Cannot update entity ID, %s is not an existing entity ID", original_id))
+        return
+    end
+
+    self.entities[new_id] = self.entities[original_id]
+    self.entities[original_id] = nil
+end
+
 function Scene:update_entity_properties(id, data)
     if self.entities[id] == nil then
-        print(string.format("Error: %s is not a valid entity ID", id))
+        print(string.format("Error: Cannot update entity properties, %s is not an existing entity ID", id))
         return
     end
     for k, v in pairs(data) do self.entities[id][k] = v end
