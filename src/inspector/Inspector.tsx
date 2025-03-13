@@ -140,7 +140,8 @@ export default function Inspector() {
           handleSave();
       }}
     >
-      <TabBar onTabChange={(index) => setActiveTab(index)}>
+      <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
+      <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
         {tabs.map((tab) => (
           <TabItem>
             {tab.icon}
@@ -148,7 +149,6 @@ export default function Inspector() {
           </TabItem>
         ))}
       </TabBar>
-      {tabs[activeTab].component}
     </div>
   );
 }
