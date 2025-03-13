@@ -38,6 +38,10 @@
 }
 
 @layer components {
+    .entity.text {
+        font-family: var(--font-serif);
+    }
+
     .entity.rect {
         width: var(--width);
         height: var(--height);
