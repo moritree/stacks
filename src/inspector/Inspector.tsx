@@ -1,4 +1,4 @@
-import { Component, render } from "preact";
+import { Component, JSX, render } from "preact";
 import "../style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Loader } from "preact-feather";
@@ -16,6 +16,7 @@ interface InspectorState {
   colorPickerOpen: Boolean;
   theme: Theme;
   contents: string;
+  activeTab: number;
 }
 
 export default class Inspector extends Component<{}, InspectorState> {
@@ -25,6 +26,7 @@ export default class Inspector extends Component<{}, InspectorState> {
     colorPickerOpen: false,
     theme: "light",
     contents: "",
+    activeTab: 0,
   };
 
   componentDidMount() {
@@ -111,6 +113,26 @@ export default class Inspector extends Component<{}, InspectorState> {
   };
 
   render() {
+    const tabs: { label: string; component: JSX.Element }[] = [
+      {
+        label: "Inspect",
+        component: (
+          <Editor
+            value={this.state.contents}
+            onChange={this.handleChange}
+            mode="javascript"
+            theme={
+              this.state.theme == "light"
+                ? "github_light_default"
+                : "github_dark"
+            }
+            className="h-full"
+          />
+        ),
+      },
+      { label: "Scripts", component: <Loader /> },
+    ];
+
     if (!this.state.entity)
       return (
         <div class="w-screen h-screen flex flex-col justify-center">
@@ -130,18 +152,12 @@ export default class Inspector extends Component<{}, InspectorState> {
             this.handleSave();
         }}
       >
-        <TabBar>
-          <TabItem label={"Inspect"} />
-          <TabItem label={"Scripts"} />
+        <TabBar onTabChange={(index) => this.setState({ activeTab: index })}>
+          {tabs.map((tab) => (
+            <TabItem label={tab.label} />
+          ))}
         </TabBar>
-        <Editor
-          value={this.state.contents}
-          onChange={this.handleChange}
-          mode="javascript"
-          theme={
-            this.state.theme == "light" ? "github_light_default" : "github_dark"
-          }
-        />
+        {tabs[this.state.activeTab].component}
       </div>
     );
   }
