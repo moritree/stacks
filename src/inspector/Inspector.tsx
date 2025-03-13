@@ -1,83 +1,76 @@
-import { Component, JSX, render } from "preact";
+import { JSX, render } from "preact";
 import "../style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
-import { Loader } from "preact-feather";
+import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity";
 import { Editor } from "../text-editor/ace-editor";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow, Theme } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { platform } from "@tauri-apps/plugin-os";
 import { message } from "@tauri-apps/plugin-dialog";
 import TabBar from "../tab-bar/tab-bar";
 import TabItem from "../tab-bar/tab-item";
+import { useEffect, useState } from "preact/hooks";
 
-interface InspectorState {
-  entity?: Entity;
-  colorPickerOpen: Boolean;
-  theme: Theme;
-  contents: string;
-  activeTab: number;
-}
+export default function Inspector() {
+  const [theme, setTheme] = useState<string>("github_light_default");
+  const [inspectorContents, setInspectorContents] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [entity, setEntity] = useState<Entity | undefined>();
 
-export default class Inspector extends Component<{}, InspectorState> {
-  private listeners: (() => void)[] = [];
+  useEffect(() => {
+    let listeners: (() => void)[] = [];
 
-  state: InspectorState = {
-    colorPickerOpen: false,
-    theme: "light",
-    contents: "",
-    activeTab: 0,
+    async function setupEntityUpdateListener() {
+      listeners.push(
+        await listen<any>("update_entity", (e) => {
+          setEntity(e.payload.entity);
+          setInspectorContents(JSON.stringify(e.payload.entity, null, 2));
+        }),
+      );
+    }
+
+    async function setupThemeChangeListener() {
+      listeners.push(
+        await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
+          setTheme(theme == "light" ? "github_light_default" : "github_dark"),
+        ),
+      );
+    }
+
+    setupEntityUpdateListener().then(() => emit("mounted"));
+    setupThemeChangeListener().then(async () =>
+      setTheme(
+        (await getCurrentWindow().theme()) == "light"
+          ? "github_light_default"
+          : "github_dark",
+      ),
+    );
+
+    return () => {
+      listeners.forEach((unsubscribe) => unsubscribe());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (entity) {
+      // update title whenever entity is updated
+      updateWindowTitle(true);
+    }
+  }, [entity]);
+
+  const updateWindowTitle = async (saved: boolean) => {
+    getCurrentWindow().setTitle(entity!.id + (saved ? "" : " *"));
   };
 
-  componentDidMount() {
-    this.setupEntityUpdateListener();
-    this.setupThemeChangeListener();
-    this.updateTheme();
-    emit("mounted");
-  }
-
-  componentWillUnmount() {
-    this.listeners.forEach((listener) => listener());
-  }
-
-  private async setupEntityUpdateListener() {
-    const unsubscribe = await listen<any>("update_entity", (e) => {
-      this.setState(
-        {
-          entity: e.payload.entity,
-          contents: JSON.stringify(e.payload.entity, null, 2),
-        },
-        () => this.updateWindowTitle(true),
-      );
-    });
-    this.listeners.push(unsubscribe);
-  }
-
-  private async setupThemeChangeListener() {
-    const unsubscribe = await getCurrentWindow().onThemeChanged(
-      ({ payload: theme }) => this.updateTheme(theme),
-    );
-    this.listeners.push(unsubscribe);
-  }
-
-  private async updateTheme(theme?: Theme) {
-    this.setState({
-      theme: theme || (await getCurrentWindow().theme()) || "light",
-    });
-  }
-
-  private async updateWindowTitle(saved: boolean) {
-    getCurrentWindow().setTitle(this.state.entity!.id + (saved ? "" : " *"));
-  }
-
-  handleSave = async () => {
+  const handleSave = async () => {
     try {
-      const { id, ...rest } = JSON.parse(this.state.contents);
+      const { id, ...rest } = JSON.parse(inspectorContents);
 
-      if (id !== this.state.entity!.id) {
+      if (id !== entity!.id) {
         // if ID is changed, we need a special operation to update it first
         invoke("update_entity_id", {
-          originalId: this.state.entity!.id,
+          originalId: entity!.id,
           newId: id,
         })
           .finally(() =>
@@ -88,8 +81,8 @@ export default class Inspector extends Component<{}, InspectorState> {
             }),
           )
           .finally(() => {
-            this.state.entity!.id = id;
-            this.updateWindowTitle(true);
+            entity!.id = id;
+            updateWindowTitle(true);
           });
       } else {
         invoke("update_entity_properties", {
@@ -97,7 +90,7 @@ export default class Inspector extends Component<{}, InspectorState> {
           data: rest,
           complete: true,
         });
-        this.updateWindowTitle(true);
+        updateWindowTitle(true);
       }
     } catch (e) {
       await message("Invalid formatting", {
@@ -107,60 +100,57 @@ export default class Inspector extends Component<{}, InspectorState> {
     }
   };
 
-  handleChange = (newVal: string) => {
-    this.state.contents = newVal;
-    this.updateWindowTitle(false);
+  const handleChange = (newVal: string) => {
+    setInspectorContents(newVal);
+    updateWindowTitle(false);
   };
 
-  render() {
-    const tabs: { label: string; component: JSX.Element }[] = [
-      {
-        label: "Inspect",
-        component: (
-          <Editor
-            value={this.state.contents}
-            onChange={this.handleChange}
-            mode="javascript"
-            theme={
-              this.state.theme == "light"
-                ? "github_light_default"
-                : "github_dark"
-            }
-            className="h-full"
-          />
-        ),
-      },
-      { label: "Scripts", component: <Loader /> },
-    ];
-
-    if (!this.state.entity)
-      return (
-        <div class="w-screen h-screen flex flex-col justify-center">
-          <Loader class="w-screen h-10" />
-        </div>
-      );
-
+  if (!entity)
     return (
-      <div
-        class="w-screen h-screen flex flex-col"
-        onKeyUp={(e) => {
-          const os = platform();
-          if (
-            ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
-            e.code === "KeyS"
-          )
-            this.handleSave();
-        }}
-      >
-        <TabBar onTabChange={(index) => this.setState({ activeTab: index })}>
-          {tabs.map((tab) => (
-            <TabItem label={tab.label} />
-          ))}
-        </TabBar>
-        {tabs[this.state.activeTab].component}
+      <div class="w-screen h-screen flex flex-col justify-center">
+        <Loader class="w-screen h-10" />
       </div>
     );
-  }
+
+  const tabs: { label: string; icon: JSX.Element; component: JSX.Element }[] = [
+    {
+      label: "Inspect",
+      icon: <Info />,
+      component: (
+        <Editor
+          value={inspectorContents}
+          onChange={handleChange}
+          mode="javascript"
+          theme={theme}
+        />
+      ),
+    },
+    { label: "Scripts", icon: <Code />, component: <Loader /> },
+  ];
+
+  return (
+    <div
+      class="w-screen h-screen flex flex-col"
+      onKeyUp={(e) => {
+        const os = platform();
+        if (
+          ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
+          e.code === "KeyS"
+        )
+          handleSave();
+      }}
+    >
+      <TabBar onTabChange={(index) => setActiveTab(index)}>
+        {tabs.map((tab) => (
+          <TabItem>
+            {tab.icon}
+            {tab.label}
+          </TabItem>
+        ))}
+      </TabBar>
+      {tabs[activeTab].component}
+    </div>
+  );
 }
 
 render(<Inspector />, document.getElementById("root")!);

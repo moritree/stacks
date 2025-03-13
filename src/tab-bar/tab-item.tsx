@@ -1,4 +1,7 @@
+import { ComponentChild } from "preact";
+
 interface TabItemProps {
+  children?: ComponentChild | ComponentChild[];
   label?: String;
   isActive?: boolean;
   onClick?: () => void;
@@ -11,10 +14,11 @@ export default function TabItem(props: TabItemProps) {
 
   return (
     <button
-      class={`grow justify-center transition-colors duration-200 ${activeClasses}`}
+      class={`flex flex-row overflow-hidden gap-2 p-1 grow justify-center transition-colors duration-200 ${activeClasses}`}
       onClick={props.onClick}
     >
-      {props.label || "X"}
+      {/* {props.label || "X"} */}
+      {props.children}
     </button>
   );
 }
