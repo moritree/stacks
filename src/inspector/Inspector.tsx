@@ -8,6 +8,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, Theme } from "@tauri-apps/api/window";
 import { platform } from "@tauri-apps/plugin-os";
 import { message } from "@tauri-apps/plugin-dialog";
+import TabBar from "../tab-bar/tab-bar";
+import TabItem from "../tab-bar/tab-item";
 
 interface InspectorState {
   entity?: Entity;
@@ -118,7 +120,7 @@ export default class Inspector extends Component<{}, InspectorState> {
 
     return (
       <div
-        class="w-screen h-screen"
+        class="w-screen h-screen flex flex-col"
         onKeyUp={(e) => {
           const os = platform();
           if (
@@ -128,6 +130,10 @@ export default class Inspector extends Component<{}, InspectorState> {
             this.handleSave();
         }}
       >
+        <TabBar>
+          <TabItem label={"Inspect"} />
+          <TabItem label={"Scripts"} />
+        </TabBar>
         <Editor
           value={this.state.contents}
           onChange={this.handleChange}
