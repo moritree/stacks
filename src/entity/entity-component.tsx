@@ -88,68 +88,52 @@ interface EntityProps {
   isSelected: boolean;
 }
 
-export default class EntityComponent extends Component<EntityProps> {
-  entity: Entity;
+export default function EntityComponent(props: EntityProps) {
+  const entity: Entity = { ...{ id: props.id }, ...props.entity };
 
-  private get style() {
-    let style = {
-      "--x": `calc(${this.entity.pos.x}px * var(--scene-scale))`,
-      "--y": `calc(${this.entity.pos.y}px * var(--scene-scale))`,
-    };
-    switch (this.entity.type) {
-      case "text":
-        break;
-      case "rect":
-        style = {
-          ...style,
-          ...{
-            "--width": `calc(${this.entity.size.width}px * var(--scene-scale))`,
-            "--height": `calc(${this.entity.size.height}px * var(--scene-scale))`,
-            "--color": `${this.entity.color}`,
-          },
-        };
-        break;
-    }
-    return style;
+  let style = {
+    "--x": `calc(${entity.pos.x}px * var(--scene-scale))`,
+    "--y": `calc(${entity.pos.y}px * var(--scene-scale))`,
+  };
+  switch (entity.type) {
+    case "text":
+      break;
+    case "rect":
+      style = {
+        ...style,
+        ...{
+          "--width": `calc(${entity.size.width}px * var(--scene-scale))`,
+          "--height": `calc(${entity.size.height}px * var(--scene-scale))`,
+          "--color": `${entity.color}`,
+        },
+      };
+      break;
   }
 
-  constructor(props: EntityProps) {
-    super(props);
-    this.entity = { ...{ id: this.props.id }, ...this.props.entity };
-  }
-
-  componentDidUpdate(prevProps: EntityProps) {
-    if (this.props.entity !== prevProps.entity) {
-      this.entity = { ...{ id: this.props.id }, ...this.props.entity };
-    }
-  }
-
-  render() {
-    return (
-      <div
-        class={`absolute left-(--x) top-(--y) text-[calc(1.5em*var(--scene-scale))] entity ${this.entity.type}
-          ${this.props.entity.selectable ? " selectable" : ""}
-          ${this.props.isSelected ? " selected" : ""}
-          ${this.props.entity.draggable ? " draggable" : ""}`}
-        id={this.entity.id}
-        style={this.style}
-        onMouseDown={(e) => {
-          e.stopPropagation();
-          this.props.onSelect(this.entity.pos, !!this.entity.draggable);
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (this.entity.on_click) {
-            e.preventDefault();
-            invoke("run_script", { id: this.entity.id, function: "on_click" });
-          }
-        }}
-        onContextMenu={(e) => {
-          handleContextMenu(e, this.entity);
-        }}
-      >
-        {this.entity.type == "text" && this.entity.content}
-      </div>
-    );
-  }
+  return (
+    <div
+      class={`absolute left-(--x) top-(--y) text-[calc(1.5em*var(--scene-scale))] entity ${entity.type}
+          ${props.entity.selectable ? " selectable" : ""}
+          ${props.isSelected ? " selected" : ""}
+          ${props.entity.draggable ? " draggable" : ""}`}
+      id={entity.id}
+      style={style}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        props.onSelect(entity.pos, !!entity.draggable);
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (entity.on_click) {
+          e.preventDefault();
+          invoke("run_script", { id: entity.id, function: "on_click" });
+        }
+      }}
+      onContextMenu={(e) => {
+        handleContextMenu(e, entity);
+      }}
+    >
+      {entity.type == "text" && entity.content}
+    </div>
+  );
 }
