@@ -3,7 +3,7 @@ import "../style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
-import { Editor } from "../components/ace-editor";
+import AceEditor from "react-ace";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { platform } from "@tauri-apps/plugin-os";
@@ -13,8 +13,15 @@ import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
 import Scripts from "./scripts-component";
 
+import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/mode-lua";
+import "ace-builds/src-noconflict/theme-github_light_default";
+import "ace-builds/src-noconflict/theme-github_dark";
+
 export default function Inspector() {
-  const [theme, setTheme] = useState<string>("github_light_default");
+  const [editorTheme, setEditorTheme] = useState<string>(
+    "github_light_default",
+  );
   const [inspectorContents, setInspectorContents] = useState<string>("");
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
@@ -35,14 +42,16 @@ export default function Inspector() {
     async function setupThemeChangeListener() {
       listeners.push(
         await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
-          setTheme(theme == "light" ? "github_light_default" : "github_dark"),
+          setEditorTheme(
+            theme == "light" ? "github_light_default" : "github_dark",
+          ),
         ),
       );
     }
 
     setupEntityUpdateListener().then(() => emit("mounted"));
     setupThemeChangeListener().then(async () =>
-      setTheme(
+      setEditorTheme(
         (await getCurrentWindow().theme()) == "light"
           ? "github_light_default"
           : "github_dark",
@@ -119,11 +128,15 @@ export default function Inspector() {
       label: "Inspect",
       icon: <Info />,
       component: (
-        <Editor
+        <AceEditor
+          height="100%"
+          mode="javascript"
           value={inspectorContents}
           onChange={handleChange}
-          mode="javascript"
-          theme={theme}
+          theme={editorTheme}
+          setOptions={{
+            tabSize: 2,
+          }}
         />
       ),
     },

@@ -1,18 +1,26 @@
 import { Loader } from "preact-feather";
 import { Entity } from "../entity/entity-type";
-import { Editor } from "../components/ace-editor";
+import AceEditor from "react-ace";
 import { JSX } from "preact/jsx-runtime";
 import Accordion from "../components/accordion";
+
+import "ace-builds/src-noconflict/mode-lua";
+import "ace-builds/src-noconflict/theme-github_light_default";
+import "ace-builds/src-noconflict/theme-github_dark";
 
 const sections: { label: string; contents: JSX.Element }[] = [
   { label: "Eeeerereeee", contents: <p>ngdsjhkbghjdsikbnghjsd</p> },
   {
     label: "onCode",
     contents: (
-      <Editor
+      <AceEditor
+        height="300px"
+        mode="lua"
         value="definitely certainly possibly maybe"
-        mode="Lua"
-        height="200px"
+        theme="github_light_default"
+        setOptions={{
+          tabSize: 2,
+        }}
       />
     ),
   },
