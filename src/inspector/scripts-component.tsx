@@ -1,8 +1,8 @@
 import { Loader } from "preact-feather";
 import { Entity } from "../entity/entity-type";
-import UnfoldSection from "../unfolding-list/unfold-section";
-import { Editor } from "../text-editor/ace-editor";
+import { Editor } from "../components/ace-editor";
 import { JSX } from "preact/jsx-runtime";
+import Accordion from "../components/accordion";
 
 const sections: { label: string; contents: JSX.Element }[] = [
   { label: "Eeeerereeee", contents: <p>ngdsjhkbghjdsikbnghjsd</p> },
@@ -35,7 +35,7 @@ export default function Scripts(props: {
   return (
     <div class="flex flex-col font-mono">
       {sections.map((section, index) => (
-        <UnfoldSection
+        <Accordion
           label={section.label}
           open={props.openScripts.has(index)}
           onToggle={(open) => {
@@ -46,7 +46,7 @@ export default function Scripts(props: {
           }}
         >
           {section.contents}
-        </UnfoldSection>
+        </Accordion>
       ))}
     </div>
   );

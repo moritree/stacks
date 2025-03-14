@@ -3,13 +3,13 @@ import "../style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
-import { Editor } from "../text-editor/ace-editor";
+import { Editor } from "../components/ace-editor";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { platform } from "@tauri-apps/plugin-os";
 import { message } from "@tauri-apps/plugin-dialog";
-import TabBar from "../tab-bar/tab-bar";
-import TabItem from "../tab-bar/tab-item";
+import TabBar from "../components/tab-bar/tab-bar";
+import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
 import Scripts from "./scripts-component";
 

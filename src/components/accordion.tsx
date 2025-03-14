@@ -2,7 +2,7 @@ import { ComponentChild } from "preact";
 import { ChevronDown, ChevronRight } from "preact-feather";
 import { useState } from "preact/hooks";
 
-export default function UnfoldSection(props: {
+export default function Accordion(props: {
   label: string;
   children?: ComponentChild | ComponentChild[];
   open?: boolean;
