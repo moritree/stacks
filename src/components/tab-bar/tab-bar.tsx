@@ -23,7 +23,7 @@ export default function TabBar(props: TabBarProps) {
 
   return (
     <div
-      class={`w-screen flex flex-row ${props.atBottom ? "border-t" : "border-b"} border-gray-200 bg-gray-100`}
+      class={`w-screen flex flex-row ${props.atBottom ? "border-t" : "border-b"} border-border bg-secondary`}
     >
       {children.map((child, index) => {
         if (child && typeof child === "object" && "type" in child) {

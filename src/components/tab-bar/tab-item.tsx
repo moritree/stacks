@@ -10,8 +10,8 @@ interface TabItemProps {
 
 export default function TabItem(props: TabItemProps) {
   const activeClasses = props.isActive
-    ? `${props.atBottom ? "border-t-2" : "border-b-2"} border-blue-500 text-blue-500`
-    : `${props.atBottom ? "border-t-2" : "border-b-2"} border-gray-100 text-gray-500 hover:text-gray-700`;
+    ? `${props.atBottom ? "border-t-2" : "border-b-2"} border-accent text-accent`
+    : `${props.atBottom ? "border-t-2" : "border-b-2"} border-secondary text-tertiary hover:text-text-color`;
 
   return (
     <button

@@ -13,7 +13,7 @@ export default function Accordion(props: {
   return (
     <div class="w-full h-auto flex flex-col">
       <button
-        class="text-sm w-full flex flex-row gap-2 p-1 bg-gray-100 border-b border-gray-200"
+        class="text-sm w-full flex flex-row gap-2 p-1 bg-secondary border-b border-border"
         onClick={() => {
           props.onToggle?.(!open);
           setOpen(!open);
