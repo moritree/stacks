@@ -3,7 +3,7 @@ import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
-import { Entity } from "./entity";
+import { Entity } from "./entity-type";
 import { open } from "@tauri-apps/plugin-dialog";
 
 async function handleContextMenu(event: Event, entity: Entity) {
