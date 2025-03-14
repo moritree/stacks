@@ -11,6 +11,7 @@ import { message } from "@tauri-apps/plugin-dialog";
 import TabBar from "../tab-bar/tab-bar";
 import TabItem from "../tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
+import Scripts from "./scripts-component";
 
 export default function Inspector() {
   const [theme, setTheme] = useState<string>("github_light_default");
@@ -125,7 +126,11 @@ export default function Inspector() {
         />
       ),
     },
-    { label: "Scripts", icon: <Code />, component: <Loader /> },
+    {
+      label: "Scripts",
+      icon: <Code />,
+      component: <Scripts entity={entity} />,
+    },
   ];
 
   return (
