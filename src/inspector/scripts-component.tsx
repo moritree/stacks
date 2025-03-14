@@ -2,7 +2,6 @@ import { Loader } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import UnfoldSection from "../unfolding-list/unfold-section";
 import { Editor } from "../text-editor/ace-editor";
-import { useState } from "preact/hooks";
 import { JSX } from "preact/jsx-runtime";
 
 const sections: { label: string; contents: JSX.Element }[] = [
