@@ -6,6 +6,7 @@ export default function UnfoldSection(props: {
   label: string;
   children?: ComponentChild | ComponentChild[];
   open?: boolean;
+  onToggle?: (isOpen: boolean) => void;
 }) {
   const [open, setOpen] = useState<boolean>(props.open || false);
 
@@ -13,7 +14,10 @@ export default function UnfoldSection(props: {
     <div class="w-full h-auto flex flex-col">
       <button
         class="text-sm w-full flex flex-row gap-2 p-1 bg-gray-100 border-b border-gray-200"
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          props.onToggle?.(!open);
+          setOpen(!open);
+        }}
       >
         <div class="shrink-0">
           {(open && <ChevronDown size={20} />) || <ChevronRight size={20} />}

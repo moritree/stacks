@@ -18,6 +18,7 @@ export default function Inspector() {
   const [inspectorContents, setInspectorContents] = useState<string>("");
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
+  const [openScripts, setOpenScripts] = useState(new Set<Number>());
 
   useEffect(() => {
     let listeners: (() => void)[] = [];
@@ -55,7 +56,7 @@ export default function Inspector() {
 
   useEffect(() => {
     if (entity) {
-      // update title whenever entity is updated
+      setOpenScripts(new Set<Number>());
       updateWindowTitle(true);
     }
   }, [entity]);
@@ -129,7 +130,13 @@ export default function Inspector() {
     {
       label: "Scripts",
       icon: <Code />,
-      component: <Scripts entity={entity} />,
+      component: (
+        <Scripts
+          entity={entity}
+          openScripts={openScripts}
+          onScriptsChange={setOpenScripts}
+        />
+      ),
     },
   ];
 
