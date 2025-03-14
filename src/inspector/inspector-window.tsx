@@ -14,9 +14,8 @@ import { useEffect, useState } from "preact/hooks";
 import Scripts from "./scripts-component";
 
 import "ace-builds/src-noconflict/mode-javascript";
-import "ace-builds/src-noconflict/mode-lua";
 import "ace-builds/src-noconflict/theme-github_light_default";
-import "ace-builds/src-noconflict/theme-github_dark";
+import "ace-builds/src-noconflict/theme-cloud9_night";
 
 export default function Inspector() {
   const [editorTheme, setEditorTheme] = useState<string>(
@@ -41,11 +40,12 @@ export default function Inspector() {
 
     async function setupThemeChangeListener() {
       listeners.push(
-        await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
+        await getCurrentWindow().onThemeChanged(({ payload: theme }) => {
+          console.log("Theme changed!", theme);
           setEditorTheme(
-            theme == "light" ? "github_light_default" : "github_dark",
-          ),
-        ),
+            theme == "light" ? "github_light_default" : "cloud9_night",
+          );
+        }),
       );
     }
 
@@ -54,7 +54,7 @@ export default function Inspector() {
       setEditorTheme(
         (await getCurrentWindow().theme()) == "light"
           ? "github_light_default"
-          : "github_dark",
+          : "cloud9_night",
       ),
     );
 
