@@ -132,6 +132,7 @@ export default function Inspector() {
       icon: <Code />,
       component: (
         <Scripts
+          key={openScripts}
           entity={entity}
           openScripts={openScripts}
           onScriptsChange={setOpenScripts}
