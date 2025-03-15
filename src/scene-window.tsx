@@ -73,6 +73,17 @@ export default function Scene() {
       listeners.push(unsubscribe);
     }
 
+    async function setupSelectEntityListener() {
+      const unsubscribe = await listen<string | undefined>(
+        "select_entity",
+        (e) => {
+          setSelectedId(e.payload);
+        },
+      );
+
+      listeners.push(unsubscribe);
+    }
+
     async function setupResizeListener() {
       const unsubscribe = await listen<any>("tauri://resize", async (e) => {
         // Do nothing if the window being resized is a different one
@@ -122,6 +133,7 @@ export default function Scene() {
 
     setupUpdateListener();
     setupResizeListener();
+    setupSelectEntityListener();
 
     return () => {
       listeners.forEach((unsubscribe) => unsubscribe());

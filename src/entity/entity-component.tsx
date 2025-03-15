@@ -4,6 +4,7 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
 import { Entity } from "./entity-type";
 import { open } from "@tauri-apps/plugin-dialog";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 async function handleContextMenu(event: Event, entity: Entity) {
   event.preventDefault();
@@ -52,6 +53,8 @@ async function handleContextMenu(event: Event, entity: Entity) {
 }
 
 async function openInspector(entity: Entity) {
+  emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
+
   // If window already exists, focus & update instead of creating a new one
   const existing = await WebviewWindow.getByLabel("inspector");
   if (existing) {
