@@ -16,6 +16,7 @@ import Scripts from "./scripts-component";
 import "ace-builds/src-noconflict/mode-javascript";
 import "ace-builds/src-noconflict/theme-github_light_default";
 import "ace-builds/src-noconflict/theme-cloud9_night";
+import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense } from "preact/compat";
 
 export default function Inspector() {
@@ -137,6 +138,9 @@ export default function Inspector() {
           theme={editorTheme}
           setOptions={{
             tabSize: 2,
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            showLineNumbers: true,
           }}
         />
       ),

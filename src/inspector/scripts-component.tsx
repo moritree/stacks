@@ -7,6 +7,7 @@ const Accordion = lazy(() => import("../components/accordion"));
 import "ace-builds/src-noconflict/mode-lua";
 import "ace-builds/src-noconflict/theme-github_light_default";
 import "ace-builds/src-noconflict/theme-github_dark";
+import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense } from "preact/compat";
 
 const sections: { label: string; contents: JSX.Element }[] = [
@@ -14,15 +15,21 @@ const sections: { label: string; contents: JSX.Element }[] = [
   {
     label: "onCode",
     contents: (
-      <AceEditor
-        height="300px"
-        mode="lua"
-        value="definitely certainly possibly maybe"
-        theme="github_light_default"
-        setOptions={{
-          tabSize: 2,
-        }}
-      />
+      <div class="overflow-auto">
+        <AceEditor
+          height="300px"
+          mode="lua"
+          value="definitely certainly possibly maybe"
+          theme="github_light_default"
+          width="100%"
+          setOptions={{
+            tabSize: 2,
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            showLineNumbers: true,
+          }}
+        />
+      </div>
     ),
   },
   {
@@ -49,7 +56,7 @@ export default function Scripts(props: {
         </div>
       }
     >
-      <div class="flex flex-col font-mono">
+      <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden">
         {sections.map((section, index) => (
           <Accordion
             label={section.label}
