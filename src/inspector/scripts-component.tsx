@@ -42,15 +42,15 @@ export default function Scripts(props: {
   onScriptsChange: (sections: Set<Number>) => void;
 }) {
   return (
-    <div class="flex flex-col font-mono">
-      {sections.map((section, index) => (
-        <Suspense
-          fallback={
-            <div class="flex justify-center">
-              <Loader />
-            </div>
-          }
-        >
+    <Suspense
+      fallback={
+        <div class="flex justify-center align-middle">
+          <Loader />
+        </div>
+      }
+    >
+      <div class="flex flex-col font-mono">
+        {sections.map((section, index) => (
           <Accordion
             label={section.label}
             open={props.openScripts.has(index)}
@@ -63,8 +63,8 @@ export default function Scripts(props: {
           >
             {section.contents}
           </Accordion>
-        </Suspense>
-      ))}
-    </div>
+        ))}
+      </div>
+    </Suspense>
   );
 }
