@@ -8,7 +8,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { platform } from "@tauri-apps/plugin-os";
 import { message } from "@tauri-apps/plugin-dialog";
-import TabBar from "../components/tab-bar/tab-bar";
+const TabBar = lazy(() => import("../components/tab-bar/tab-bar"));
 import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
 import Scripts from "./scripts-component";
@@ -16,6 +16,7 @@ import Scripts from "./scripts-component";
 import "ace-builds/src-noconflict/mode-javascript";
 import "ace-builds/src-noconflict/theme-github_light_default";
 import "ace-builds/src-noconflict/theme-cloud9_night";
+import { lazy, Suspense } from "preact/compat";
 
 export default function Inspector() {
   const [editorTheme, setEditorTheme] = useState<string>(
@@ -167,14 +168,22 @@ export default function Inspector() {
       }}
     >
       <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
-      <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
-        {tabs.map((tab) => (
-          <TabItem>
-            {tab.icon}
-            {tab.label}
-          </TabItem>
-        ))}
-      </TabBar>
+      <Suspense
+        fallback={
+          <div class="flex justify-center">
+            <Loader />
+          </div>
+        }
+      >
+        <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
+          {tabs.map((tab) => (
+            <TabItem>
+              {tab.icon}
+              {tab.label}
+            </TabItem>
+          ))}
+        </TabBar>
+      </Suspense>
     </div>
   );
 }

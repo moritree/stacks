@@ -2,11 +2,12 @@ import { Loader } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import AceEditor from "react-ace";
 import { JSX } from "preact/jsx-runtime";
-import Accordion from "../components/accordion";
+const Accordion = lazy(() => import("../components/accordion"));
 
 import "ace-builds/src-noconflict/mode-lua";
 import "ace-builds/src-noconflict/theme-github_light_default";
 import "ace-builds/src-noconflict/theme-github_dark";
+import { lazy, Suspense } from "preact/compat";
 
 const sections: { label: string; contents: JSX.Element }[] = [
   { label: "Eeeerereeee", contents: <p>ngdsjhkbghjdsikbnghjsd</p> },
@@ -43,18 +44,26 @@ export default function Scripts(props: {
   return (
     <div class="flex flex-col font-mono">
       {sections.map((section, index) => (
-        <Accordion
-          label={section.label}
-          open={props.openScripts.has(index)}
-          onToggle={(open) => {
-            const clone = new Set(props.openScripts);
-            if (open) clone.add(index);
-            else clone.delete(index);
-            props.onScriptsChange(clone);
-          }}
+        <Suspense
+          fallback={
+            <div class="flex justify-center">
+              <Loader />
+            </div>
+          }
         >
-          {section.contents}
-        </Accordion>
+          <Accordion
+            label={section.label}
+            open={props.openScripts.has(index)}
+            onToggle={(open) => {
+              const clone = new Set(props.openScripts);
+              if (open) clone.add(index);
+              else clone.delete(index);
+              props.onScriptsChange(clone);
+            }}
+          >
+            {section.contents}
+          </Accordion>
+        </Suspense>
       ))}
     </div>
   );
