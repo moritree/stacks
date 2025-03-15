@@ -130,19 +130,22 @@ export default function Inspector() {
       label: "Inspect",
       icon: <Info />,
       component: (
-        <AceEditor
-          height="100%"
-          mode="javascript"
-          value={inspectorContents}
-          onChange={handleChange}
-          theme={editorTheme}
-          setOptions={{
-            tabSize: 2,
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true,
-            showLineNumbers: true,
-          }}
-        />
+        <div class="overflow-auto size-full">
+          <AceEditor
+            height="100%"
+            width="100%"
+            mode="javascript"
+            value={inspectorContents}
+            onChange={handleChange}
+            theme={editorTheme}
+            setOptions={{
+              tabSize: 2,
+              enableBasicAutocompletion: true,
+              enableLiveAutocompletion: true,
+              showLineNumbers: true,
+            }}
+          />
+        </div>
       ),
     },
     {
