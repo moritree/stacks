@@ -390,22 +390,6 @@ pub async fn update_entity_properties(
 }
 
 #[tauri::command]
-pub async fn update_entity_property(
-    state: State<'_, LuaState>,
-    id: String,
-    key: String,
-    data: Value,
-) -> Result<(), String> {
-    let mut properties = serde_json::Map::new();
-    properties.insert(key, data);
-    let properties_value = Value::Object(properties);
-    state
-        .tx
-        .send(LuaMessage::UpdateEntityProperties(id, properties_value))
-        .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
 pub async fn delete_entity(state: State<'_, LuaState>, id: String) -> Result<(), String> {
     state
         .tx

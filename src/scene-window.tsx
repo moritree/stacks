@@ -148,19 +148,6 @@ export default function Scene() {
     };
   }, []);
 
-  const calculateNewPosition = (transform: string) => {
-    // transform will be, annoyingly, in the format "translate(Xpx, Ypx)"
-    const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
-    if (matches) {
-      return {
-        x: selectedInitialPosition.x + parseFloat(matches[1]) * transformScale,
-        y: selectedInitialPosition.y + parseFloat(matches[2]) * transformScale,
-      };
-    }
-    console.error("Drag transform format couldn't be parsed", transform);
-    return selectedEntity?.pos; // fallback
-  };
-
   const handleEntitySelect = (
     id: string,
     pos: { x: number; y: number },
@@ -174,12 +161,23 @@ export default function Scene() {
     }
   };
 
+  const calculateNewPosition = (transform: string) => {
+    // transform will be, annoyingly, in the format "translate(Xpx, Ypx)"
+    const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+    if (matches) {
+      return {
+        x: selectedInitialPosition.x + parseFloat(matches[1]) * transformScale,
+        y: selectedInitialPosition.y + parseFloat(matches[2]) * transformScale,
+      };
+    }
+    console.error("Drag transform format couldn't be parsed", transform);
+    return selectedEntity?.pos; // fallback
+  };
+
   const handleDrag = ({ transform }: { transform: string }) => {
-    // Update position through backend
-    invoke("update_entity_property", {
+    invoke("update_entity_properties", {
       id: selectedId,
-      key: "pos",
-      data: calculateNewPosition(transform),
+      data: { pos: calculateNewPosition(transform) },
     });
   };
 
