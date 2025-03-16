@@ -17,13 +17,12 @@ return {
                 selectable = true,
                 draggable = true,
                 scripts_available = { "on_click" },
-                scripts_str = [[
-                local M = {
-                    on_click = function(self)
-                        self.pos = { x = self.pos.x + 20, y = self.pos.y }
-                    end
-                }
-                return M]]
+                scripts_str = [[local M = {
+    on_click = function(self)
+        self.pos = { x = self.pos.x + 20, y = self.pos.y }
+    end
+}
+return M]]
             }),
             test3 = Entity:new({
                 type = "rect",

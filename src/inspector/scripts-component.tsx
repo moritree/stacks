@@ -10,44 +10,44 @@ import "ace-builds/src-noconflict/theme-github_dark";
 import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense } from "preact/compat";
 
-const sections: { label: string; contents: JSX.Element }[] = [
-  { label: "Eeeerereeee", contents: <p>ngdsjhkbghjdsikbnghjsd</p> },
-  {
-    label: "onCode",
-    contents: (
-      <div class="overflow-auto">
-        <AceEditor
-          height="300px"
-          mode="lua"
-          value="definitely certainly possibly maybe"
-          theme="github_light_default"
-          width="100%"
-          setOptions={{
-            tabSize: 2,
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true,
-            showLineNumbers: true,
-          }}
-        />
-      </div>
-    ),
-  },
-  {
-    label:
-      "Salmonella toolong toolong toolong toolong toolong toolong toolong toolong toolong",
-    contents: (
-      <div class="w-full h-48 bg-sky-200">
-        <Loader />
-      </div>
-    ),
-  },
-];
-
 export default function Scripts(props: {
   entity: Entity;
   openScripts: Set<Number>;
   onScriptsChange: (sections: Set<Number>) => void;
 }) {
+  const sections: { label: string; contents: JSX.Element }[] = [
+    { label: "Eeeerereeee", contents: <p>ngdsjhkbghjdsikbnghjsd</p> },
+    {
+      label: "onCode",
+      contents: (
+        <div class="overflow-auto">
+          <AceEditor
+            height="300px"
+            mode="lua"
+            value={props.entity.scripts_str}
+            theme="github_light_default"
+            width="100%"
+            setOptions={{
+              tabSize: 2,
+              enableBasicAutocompletion: true,
+              enableLiveAutocompletion: true,
+              showLineNumbers: true,
+            }}
+          />
+        </div>
+      ),
+    },
+    {
+      label:
+        "Salmonella toolong toolong toolong toolong toolong toolong toolong toolong toolong",
+      contents: (
+        <div class="w-full h-48 bg-sky-200">
+          <Loader />
+        </div>
+      ),
+    },
+  ];
+
   return (
     <Suspense
       fallback={

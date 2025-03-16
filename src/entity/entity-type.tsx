@@ -12,6 +12,7 @@ interface TextEntity {
 interface BaseEntity {
   id: string;
   scripts_available: Set<string>;
+  scripts_str: string;
   pos: { x: number; y: number };
   draggable?: Boolean;
 }
