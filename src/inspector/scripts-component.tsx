@@ -11,8 +11,11 @@ import { lazy, Suspense } from "preact/compat";
 
 export default function Scripts(props: {
   entity: Entity;
+  editorTheme: string;
   openScripts: Set<Number>;
-  onScriptsChange: (sections: Set<Number>) => void;
+  onOpenScriptsChange: (sections: Set<Number>) => void;
+  contents: string[];
+  onContentsChange: (scripts: string[]) => void;
 }) {
   return (
     <Suspense
@@ -23,34 +26,45 @@ export default function Scripts(props: {
       }
     >
       <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden">
-        {Object.keys(props.entity.scripts).map((script, index) => (
-          <Accordion
-            label={script}
-            open={props.openScripts.has(index)}
-            onToggle={(open) => {
-              const clone = new Set(props.openScripts);
-              if (open) clone.add(index);
-              else clone.delete(index);
-              props.onScriptsChange(clone);
-            }}
-          >
-            <div class="overflow-auto">
-              <AceEditor
-                height="300px"
-                mode="lua"
-                value={props.entity.scripts[script]}
-                theme="github_light_default"
-                width="100%"
-                setOptions={{
-                  tabSize: 2,
-                  enableBasicAutocompletion: true,
-                  enableLiveAutocompletion: true,
-                  showLineNumbers: true,
-                }}
-              />
-            </div>
-          </Accordion>
-        ))}
+        {props.contents.length > 0 ? (
+          Object.keys(props.entity.scripts).map((script, index) => (
+            <Accordion
+              label={script}
+              open={props.openScripts.has(index)}
+              onToggle={(open) => {
+                const clone = new Set(props.openScripts);
+                if (open) clone.add(index);
+                else clone.delete(index);
+                props.onOpenScriptsChange(clone);
+              }}
+            >
+              <div class="overflow-auto w-full h-32">
+                <AceEditor
+                  height="100%"
+                  mode="lua"
+                  value={props.contents[index]}
+                  onChange={(e) =>
+                    props.onContentsChange(
+                      props.contents.map((content, i) =>
+                        i == index ? e : content,
+                      ),
+                    )
+                  }
+                  theme={props.editorTheme}
+                  width="100%"
+                  setOptions={{
+                    tabSize: 2,
+                    enableBasicAutocompletion: true,
+                    enableLiveAutocompletion: true,
+                    showLineNumbers: true,
+                  }}
+                />
+              </div>
+            </Accordion>
+          ))
+        ) : (
+          <Loader />
+        )}
       </div>
     </Suspense>
   );

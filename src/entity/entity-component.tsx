@@ -38,7 +38,7 @@ async function openInspector(entity: Entity) {
   // If window already exists, focus & update instead of creating a new one
   const existing = await WebviewWindow.getByLabel("inspector");
   if (existing) {
-    emitTo("inspector", "update_entity", { entity: entity });
+    emitTo("inspector", "update_entity", entity);
     existing.setFocus();
     return;
   }

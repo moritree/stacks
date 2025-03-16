@@ -24,16 +24,28 @@ export default function InspectorWindow() {
   const [entity, setEntity] = useState<Entity | undefined>();
   const [openScripts, setOpenScripts] = useState(new Set<Number>());
   const [inspectorContents, setInspectorContents] = useState<string>("");
+  const [scriptsContents, setScriptsContents] = useState<string[]>([]);
+
+  useEffect(() => {
+    console.log("SCRIPTS CONTENTS", scriptsContents);
+  }, [scriptsContents]);
 
   useEffect(() => {
     let listeners: (() => void)[] = [];
 
     async function setupEntityUpdateListener() {
       listeners.push(
-        await listen<any>("update_entity", (e) => {
-          const { scripts, ...rest } = e.payload.entity;
+        await listen<Entity>("update_entity", (e) => {
+          const { scripts, ...rest } = e.payload;
           setInspectorContents(JSON.stringify(rest, null, 2));
-          setEntity(e.payload.entity);
+          setScriptsContents(
+            e.payload.scripts
+              ? Object.keys(e.payload.scripts).map(
+                  (script) => e.payload.scripts[script],
+                )
+              : [],
+          );
+          setEntity(e.payload);
         }),
       );
     }
@@ -103,7 +115,10 @@ export default function InspectorWindow() {
           key={openScripts}
           entity={entity}
           openScripts={openScripts}
-          onScriptsChange={setOpenScripts}
+          onOpenScriptsChange={setOpenScripts}
+          contents={scriptsContents}
+          onContentsChange={setScriptsContents}
+          editorTheme={editorTheme}
         />
       ),
     },
