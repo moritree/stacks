@@ -21,7 +21,6 @@ impl LuaState {
 pub enum LuaMessage {
     /// Game loop tick with the given time difference.
     Tick(f64),
-    EmitEvent(String, Value),
     UpdateEntityId(String, String, Value),
     UpdateEntity(String, Value),
     DeleteEntity(String),
@@ -35,7 +34,6 @@ pub enum LuaMessage {
 /// Set up Lua environment
 pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     let (tx, rx) = mpsc::channel(); // create communication channel
-    let event_tx = tx.clone(); // clone sender, multiple parts of code can send messages (rust ownership is weird)
     let w = window.clone();
 
     let _ = std::thread::Builder::new()
@@ -49,9 +47,9 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                     "Lua event {}: Couldn't convert data to valid JSON value.",
                     evt
                 ));
-                event_tx
-                    .send(LuaMessage::EmitEvent(evt, json))
-                    .map_err(|e| mlua::Error::runtime(e.to_string()))?;
+                w.clone()
+                    .emit(&evt, json)
+                    .expect(&format!("Couldn't emit event {}", evt));
                 Ok(())
             };
             lua.globals()
@@ -164,9 +162,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .call::<_, ()>((scene, id))
                             .expect("Couldn't call duplicate_entity")
                     }
-                    LuaMessage::EmitEvent(evt, data) => w
-                        .emit(&evt, data)
-                        .expect(&format!("Couldn't emit event {}", evt)),
                     LuaMessage::SaveScene(path) => {
                         let scene: LuaTable = lua
                             .globals()
