@@ -6,6 +6,7 @@ import { Menu } from "@tauri-apps/api/menu";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "preact/hooks";
+import { Entity } from "./entity/entity-type";
 
 const SCENE_BASE_SIZE = {
   width: 1280,
@@ -49,7 +50,7 @@ async function handleContextMenu(event: Event) {
 }
 
 export default function Scene() {
-  const [entities, setEntities] = useState<any>({});
+  const [entities, setEntities] = useState<Map<string, Entity>>(new Map());
   const [transformScale, setTransformScale] = useState<number>(1);
   const [lastTime, setLastTime] = useState(performance.now());
   const [animationFrameId, setAnimationFrameId] = useState<
@@ -61,14 +62,20 @@ export default function Scene() {
     x: 0,
     y: 0,
   });
-  const selectedEntity = selectedId ? entities[selectedId] : null;
+  const selectedEntity = selectedId ? entities.get(selectedId) : null;
 
   useEffect(() => {
     let listeners: (() => void)[] = [];
 
     async function setupUpdateListener() {
       const unsubscribe = await listen<any>("scene_update", (e) => {
-        setEntities(e.payload);
+        Object.keys(e.payload).forEach((key) => {
+          e.payload[key].scripts_available = new Set<string>(
+            e.payload[key].scripts_available,
+          );
+          // e.payload[key] = e.payload[key] as Entity;
+        });
+        setEntities(new Map(Object.entries(e.payload)));
       });
       listeners.push(unsubscribe);
     }
@@ -182,11 +189,11 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      onContextMenu={(e) =>
-        e.target === e.currentTarget && handleContextMenu(e)
-      }
+      // onContextMenu={(e) =>
+      //   e.target === e.currentTarget && handleContextMenu(e)
+      // }
     >
-      {Object.entries(entities).map(([id, entity]) => (
+      {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
           key={id}
           id={id}

@@ -11,10 +11,9 @@ interface TextEntity {
 
 interface BaseEntity {
   id: string;
-  scripts_available: string[];
+  scripts_available: Set<string>;
   pos: { x: number; y: number };
   draggable?: Boolean;
-  on_click?: Boolean;
 }
 
 export type Entity = BaseEntity & (RectEntity | TextEntity);

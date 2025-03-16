@@ -35,7 +35,8 @@ export default function Inspector() {
       listeners.push(
         await listen<any>("update_entity", (e) => {
           setEntity(e.payload.entity);
-          const { scripts, scripts_str, ...rest } = e.payload.entity;
+          const { scripts, scripts_available, scripts_str, ...rest } =
+            e.payload.entity;
           setInspectorContents(JSON.stringify(rest, null, 2));
         }),
       );
@@ -80,6 +81,14 @@ export default function Inspector() {
   const handleSave = async () => {
     try {
       const { id, ...rest } = JSON.parse(inspectorContents);
+      const diff = {
+        ...rest,
+        ...Object.fromEntries(
+          Object.keys(entity!)
+            .filter((k) => !rest[k])
+            .map((k) => [k, null]),
+        ),
+      };
 
       if (id !== entity!.id) {
         // if ID is changed, we need a special operation to update it first
@@ -90,8 +99,7 @@ export default function Inspector() {
           .finally(() =>
             invoke("update_entity_properties", {
               id: id,
-              data: rest,
-              complete: true,
+              data: diff,
             }),
           )
           .finally(() => {
@@ -101,8 +109,7 @@ export default function Inspector() {
       } else {
         invoke("update_entity_properties", {
           id: id,
-          data: rest,
-          complete: true,
+          data: diff,
         });
         updateWindowTitle(true);
       }

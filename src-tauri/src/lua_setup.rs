@@ -23,7 +23,7 @@ pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
     UpdateEntityId(String, String),
-    UpdateEntityProperties(String, Value, bool),
+    UpdateEntityProperties(String, Value),
     DeleteEntity(String),
     DuplicateEntity(String),
     SaveScene(String),
@@ -119,18 +119,14 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .call::<_, ()>((scene, original_id, new_id))
                             .expect("Couldn't call update_entity_property")
                     }
-                    LuaMessage::UpdateEntityProperties(id, data, complete) => {
+                    LuaMessage::UpdateEntityProperties(id, data) => {
                         let scene: LuaTable = lua
                             .globals()
                             .get("currentScene")
                             .expect("Couldn't get Lua scene");
-                        let mut function_name: &str = "update_entity_properties";
-                        if complete {
-                            function_name = "replace_entity";
-                        }
                         let update_func: LuaFunction = scene
-                            .get(function_name)
-                            .expect(&format!("Couldn't get Lua {} function", function_name));
+                            .get("update_entity_properties")
+                            .expect("Couldn't get Lua update_entity_properties function");
                         update_func
                             .call::<_, ()>((
                                 scene,
@@ -138,7 +134,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                                 json_value_to_lua(&lua, &data)
                                     .expect("Couldn't convert json data to Lua object"),
                             ))
-                            .expect(&format!("Couldn't call {}", function_name))
+                            .expect("Couldn't call update_entity_properties")
                     }
                     LuaMessage::DeleteEntity(id) => {
                         let scene: LuaTable = lua
@@ -368,26 +364,6 @@ pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn update_entity_property(
-    state: State<'_, LuaState>,
-    id: String,
-    key: String,
-    data: Value,
-) -> Result<(), String> {
-    let mut properties = serde_json::Map::new();
-    properties.insert(key, data);
-    let properties_value = Value::Object(properties);
-    state
-        .tx
-        .send(LuaMessage::UpdateEntityProperties(
-            id,
-            properties_value,
-            false,
-        ))
-        .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
 pub async fn update_entity_id(
     state: State<'_, LuaState>,
     original_id: String,
@@ -404,11 +380,26 @@ pub async fn update_entity_properties(
     state: State<'_, LuaState>,
     id: String,
     data: Value,
-    complete: bool, // Whether this is the complete version of the updated entity. Will fully overwrite.
 ) -> Result<(), String> {
     state
         .tx
-        .send(LuaMessage::UpdateEntityProperties(id, data, complete))
+        .send(LuaMessage::UpdateEntityProperties(id, data))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn update_entity_property(
+    state: State<'_, LuaState>,
+    id: String,
+    key: String,
+    data: Value,
+) -> Result<(), String> {
+    let mut properties = serde_json::Map::new();
+    properties.insert(key, data);
+    let properties_value = Value::Object(properties);
+    state
+        .tx
+        .send(LuaMessage::UpdateEntityProperties(id, properties_value))
         .map_err(|e| e.to_string())
 }
 
