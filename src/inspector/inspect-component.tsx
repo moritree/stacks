@@ -13,11 +13,6 @@ export default function Inspector(props: {
   contents: string;
   onContentsChange: (contents: string) => void;
 }) {
-  const handleChange = (newVal: string) => {
-    props.onContentsChange(newVal);
-    props.updateWindowTitle(false);
-  };
-
   return (
     <div class="overflow-auto size-full">
       <AceEditor
@@ -25,7 +20,10 @@ export default function Inspector(props: {
         width="100%"
         mode="javascript"
         value={props.contents}
-        onChange={handleChange}
+        onChange={(newVal) => {
+          props.onContentsChange(newVal);
+          props.updateWindowTitle(false);
+        }}
         theme={props.editorTheme}
         setOptions={{
           tabSize: 2,

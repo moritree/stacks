@@ -25,9 +25,11 @@ export default function InspectorWindow() {
   );
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
-  const [openScripts, setOpenScripts] = useState(new Set<Number>());
+  const [openScripts, setOpenScripts] = useState(new Set<string>());
   const [inspectorContents, setInspectorContents] = useState<string>("");
-  const [scriptsContents, setScriptsContents] = useState<string[]>([]);
+  const [scriptsContents, setScriptsContents] = useState<Map<string, string>>(
+    new Map(),
+  );
 
   useEffect(() => {
     console.log("SCRIPTS CONTENTS", scriptsContents);
@@ -39,14 +41,12 @@ export default function InspectorWindow() {
     async function setupEntityUpdateListener() {
       listeners.push(
         await listen<Entity>("update_entity", (e) => {
+          console.log("ENTITY", e.payload);
           const { scripts, ...rest } = e.payload;
           setInspectorContents(JSON.stringify(rest, null, 2));
+          setOpenScripts(new Set<string>());
           setScriptsContents(
-            e.payload.scripts
-              ? Object.keys(e.payload.scripts).map(
-                  (script) => e.payload.scripts[script],
-                )
-              : [],
+            scripts ? new Map(Object.entries(scripts)) : new Map(),
           );
           setEntity(e.payload);
         }),
@@ -80,7 +80,6 @@ export default function InspectorWindow() {
 
   useEffect(() => {
     if (entity) {
-      setOpenScripts(new Set<Number>());
       updateWindowTitle(true);
     }
   }, [entity]);
@@ -99,10 +98,10 @@ export default function InspectorWindow() {
   const handleSave = async () => {
     try {
       const parsedInspectorContents = JSON.parse(inspectorContents);
-      const diff = {
+      const jsonDiff = {
         ...parsedInspectorContents,
         ...Object.fromEntries(
-          Object.keys(entity)
+          new Array(...Object.keys(entity))
             .filter((k) => !parsedInspectorContents[k])
             .map((k) => [k, null]),
         ),
@@ -110,13 +109,24 @@ export default function InspectorWindow() {
 
       invoke("update_entity", {
         id: entity.id,
-        data: diff,
+        data: jsonDiff,
       }).then(() => {
-        entity.id = diff.id || entity.id;
+        entity.id = jsonDiff.id || entity.id;
         updateWindowTitle(true);
       });
     } catch (e) {
       await message("Invalid formatting in inspector", {
+        title: "Couldn't save entity",
+        kind: "error",
+      });
+    }
+    try {
+      invoke("update_entity", {
+        id: entity.id,
+        data: { scripts: scriptsContents },
+      });
+    } catch (e) {
+      await message("Invalid formatting in scripts", {
         title: "Couldn't save entity",
         kind: "error",
       });
@@ -142,8 +152,8 @@ export default function InspectorWindow() {
       icon: <Code />,
       component: (
         <Scripts
-          key={openScripts}
           entity={entity}
+          updateWindowTitle={updateWindowTitle}
           openScripts={openScripts}
           onOpenScriptsChange={setOpenScripts}
           contents={scriptsContents}

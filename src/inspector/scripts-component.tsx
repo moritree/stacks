@@ -12,10 +12,11 @@ import { lazy, Suspense } from "preact/compat";
 export default function Scripts(props: {
   entity: Entity;
   editorTheme: string;
-  openScripts: Set<Number>;
-  onOpenScriptsChange: (sections: Set<Number>) => void;
-  contents: string[];
-  onContentsChange: (scripts: string[]) => void;
+  openScripts: Set<string>;
+  onOpenScriptsChange: (sections: Set<string>) => void;
+  contents: Map<string, string>;
+  onContentsChange: (scripts: Map<string, string>) => void;
+  updateWindowTitle: (saved: boolean) => void;
 }) {
   return (
     <Suspense
@@ -26,15 +27,15 @@ export default function Scripts(props: {
       }
     >
       <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden">
-        {props.contents.length > 0 ? (
-          Object.keys(props.entity.scripts).map((script, index) => (
+        {props.contents.size > 0 ? (
+          Array.from(props.contents).map(([key, value]) => (
             <Accordion
-              label={script}
-              open={props.openScripts.has(index)}
+              label={key}
+              open={props.openScripts.has(key)}
               onToggle={(open) => {
                 const clone = new Set(props.openScripts);
-                if (open) clone.add(index);
-                else clone.delete(index);
+                if (open) clone.add(key);
+                else clone.delete(key);
                 props.onOpenScriptsChange(clone);
               }}
             >
@@ -42,14 +43,13 @@ export default function Scripts(props: {
                 <AceEditor
                   height="100%"
                   mode="lua"
-                  value={props.contents[index]}
-                  onChange={(e) =>
+                  value={value}
+                  onChange={(newVal) => {
                     props.onContentsChange(
-                      props.contents.map((content, i) =>
-                        i == index ? e : content,
-                      ),
-                    )
-                  }
+                      new Map({ ...props.contents, [key]: newVal }),
+                    );
+                    props.updateWindowTitle(false);
+                  }}
                   theme={props.editorTheme}
                   width="100%"
                   setOptions={{
