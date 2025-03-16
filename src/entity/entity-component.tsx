@@ -106,7 +106,7 @@ export default function EntityComponent(props: EntityProps) {
       }}
       onDblClick={async (e) => {
         e.stopPropagation();
-        if (entity.on_click) {
+        if (new Set<string>(entity.scripts_available).has("on_click")) {
           e.preventDefault();
           invoke("run_script", { id: entity.id, function: "on_click" });
           emitTo(getCurrentWindow().label, "select_entity", { id: undefined });

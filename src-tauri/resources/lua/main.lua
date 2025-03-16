@@ -7,7 +7,7 @@ return {
                 type = "text",
                 pos = { x = 100, y = 100 },
                 content = "vibing",
-                on_click = true,
+                scripts_available = { "on_click" },
                 scripts_str = "local M = { on_click = function(self) self.pos = { x = 200, y = 200 } end } ; return M"
             }),
             test2 = Entity:new({
@@ -16,7 +16,7 @@ return {
                 content = "u can do it",
                 selectable = true,
                 draggable = true,
-                on_click = true,
+                scripts_available = { "on_click" },
                 scripts_str = [[
                 local M = {
                     on_click = function(self)

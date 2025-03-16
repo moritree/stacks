@@ -11,6 +11,7 @@ interface TextEntity {
 
 interface BaseEntity {
   id: string;
+  scripts_available: string[];
   pos: { x: number; y: number };
   draggable?: Boolean;
   on_click?: Boolean;
