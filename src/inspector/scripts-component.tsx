@@ -1,7 +1,6 @@
 import { Loader } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import AceEditor from "react-ace";
-import { JSX } from "preact/jsx-runtime";
 const Accordion = lazy(() => import("../components/accordion"));
 
 import "ace-builds/src-noconflict/mode-lua";
@@ -15,39 +14,6 @@ export default function Scripts(props: {
   openScripts: Set<Number>;
   onScriptsChange: (sections: Set<Number>) => void;
 }) {
-  const sections: { label: string; contents: JSX.Element }[] = [
-    { label: "Eeeerereeee", contents: <p>ngdsjhkbghjdsikbnghjsd</p> },
-    {
-      label: "onClick",
-      contents: (
-        <div class="overflow-auto">
-          <AceEditor
-            height="300px"
-            mode="lua"
-            value={props.entity.scripts.on_click || ""}
-            theme="github_light_default"
-            width="100%"
-            setOptions={{
-              tabSize: 2,
-              enableBasicAutocompletion: true,
-              enableLiveAutocompletion: true,
-              showLineNumbers: true,
-            }}
-          />
-        </div>
-      ),
-    },
-    {
-      label:
-        "Salmonella toolong toolong toolong toolong toolong toolong toolong toolong toolong",
-      contents: (
-        <div class="w-full h-48 bg-sky-200">
-          <Loader />
-        </div>
-      ),
-    },
-  ];
-
   return (
     <Suspense
       fallback={
@@ -57,9 +23,9 @@ export default function Scripts(props: {
       }
     >
       <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden">
-        {sections.map((section, index) => (
+        {Object.keys(props.entity.scripts).map((script, index) => (
           <Accordion
-            label={section.label}
+            label={script}
             open={props.openScripts.has(index)}
             onToggle={(open) => {
               const clone = new Set(props.openScripts);
@@ -68,7 +34,21 @@ export default function Scripts(props: {
               props.onScriptsChange(clone);
             }}
           >
-            {section.contents}
+            <div class="overflow-auto">
+              <AceEditor
+                height="300px"
+                mode="lua"
+                value={props.entity.scripts[script]}
+                theme="github_light_default"
+                width="100%"
+                setOptions={{
+                  tabSize: 2,
+                  enableBasicAutocompletion: true,
+                  enableLiveAutocompletion: true,
+                  showLineNumbers: true,
+                }}
+              />
+            </div>
           </Accordion>
         ))}
       </div>
