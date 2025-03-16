@@ -15,6 +15,9 @@ import "ace-builds/src-noconflict/theme-cloud9_night";
 import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense } from "preact/compat";
 import Inspector from "./inspect-component";
+import { platform } from "@tauri-apps/plugin-os";
+import { invoke } from "@tauri-apps/api/core";
+import { message } from "@tauri-apps/plugin-dialog";
 
 export default function InspectorWindow() {
   const [editorTheme, setEditorTheme] = useState<string>(
@@ -93,6 +96,33 @@ export default function InspectorWindow() {
       </div>
     );
 
+  const handleSave = async () => {
+    try {
+      const parsedInspectorContents = JSON.parse(inspectorContents);
+      const diff = {
+        ...parsedInspectorContents,
+        ...Object.fromEntries(
+          Object.keys(entity)
+            .filter((k) => !parsedInspectorContents[k])
+            .map((k) => [k, null]),
+        ),
+      };
+
+      invoke("update_entity", {
+        id: entity.id,
+        data: diff,
+      }).then(() => {
+        entity.id = diff.id || entity.id;
+        updateWindowTitle(true);
+      });
+    } catch (e) {
+      await message("Invalid formatting in inspector", {
+        title: "Couldn't save entity",
+        kind: "error",
+      });
+    }
+  };
+
   const tabs: { label: string; icon: JSX.Element; component: JSX.Element }[] = [
     {
       label: "Inspect",
@@ -125,7 +155,17 @@ export default function InspectorWindow() {
   ];
 
   return (
-    <div class="w-screen h-screen flex flex-col">
+    <div
+      class="w-screen h-screen flex flex-col"
+      onKeyUp={(e) => {
+        const os = platform();
+        if (
+          ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
+          e.code === "KeyS"
+        )
+          handleSave();
+      }}
+    >
       <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
       <Suspense
         fallback={
