@@ -16,11 +16,6 @@ pub fn run() {
             let window = app.get_webview_window("main").unwrap();
             let state = init_lua_thread(window.clone());
             let state_clone = state.clone();
-            window.on_window_event(move |event| {
-                if let tauri::WindowEvent::Destroyed = event {
-                    let _ = state_clone.shutdown();
-                }
-            });
             app.manage(state);
             Ok(())
         })

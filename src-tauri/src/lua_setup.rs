@@ -11,12 +11,6 @@ pub struct LuaState {
     tx: mpsc::Sender<LuaMessage>,
 }
 
-impl LuaState {
-    pub fn shutdown(&self) -> Result<(), String> {
-        self.tx.send(LuaMessage::Die).map_err(|e| e.to_string())
-    }
-}
-
 /// Messages to Lua thread
 pub enum LuaMessage {
     /// Game loop tick with the given time difference.
@@ -28,7 +22,6 @@ pub enum LuaMessage {
     SaveScene(String),
     LoadScene(String),
     RunScript(String, String),
-    Die,
 }
 
 /// Set up Lua environment
@@ -224,7 +217,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .call::<_, ()>(entity)
                             .expect("Couldn't call script");
                     }
-                    LuaMessage::Die => break, // TODO trigger any shutdown code
                 }
             }
         });
