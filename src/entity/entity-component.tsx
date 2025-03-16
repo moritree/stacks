@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
 import { Entity } from "./entity-type";
-import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 async function handleContextMenu(event: Event, entity: Entity) {
@@ -27,25 +26,6 @@ async function handleContextMenu(event: Event, entity: Entity) {
           id: "inspect",
           text: "Inspect",
           action: async () => openInspector(entity),
-        },
-        {
-          id: "load_script",
-          text: "Load script (DEV)",
-          action: async (_: string) => {
-            await invoke("load_script", {
-              path: await open({
-                multiple: false,
-                directory: false,
-                filters: [
-                  {
-                    name: "Lua",
-                    extensions: ["txt", "lua"],
-                  },
-                ],
-              }),
-              id: entity.id,
-            });
-          },
         },
       ],
     })

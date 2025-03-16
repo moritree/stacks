@@ -28,7 +28,6 @@ pub enum LuaMessage {
     DuplicateEntity(String),
     SaveScene(String),
     LoadScene(String),
-    LoadScript(String, String),
     RunScript(String, String),
     Die,
 }
@@ -191,22 +190,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                         load_func
                             .call::<_, ()>((scene, path))
                             .expect("Couldn't call load_scene")
-                    }
-                    LuaMessage::LoadScript(path, id) => {
-                        let scene: LuaTable = lua
-                            .globals()
-                            .get("currentScene")
-                            .expect("Couldn't get Lua scene");
-                        let scripts_module: LuaTable = lua
-                            .load(fs::read_to_string(path).expect("Couldn't load file to string"))
-                            .eval()
-                            .expect("Couldn't load into table");
-                        let update_func: LuaFunction = scene
-                            .get("update_entity_properties")
-                            .expect("Couldn't get Lua update_entity_properties function");
-                        update_func
-                            .call::<_, ()>((scene, id, scripts_module))
-                            .expect("Couldn't call update_entity_property")
                     }
                     LuaMessage::RunScript(id, function) => {
                         println!("RunScript called");
@@ -458,18 +441,6 @@ pub async fn load_scene(state: State<'_, LuaState>, path: String) -> Result<(), 
     state
         .tx
         .send(LuaMessage::LoadScene(path))
-        .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-pub async fn load_script(
-    state: State<'_, LuaState>,
-    path: String,
-    id: String,
-) -> Result<(), String> {
-    state
-        .tx
-        .send(LuaMessage::LoadScript(path, id))
         .map_err(|e| e.to_string())
 }
 
