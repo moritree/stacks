@@ -146,11 +146,13 @@ export default function InspectorWindow() {
         ),
       };
 
-    if (Object.keys(updateData).length > 0)
+    if (Object.keys(updateData).length > 0) {
       invoke("update_entity", {
         id: entity.id,
         data: updateData,
       });
+      if (updateData.id) entity.id = updateData.id;
+    }
     setSaved(true);
   };
 
