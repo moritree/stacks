@@ -22,7 +22,7 @@ pub enum LuaMessage {
     /// Game loop tick with the given time difference.
     Tick(f64),
     EmitEvent(String, Value),
-    UpdateEntityId(String, String),
+    UpdateEntityId(String, String, Value),
     UpdateEntity(String, Value),
     DeleteEntity(String),
     DuplicateEntity(String),
@@ -107,7 +107,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .call::<_, ()>((scene, dt))
                             .expect("Failed calling emit_update")
                     }
-                    LuaMessage::UpdateEntityId(original_id, new_id) => {
+                    LuaMessage::UpdateEntityId(original_id, new_id, data) => {
                         let scene: LuaTable = lua
                             .globals()
                             .get("currentScene")
@@ -116,7 +116,13 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .get("update_entity_id")
                             .expect("Couldn't get Lua update_entity_id function");
                         id_func
-                            .call::<_, ()>((scene, original_id, new_id))
+                            .call::<_, ()>((
+                                scene,
+                                original_id,
+                                new_id,
+                                json_value_to_lua(&lua, &data)
+                                    .expect("Couldn't convert json data to Lua object"),
+                            ))
                             .expect("Couldn't call update_entity_id")
                     }
                     LuaMessage::UpdateEntity(id, data) => {
@@ -366,27 +372,37 @@ pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn update_entity_id(
-    state: State<'_, LuaState>,
-    original_id: String,
-    new_id: String,
-) -> Result<(), String> {
-    state
-        .tx
-        .send(LuaMessage::UpdateEntityId(original_id, new_id))
-        .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
 pub async fn update_entity(
     state: State<'_, LuaState>,
     id: String,
     data: Value,
 ) -> Result<(), String> {
-    state
-        .tx
-        .send(LuaMessage::UpdateEntity(id, data))
-        .map_err(|e| e.to_string())
+    let mut trimmed_data = data.clone();
+    trimmed_data
+        .as_object_mut()
+        .expect("Couldn't turn data into object")
+        .remove("id")
+        .expect("Failed to remove id from data");
+
+    if data.as_object().unwrap().contains_key("id") {
+        let confirmed_id = data
+            .as_object()
+            .unwrap()
+            .get("id")
+            .expect("Couldn't get valid new ID")
+            .as_str()
+            .expect("New ID is not a string")
+            .to_string();
+        state
+            .tx
+            .send(LuaMessage::UpdateEntityId(id, confirmed_id, trimmed_data))
+            .map_err(|e| e.to_string())
+    } else {
+        state
+            .tx
+            .send(LuaMessage::UpdateEntity(id, trimmed_data))
+            .map_err(|e| e.to_string())
+    }
 }
 
 #[tauri::command]

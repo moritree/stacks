@@ -80,39 +80,23 @@ export default function Inspector() {
 
   const handleSave = async () => {
     try {
-      const { id, ...rest } = JSON.parse(inspectorContents);
+      const contents = JSON.parse(inspectorContents);
       const diff = {
-        ...rest,
+        ...contents,
         ...Object.fromEntries(
           Object.keys(entity!)
-            .filter((k) => !rest[k])
+            .filter((k) => !contents[k])
             .map((k) => [k, null]),
         ),
       };
 
-      if (id !== entity!.id) {
-        // if ID is changed, we need a special operation to update it first
-        invoke("update_entity_id", {
-          originalId: entity!.id,
-          newId: id,
-        })
-          .finally(() =>
-            invoke("update_entity", {
-              id: id,
-              data: diff,
-            }),
-          )
-          .finally(() => {
-            entity!.id = id;
-            updateWindowTitle(true);
-          });
-      } else {
-        invoke("update_entity", {
-          id: id,
-          data: diff,
-        });
+      invoke("update_entity", {
+        id: entity!.id,
+        data: diff,
+      }).then(() => {
+        entity!.id = diff.id || entity!.id;
         updateWindowTitle(true);
-      }
+      });
     } catch (e) {
       await message("Invalid formatting", {
         title: "Couldn't save entity",

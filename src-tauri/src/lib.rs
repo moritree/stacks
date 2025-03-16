@@ -3,7 +3,7 @@ mod lua_setup;
 use frontend_commands::{resize_window, window_scale};
 use lua_setup::{
     delete_entity, duplicate_entity, init_lua_thread, load_scene, run_script, save_scene, tick,
-    update_entity, update_entity_id,
+    update_entity,
 };
 use tauri::Manager;
 
@@ -27,7 +27,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             tick,
-            update_entity_id,
             update_entity,
             delete_entity,
             duplicate_entity,
