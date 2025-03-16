@@ -35,7 +35,8 @@ export default function Inspector() {
       listeners.push(
         await listen<any>("update_entity", (e) => {
           setEntity(e.payload.entity);
-          setInspectorContents(JSON.stringify(e.payload.entity, null, 2));
+          const { scripts, scripts_str, ...rest } = e.payload.entity;
+          setInspectorContents(JSON.stringify(rest, null, 2));
         }),
       );
     }

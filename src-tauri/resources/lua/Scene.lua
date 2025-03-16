@@ -50,6 +50,7 @@ function Scene:replace_entity(id, data)
         print(string.format("Error: Cannot overwrite entity, %s is not an existing entity ID", id))
         return
     end
+    data.scripts = self.entities[id].scripts
     self.entities[id] = data
 
     self:emit_update(0)
