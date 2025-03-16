@@ -1,8 +1,6 @@
 local Entity = {
     draggable = false,
     scripts = {},
-    scripts_available = {},
-    scripts_str = ""
 }
 
 function Entity:new(o)

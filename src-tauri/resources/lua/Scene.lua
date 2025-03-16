@@ -14,12 +14,9 @@ end
 
 function Scene:emit_update(dt)
     local entities_copy = deep_copy(self.entities)
-    -- can't serialize functions! so just set them to "true" to let the frontend know there is a script
     for _, entity in pairs(entities_copy) do
-        for property, value in pairs(entity.scripts) do
-            if type(value) == "function" then
-                entity.scripts[property] = true
-            end
+        for script, _ in pairs(entity.scripts) do
+            entity.scripts[script] = entity.scripts[script].string
         end
     end
     emit("scene_update", entities_copy)

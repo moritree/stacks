@@ -7,8 +7,7 @@ return {
                 type = "text",
                 pos = { x = 100, y = 100 },
                 content = "vibing",
-                scripts_available = { "on_click" },
-                scripts_str = "local M = { on_click = function(self) self.pos = { x = 200, y = 200 } end } ; return M"
+                scripts = { on_click = { string = "self.pos = { x = 200, y = 200 }" } }
             }),
             test2 = Entity:new({
                 type = "text",
@@ -16,13 +15,7 @@ return {
                 content = "u can do it",
                 selectable = true,
                 draggable = true,
-                scripts_available = { "on_click" },
-                scripts_str = [[local M = {
-    on_click = function(self)
-        self.pos = { x = self.pos.x + 20, y = self.pos.y }
-    end
-}
-return M]]
+                scripts = { on_click = { string = "self.pos = { x = self.pos.x + 20, y = self.pos.y }" } }
             }),
             test3 = Entity:new({
                 type = "rect",

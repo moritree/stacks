@@ -189,30 +189,37 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .get::<_, LuaTable>(id.clone())
                             .expect("Couldn't get entity");
 
-                        if !entity
+                        let script_obj: LuaTable = entity
                             .get::<&str, LuaTable>("scripts")
                             .expect("Couldn't get scripts table")
-                            .contains_key(function.clone())
+                            .get(function.clone())
+                            .expect("Couldn't get script");
+                        if !script_obj
+                            .contains_key("func")
                             .expect("Couldn't find out whether function is there or not")
                         {
-                            // If the sought script isn't loaded, load all scripts
-                            entity
+                            // If the sought script isn't loaded, load it
+                            let script_string = script_obj
+                                .get::<&str, LuaString>("string")
+                                .expect("Couldn't get function string")
+                                .to_str()
+                                .expect("Couldn't convert Lua string to rust string")
+                                .to_string();
+                            let wrapped_script = format!(
+                                "local func = function(self) {} end ; return func",
+                                script_string
+                            );
+                            script_obj
                                 .set(
-                                    "scripts",
-                                    lua.load(
-                                        entity
-                                            .get::<&str, String>("scripts_str")
-                                            .expect("Couldn't get scripts string"),
-                                    )
-                                    .eval::<LuaTable>()
-                                    .expect("Coudln't load scripts module"),
+                                    "func",
+                                    lua.load(wrapped_script)
+                                        .eval::<LuaFunction>()
+                                        .expect("Coudln't load wrapped script module"),
                                 )
                                 .expect("Couldn't set scripts table")
                         }
-                        entity
-                            .get::<&str, LuaTable>("scripts")
-                            .expect("Couldn't get scripts table")
-                            .get::<String, LuaFunction>(function)
+                        script_obj
+                            .get::<&str, LuaFunction>("func")
                             .expect("Couldn't get function")
                             .call::<_, ()>(entity)
                             .expect("Couldn't call script");

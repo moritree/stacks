@@ -69,11 +69,6 @@ export default function Scene() {
 
     async function setupUpdateListener() {
       const unsubscribe = await listen<any>("scene_update", (e) => {
-        Object.keys(e.payload).forEach((key) => {
-          e.payload[key].scripts_available = new Set<string>(
-            e.payload[key].scripts_available,
-          );
-        });
         setEntities(new Map(Object.entries(e.payload)));
       });
       listeners.push(unsubscribe);
@@ -189,9 +184,9 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      onContextMenu={(e) =>
-        e.target === e.currentTarget && handleContextMenu(e)
-      }
+      // onContextMenu={(e) =>
+      //   e.target === e.currentTarget && handleContextMenu(e)
+      // }
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent

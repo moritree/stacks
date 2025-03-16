@@ -18,13 +18,13 @@ export default function Scripts(props: {
   const sections: { label: string; contents: JSX.Element }[] = [
     { label: "Eeeerereeee", contents: <p>ngdsjhkbghjdsikbnghjsd</p> },
     {
-      label: "onCode",
+      label: "onClick",
       contents: (
         <div class="overflow-auto">
           <AceEditor
             height="300px"
             mode="lua"
-            value={props.entity.scripts_str}
+            value={props.entity.scripts.on_click || ""}
             theme="github_light_default"
             width="100%"
             setOptions={{
