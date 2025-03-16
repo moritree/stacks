@@ -98,7 +98,7 @@ export default function Inspector() {
         updateWindowTitle(true);
       });
     } catch (e) {
-      await message("Invalid formatting", {
+      await message("Invalid formatting in inspector", {
         title: "Couldn't save entity",
         kind: "error",
       });

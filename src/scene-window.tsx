@@ -91,38 +91,41 @@ export default function Scene() {
     }
 
     async function setupResizeListener() {
-      const unsubscribe = await listen<any>("tauri://resize", async (e) => {
-        // Do nothing if the window being resized is a different one
-        // Yes this is janky and I should write a better solution
-        const thisWindowSize = await WebviewWindow.getCurrent().size();
-        if (
-          thisWindowSize.width != e.payload.width ||
-          thisWindowSize.height != e.payload.height
-        ) {
-          return;
-        }
+      const unsubscribe = await listen<{ width: number; height: number }>(
+        "tauri://resize",
+        async (e) => {
+          // Do nothing if the window being resized is a different one
+          // Yes this is janky and I should write a better solution
+          const thisWindowSize = await WebviewWindow.getCurrent().size();
+          if (
+            thisWindowSize.width != e.payload.width ||
+            thisWindowSize.height != e.payload.height
+          ) {
+            return;
+          }
 
-        setSelectedId(undefined);
+          setSelectedId(undefined);
 
-        const scaleFactor: number = await invoke("window_scale");
-        const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
-        const windowHeight = e.payload.height; // gives us the full window dimensions
-        const titleBarHeight = windowHeight / scaleFactor - contentHeight; // Calculate title bar height dynamically
+          const scaleFactor: number = await invoke("window_scale");
+          const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
+          const windowHeight = e.payload.height; // gives us the full window dimensions
+          const titleBarHeight = windowHeight / scaleFactor - contentHeight; // Calculate title bar height dynamically
 
-        const newScale = e.payload.width / SCENE_BASE_SIZE.width;
-        setTransformScale(scaleFactor / newScale);
+          const newScale = e.payload.width / SCENE_BASE_SIZE.width;
+          setTransformScale(scaleFactor / newScale);
 
-        invoke("resize_window", {
-          width: Math.round(SCENE_BASE_SIZE.width * newScale),
-          height: Math.round(
-            SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
-          ),
-        });
-        document.documentElement.style.setProperty(
-          `--scene-scale`,
-          newScale / scaleFactor + "",
-        );
-      });
+          invoke("resize_window", {
+            width: Math.round(SCENE_BASE_SIZE.width * newScale),
+            height: Math.round(
+              SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
+            ),
+          });
+          document.documentElement.style.setProperty(
+            `--scene-scale`,
+            newScale / scaleFactor + "",
+          );
+        },
+      );
       listeners.push(unsubscribe);
 
       emit("tauri://resize", await WebviewWindow.getCurrent().size()); // emit at setup
@@ -161,7 +164,7 @@ export default function Scene() {
   };
 
   const calculateNewPosition = (transform: string) => {
-    // transform will be, annoyingly, in the format "translate(Xpx, Ypx)"
+    // transform will be, annoyingly, a string in the format "translate(Xpx, Ypx)"
     const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     if (matches) {
       return {
