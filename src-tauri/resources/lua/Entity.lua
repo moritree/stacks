@@ -12,4 +12,8 @@ function Entity:new(o)
     return o
 end
 
+function Entity:update(data)
+    for k, v in pairs(data) do self[k] = v end
+end
+
 return Entity

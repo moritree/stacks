@@ -117,24 +117,26 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .expect("Couldn't get Lua update_entity_id function");
                         id_func
                             .call::<_, ()>((scene, original_id, new_id))
-                            .expect("Couldn't call update_entity_property")
+                            .expect("Couldn't call update_entity_id")
                     }
                     LuaMessage::UpdateEntityProperties(id, data) => {
-                        let scene: LuaTable = lua
+                        let entity: LuaTable = lua
                             .globals()
-                            .get("currentScene")
-                            .expect("Couldn't get Lua scene");
-                        let update_func: LuaFunction = scene
-                            .get("update_entity_properties")
-                            .expect("Couldn't get Lua update_entity_properties function");
-                        update_func
+                            .get::<&str, LuaTable>("currentScene")
+                            .expect("Couldn't get Lua scene")
+                            .get::<&str, LuaTable>("entities")
+                            .expect("Couldn't get entities table")
+                            .get::<String, LuaTable>(id.clone())
+                            .expect(&format!("Couldn't get entity {}", id));
+                        entity
+                            .get::<&str, LuaFunction>("update")
+                            .expect("Couldn't get update function")
                             .call::<_, ()>((
-                                scene,
-                                id,
+                                entity,
                                 json_value_to_lua(&lua, &data)
                                     .expect("Couldn't convert json data to Lua object"),
                             ))
-                            .expect("Couldn't call update_entity_properties")
+                            .expect(&format!("Couldn't call update function on {}", id))
                     }
                     LuaMessage::DeleteEntity(id) => {
                         let scene: LuaTable = lua

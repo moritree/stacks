@@ -35,18 +35,8 @@ function Scene:update_entity_id(original_id, new_id)
     self.entities[original_id] = nil
 end
 
-function Scene:update_entity_properties(id, data)
-    if self.entities[id] == nil then
-        print(string.format("Error: Cannot update entity properties, %s is not an existing entity ID", id))
-        return
-    end
-    for k, v in pairs(data) do self.entities[id][k] = v end
-
-    self:emit_update(0)
-end
-
 function Scene:delete_entity(id)
-    if self.entities[id] ~= nil then
+    if self.entities[id] then
         self.entities[id] = nil
     else
         print(string.format("Warning: Can't delete entity %s, this id does not exist on the scene", id))
@@ -54,7 +44,7 @@ function Scene:delete_entity(id)
 end
 
 function Scene:duplicate_entity(id)
-    if self.entities[id] ~= nil then
+    if self.entities[id] then
         local new_key = id .. "_clone"
         self.entities[new_key] = deep_copy(self.entities[id])
         self.entities[new_key].pos.x = self.entities[new_key].pos.x + 15
