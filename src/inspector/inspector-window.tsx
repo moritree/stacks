@@ -80,6 +80,7 @@ export default function InspectorWindow() {
 
   useEffect(() => {
     if (entity) {
+      console.log("ENTITY, UPDATE TIME", entity);
       updateWindowTitle(true);
     }
   }, [entity]);
@@ -110,9 +111,6 @@ export default function InspectorWindow() {
       invoke("update_entity", {
         id: entity.id,
         data: jsonDiff,
-      }).then(() => {
-        entity.id = jsonDiff.id || entity.id;
-        updateWindowTitle(true);
       });
     } catch (e) {
       await message("Invalid formatting in inspector", {
