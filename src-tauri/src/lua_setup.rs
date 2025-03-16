@@ -144,18 +144,14 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             ))
                             .expect(&format!("Couldn't call update function on {}", id))
                     }
-                    LuaMessage::DeleteEntity(id) => {
-                        let scene: LuaTable = lua
-                            .globals()
-                            .get("currentScene")
-                            .expect("Couldn't get Lua scene");
-                        let update_func: LuaFunction = scene
-                            .get("delete_entity")
-                            .expect("Couldn't get Lua delete_entity function");
-                        update_func
-                            .call::<_, ()>((scene, id))
-                            .expect("Couldn't call delete_entity")
-                    }
+                    LuaMessage::DeleteEntity(id) => lua
+                        .globals()
+                        .get::<&str, LuaTable>("currentScene")
+                        .expect("Couldn't get Lua scene")
+                        .get::<&str, LuaTable>("entities")
+                        .expect("Couldn't get entities table")
+                        .set(id, LuaNil)
+                        .expect("Couldn't delete entity"),
                     LuaMessage::DuplicateEntity(id) => {
                         let scene: LuaTable = lua
                             .globals()

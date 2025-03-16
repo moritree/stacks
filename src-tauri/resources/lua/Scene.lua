@@ -38,15 +38,6 @@ function Scene:update_entity_id(original_id, new_id, data)
     if (data) then self.entities[new_id]:update(data) end
 end
 
-function Scene:delete_entity(id)
-    if not self.entities[id] then
-        print(string.format("Warning: Can't delete entity %s, this id does not exist on the scene", id))
-        return
-    end
-
-    self.entities[id] = nil
-end
-
 function Scene:duplicate_entity(id)
     if not self.entities[id] then
         print(string.format(
