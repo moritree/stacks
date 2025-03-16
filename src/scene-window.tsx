@@ -175,7 +175,7 @@ export default function Scene() {
   };
 
   const handleDrag = ({ transform }: { transform: string }) => {
-    invoke("update_entity_properties", {
+    invoke("update_entity", {
       id: selectedId,
       data: { pos: calculateNewPosition(transform) },
     });

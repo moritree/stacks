@@ -23,7 +23,7 @@ pub enum LuaMessage {
     Tick(f64),
     EmitEvent(String, Value),
     UpdateEntityId(String, String),
-    UpdateEntityProperties(String, Value),
+    UpdateEntity(String, Value),
     DeleteEntity(String),
     DuplicateEntity(String),
     SaveScene(String),
@@ -119,7 +119,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .call::<_, ()>((scene, original_id, new_id))
                             .expect("Couldn't call update_entity_id")
                     }
-                    LuaMessage::UpdateEntityProperties(id, data) => {
+                    LuaMessage::UpdateEntity(id, data) => {
                         let entity: LuaTable = lua
                             .globals()
                             .get::<&str, LuaTable>("currentScene")
@@ -378,14 +378,14 @@ pub async fn update_entity_id(
 }
 
 #[tauri::command]
-pub async fn update_entity_properties(
+pub async fn update_entity(
     state: State<'_, LuaState>,
     id: String,
     data: Value,
 ) -> Result<(), String> {
     state
         .tx
-        .send(LuaMessage::UpdateEntityProperties(id, data))
+        .send(LuaMessage::UpdateEntity(id, data))
         .map_err(|e| e.to_string())
 }
 

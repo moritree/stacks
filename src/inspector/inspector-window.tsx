@@ -97,7 +97,7 @@ export default function Inspector() {
           newId: id,
         })
           .finally(() =>
-            invoke("update_entity_properties", {
+            invoke("update_entity", {
               id: id,
               data: diff,
             }),
@@ -107,7 +107,7 @@ export default function Inspector() {
             updateWindowTitle(true);
           });
       } else {
-        invoke("update_entity_properties", {
+        invoke("update_entity", {
           id: id,
           data: diff,
         });
