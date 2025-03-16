@@ -36,22 +36,25 @@ function Scene:update_entity_id(original_id, new_id)
 end
 
 function Scene:delete_entity(id)
-    if self.entities[id] then
-        self.entities[id] = nil
-    else
+    if not self.entities[id] then
         print(string.format("Warning: Can't delete entity %s, this id does not exist on the scene", id))
+        return
     end
+
+    self.entities[id] = nil
 end
 
 function Scene:duplicate_entity(id)
-    if self.entities[id] then
-        local new_key = id .. "_clone"
-        self.entities[new_key] = deep_copy(self.entities[id])
-        self.entities[new_key].pos.x = self.entities[new_key].pos.x + 15
-        self.entities[new_key].pos.y = self.entities[new_key].pos.y + 15
-    else
-        print(string.format("Warning: Can't duplicate entity %s, this id does not exist on the scene", id))
+    if not self.entities[id] then
+        print(string.format(
+            "Warning: Can't duplicate entity %s, this id does not exist on the scene", id))
+        return
     end
+
+    local new_key = id .. "_clone"
+    self.entities[new_key] = deep_copy(self.entities[id])
+    self.entities[new_key].pos.x = self.entities[new_key].pos.x + 15
+    self.entities[new_key].pos.y = self.entities[new_key].pos.y + 15
 end
 
 function Scene:save_scene(path)
