@@ -196,7 +196,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .expect("Couldn't call load_scene")
                     }
                     LuaMessage::RunScript(id, function) => {
-                        println!("RunScript called");
                         let scene: LuaTable = lua
                             .globals()
                             .get("currentScene")
@@ -377,13 +376,6 @@ pub async fn update_entity(
     id: String,
     data: Value,
 ) -> Result<(), String> {
-    let mut trimmed_data = data.clone();
-    trimmed_data
-        .as_object_mut()
-        .expect("Couldn't turn data into object")
-        .remove("id")
-        .expect("Failed to remove id from data");
-
     if data.as_object().unwrap().contains_key("id") {
         let confirmed_id = data
             .as_object()
@@ -393,6 +385,12 @@ pub async fn update_entity(
             .as_str()
             .expect("New ID is not a string")
             .to_string();
+        let mut trimmed_data = data.clone();
+        trimmed_data
+            .as_object_mut()
+            .expect("Couldn't turn data into object")
+            .remove("id")
+            .expect("Failed to remove id from data");
         state
             .tx
             .send(LuaMessage::UpdateEntityId(id, confirmed_id, trimmed_data))
@@ -400,7 +398,7 @@ pub async fn update_entity(
     } else {
         state
             .tx
-            .send(LuaMessage::UpdateEntity(id, trimmed_data))
+            .send(LuaMessage::UpdateEntity(id, data))
             .map_err(|e| e.to_string())
     }
 }
