@@ -30,7 +30,7 @@ export default function InspectorWindow() {
   const [scriptsContents, setScriptsContents] = useState<Map<string, string>>(
     new Map(),
   );
-  const [saved, setSaved] = useState(true);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     let listeners: (() => void)[] = [];
@@ -44,7 +44,6 @@ export default function InspectorWindow() {
           setScriptsContents(
             scripts ? new Map(Object.entries(scripts)) : new Map(),
           );
-          setSaved(true);
           setEntity(e.payload);
         }),
       );
@@ -75,7 +74,7 @@ export default function InspectorWindow() {
   }, []);
 
   useEffect(() => {
-    if (entity) getCurrentWindow().setTitle(entity.id);
+    if (entity) setSaved(true);
   }, [entity]);
 
   useEffect(() => {
@@ -90,7 +89,6 @@ export default function InspectorWindow() {
     );
 
   const handleSave = async () => {
-    console.log("Handle save");
     const { scripts, ...rest } = entity;
     let updateData: Partial<Entity> = {};
 
@@ -109,6 +107,7 @@ export default function InspectorWindow() {
     };
 
     // save inspector
+    // TODO data validation
     try {
       const parsedInspectorContents = JSON.parse(inspectorContents);
 
@@ -147,7 +146,6 @@ export default function InspectorWindow() {
         ),
       };
 
-    console.log("UPDATE DATA", updateData);
     if (Object.keys(updateData).length > 0)
       invoke("update_entity", {
         id: entity.id,
