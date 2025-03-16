@@ -7,7 +7,10 @@ return {
                 type = "text",
                 pos = { x = 100, y = 100 },
                 content = "vibing",
-                scripts = { on_click = { string = "self.pos = { x = 200, y = 200 }" } }
+                scripts = {
+                    on_click = { string = "self.pos = { x = 200, y = 200 }" },
+                    on_tick = { string = "if self.pos.y > 100 then self.pos.y -= 1 end" }
+                }
             }),
             test2 = Entity:new({
                 type = "text",

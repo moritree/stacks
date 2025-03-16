@@ -13,6 +13,12 @@ function Scene:new(o)
 end
 
 function Scene:emit_update(dt)
+    for id, entity in pairs(self.entities) do
+        if entity.scripts.on_tick then
+            emit("run_script", id, "on_tick")
+        end
+    end
+
     local entities_copy = deep_copy(self.entities)
     for _, entity in pairs(entities_copy) do
         for script, _ in pairs(entity.scripts) do
@@ -78,7 +84,6 @@ function Scene:load_scene(path)
         end
 
         self.entities = new_entities
-        self:emit_update(0)
     else
         print("Error loading scene: " .. tostring(loaded_entities))
     end
