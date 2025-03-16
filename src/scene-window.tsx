@@ -73,7 +73,6 @@ export default function Scene() {
           e.payload[key].scripts_available = new Set<string>(
             e.payload[key].scripts_available,
           );
-          // e.payload[key] = e.payload[key] as Entity;
         });
         setEntities(new Map(Object.entries(e.payload)));
       });
