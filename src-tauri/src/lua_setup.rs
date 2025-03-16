@@ -42,21 +42,20 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
             let lua = Lua::new();
 
             // let lua emit messages that TS can pick up
-            let emit = move |_: &Lua, (evt, data): (String, LuaValue)| {
-                let json = serde_json::to_value(&data).expect(&format!(
-                    "Lua event {}: Couldn't convert data to valid JSON value.",
-                    evt
-                ));
-                w.clone()
-                    .emit(&evt, json)
-                    .expect(&format!("Couldn't emit event {}", evt));
-                Ok(())
-            };
             lua.globals()
                 .set(
                     "emit",
-                    lua.create_function(emit)
-                        .expect("Couldn't create Lua emit function"),
+                    lua.create_function(move |_: &Lua, (evt, data): (String, LuaValue)| {
+                        let json = serde_json::to_value(&data).expect(&format!(
+                            "Lua event {}: Couldn't convert data to valid JSON value.",
+                            evt
+                        ));
+                        w.clone()
+                            .emit(&evt, json)
+                            .expect(&format!("Couldn't emit event {}", evt));
+                        Ok(())
+                    })
+                    .expect("Couldn't create Lua emit function"),
                 )
                 .expect("Couldn't set emit global in Lua");
 
