@@ -55,7 +55,7 @@ async function openInspector(entity: Entity) {
   });
 
   inspectorWindow.once("mounted", () => {
-    emitTo("inspector", "update_entity", { entity: entity });
+    emitTo("inspector", "update_entity", entity);
   });
 
   inspectorWindow.once("tauri://error", (e) => {

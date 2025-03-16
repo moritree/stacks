@@ -16,7 +16,6 @@ export default function Scripts(props: {
   onOpenScriptsChange: (sections: Set<string>) => void;
   contents: Map<string, string>;
   onContentsChange: (scripts: Map<string, string>) => void;
-  updateWindowTitle: (saved: boolean) => void;
 }) {
   return (
     <Suspense
@@ -45,10 +44,9 @@ export default function Scripts(props: {
                   mode="lua"
                   value={value}
                   onChange={(newVal) => {
-                    props.onContentsChange(
-                      new Map({ ...props.contents, [key]: newVal }),
-                    );
-                    props.updateWindowTitle(false);
+                    const newContents = new Map(props.contents);
+                    newContents.set(key, newVal);
+                    props.onContentsChange(newContents);
                   }}
                   theme={props.editorTheme}
                   width="100%"

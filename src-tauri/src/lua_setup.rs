@@ -21,12 +21,14 @@ pub enum LuaMessage {
     DuplicateEntity(String),
     SaveScene(String),
     LoadScene(String),
+    LoadScript(String, String),
     RunScript(String, String),
 }
 
 /// Set up Lua environment
 pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     let (tx, rx) = mpsc::channel(); // create communication channel
+    let tx_thread = tx.clone();
     let w = window.clone();
 
     let _ = std::thread::Builder::new()
@@ -132,7 +134,32 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                                 json_value_to_lua(&lua, &data)
                                     .expect("Couldn't convert json data to Lua object"),
                             ))
-                            .expect(&format!("Couldn't call update function on {}", id))
+                            .expect(&format!("Couldn't call update function on {}", id));
+                        // Load scripts if any are updated
+                        let data_object =
+                            data.as_object().expect("Data cannot be parsed as object");
+                        if data_object.contains_key("scripts")
+                            && data_object
+                                .get("scripts")
+                                .expect("Couldn't get scripts vale")
+                                .is_object()
+                        {
+                            data.as_object()
+                                .expect("Data cannot be parsed as object")
+                                .get("scripts")
+                                .expect("Couldn't get scripts value")
+                                .as_object()
+                                .expect("Couldn't parse scripts as object")
+                                .keys()
+                                .for_each(|script| {
+                                    let _ = tx_thread
+                                        .send(LuaMessage::LoadScript(
+                                            id.clone(),
+                                            script.to_string(),
+                                        ))
+                                        .map_err(|e| e.to_string());
+                                });
+                        }
                     }
                     LuaMessage::DeleteEntity(id) => lua
                         .globals()
@@ -177,6 +204,38 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                         load_func
                             .call::<_, ()>((scene, path))
                             .expect("Couldn't call load_scene")
+                    }
+                    LuaMessage::LoadScript(id, function) => {
+                        let script_obj: LuaTable = lua
+                            .globals()
+                            .get::<_, LuaTable>("currentScene")
+                            .expect("Couldn't get Lua scene")
+                            .get::<_, LuaTable>("entities")
+                            .expect("Couldn't get entities table from scene")
+                            .get::<_, LuaTable>(id.clone())
+                            .expect("Couldn't get entity")
+                            .get::<&str, LuaTable>("scripts")
+                            .expect("Couldn't get scripts table")
+                            .get(function.clone())
+                            .expect("Couldn't get script");
+
+                        let wrapped_script = format!(
+                            "local func = function(self) {} end ; return func",
+                            script_obj
+                                .get::<&str, LuaString>("string")
+                                .expect("Couldn't get function string")
+                                .to_str()
+                                .expect("Couldn't convert Lua string to rust string")
+                                .to_string()
+                        );
+                        script_obj
+                            .set(
+                                "func",
+                                lua.load(wrapped_script)
+                                    .eval::<LuaFunction>()
+                                    .expect("Coudln't load wrapped script module"),
+                            )
+                            .expect("Couldn't set scripts table")
                     }
                     LuaMessage::RunScript(id, function) => {
                         let scene: LuaTable = lua

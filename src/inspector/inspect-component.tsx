@@ -8,7 +8,6 @@ import "ace-builds/src-noconflict/ext-language_tools";
 
 export default function Inspector(props: {
   entity: Entity;
-  updateWindowTitle: (saved: boolean) => void;
   editorTheme: string;
   contents: string;
   onContentsChange: (contents: string) => void;
@@ -20,10 +19,7 @@ export default function Inspector(props: {
         width="100%"
         mode="javascript"
         value={props.contents}
-        onChange={(newVal) => {
-          props.onContentsChange(newVal);
-          props.updateWindowTitle(false);
-        }}
+        onChange={props.onContentsChange}
         theme={props.editorTheme}
         setOptions={{
           tabSize: 2,
