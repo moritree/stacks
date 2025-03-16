@@ -52,6 +52,10 @@ function Scene:duplicate_entity(id)
     end
 
     local new_key = id .. "_clone"
+    while self.entities[new_key] do
+        new_key = new_key .. "_clone"
+    end
+
     self.entities[new_key] = deep_copy(self.entities[id])
     self.entities[new_key].pos.x = self.entities[new_key].pos.x + 15
     self.entities[new_key].pos.y = self.entities[new_key].pos.y + 15
