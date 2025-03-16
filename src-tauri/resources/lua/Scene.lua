@@ -53,7 +53,6 @@ function Scene:duplicate_entity(id)
 end
 
 function Scene:save_scene(path)
-    print(string.format("save_scene to %s", path))
     local file = assert(io.open(path, "w"), "Couldn't open file")
     file:write(serializer.dump(self.entities))
     file:close()

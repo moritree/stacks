@@ -3,11 +3,7 @@ import "../style/main.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
-import AceEditor from "react-ace";
-import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { platform } from "@tauri-apps/plugin-os";
-import { message } from "@tauri-apps/plugin-dialog";
 const TabBar = lazy(() => import("../components/tab-bar/tab-bar"));
 import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
@@ -18,15 +14,16 @@ import "ace-builds/src-noconflict/theme-github_light_default";
 import "ace-builds/src-noconflict/theme-cloud9_night";
 import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense } from "preact/compat";
+import Inspector from "./inspect-component";
 
-export default function Inspector() {
+export default function InspectorWindow() {
   const [editorTheme, setEditorTheme] = useState<string>(
     "github_light_default",
   );
-  const [inspectorContents, setInspectorContents] = useState<string>("");
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
   const [openScripts, setOpenScripts] = useState(new Set<Number>());
+  const [inspectorContents, setInspectorContents] = useState<string>("");
 
   useEffect(() => {
     let listeners: (() => void)[] = [];
@@ -34,10 +31,9 @@ export default function Inspector() {
     async function setupEntityUpdateListener() {
       listeners.push(
         await listen<any>("update_entity", (e) => {
-          setEntity(e.payload.entity);
-          const { scripts, scripts_available, scripts_str, ...rest } =
-            e.payload.entity;
+          const { scripts, ...rest } = e.payload.entity;
           setInspectorContents(JSON.stringify(rest, null, 2));
+          setEntity(e.payload.entity);
         }),
       );
     }
@@ -78,38 +74,6 @@ export default function Inspector() {
     getCurrentWindow().setTitle(entity!.id + (saved ? "" : " *"));
   };
 
-  const handleSave = async () => {
-    try {
-      const contents = JSON.parse(inspectorContents);
-      const diff = {
-        ...contents,
-        ...Object.fromEntries(
-          Object.keys(entity!)
-            .filter((k) => !contents[k])
-            .map((k) => [k, null]),
-        ),
-      };
-
-      invoke("update_entity", {
-        id: entity!.id,
-        data: diff,
-      }).then(() => {
-        entity!.id = diff.id || entity!.id;
-        updateWindowTitle(true);
-      });
-    } catch (e) {
-      await message("Invalid formatting in inspector", {
-        title: "Couldn't save entity",
-        kind: "error",
-      });
-    }
-  };
-
-  const handleChange = (newVal: string) => {
-    setInspectorContents(newVal);
-    updateWindowTitle(false);
-  };
-
   if (!entity)
     return (
       <div class="w-screen h-screen flex flex-col justify-center">
@@ -122,22 +86,13 @@ export default function Inspector() {
       label: "Inspect",
       icon: <Info />,
       component: (
-        <div class="overflow-auto size-full">
-          <AceEditor
-            height="100%"
-            width="100%"
-            mode="javascript"
-            value={inspectorContents}
-            onChange={handleChange}
-            theme={editorTheme}
-            setOptions={{
-              tabSize: 2,
-              enableBasicAutocompletion: true,
-              enableLiveAutocompletion: true,
-              showLineNumbers: true,
-            }}
-          />
-        </div>
+        <Inspector
+          entity={entity}
+          updateWindowTitle={updateWindowTitle}
+          editorTheme={editorTheme}
+          contents={inspectorContents}
+          onContentsChange={setInspectorContents}
+        />
       ),
     },
     {
@@ -155,17 +110,7 @@ export default function Inspector() {
   ];
 
   return (
-    <div
-      class="w-screen h-screen flex flex-col"
-      onKeyUp={(e) => {
-        const os = platform();
-        if (
-          ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
-          e.code === "KeyS"
-        )
-          handleSave();
-      }}
-    >
+    <div class="w-screen h-screen flex flex-col">
       <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
       <Suspense
         fallback={
@@ -187,4 +132,4 @@ export default function Inspector() {
   );
 }
 
-render(<Inspector />, document.getElementById("root")!);
+render(<InspectorWindow />, document.getElementById("root")!);
