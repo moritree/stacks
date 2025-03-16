@@ -124,11 +124,12 @@ export default function EntityComponent(props: EntityProps) {
         e.stopPropagation();
         props.onSelect(entity.pos, !!entity.draggable);
       }}
-      onClick={(e) => {
+      onDblClick={async (e) => {
         e.stopPropagation();
         if (entity.on_click) {
           e.preventDefault();
           invoke("run_script", { id: entity.id, function: "on_click" });
+          emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
         }
       }}
       onContextMenu={(e) => {

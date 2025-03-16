@@ -226,6 +226,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .contains_key(function.clone())
                             .expect("Couldn't find out whether function is there or not")
                         {
+                            // If the sought script isn't loaded, load all scripts
                             entity
                                 .set(
                                     "scripts",
@@ -377,16 +378,10 @@ fn json_value_to_lua<'lua>(
 
 #[tauri::command]
 pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
-    let scene: LuaTable = lua
-        .globals()
-        .get("currentScene")
-        .expect("Couldn't get Lua scene");
-    let update: LuaFunction = scene
-        .get("emit_update")
-        .expect("Couldn't get Lua emit_update function");
-    update
-        .call::<_, ()>((scene, dt))
-        .expect("Failed calling emit_update")
+    state
+        .tx
+        .send(LuaMessage::Tick(dt))
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
