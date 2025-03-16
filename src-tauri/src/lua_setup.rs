@@ -219,10 +219,32 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .expect("Couldn't get entities table from scene")
                             .get::<_, LuaTable>(id.clone())
                             .expect("Couldn't get entity");
-                        let script: LuaFunction =
-                            entity.get(function).expect("Couldn't get script function");
-                        script
-                            .call::<_, ()>((entity, id))
+
+                        if !entity
+                            .get::<&str, LuaTable>("scripts")
+                            .expect("Couldn't get scripts table")
+                            .contains_key(function.clone())
+                            .expect("Couldn't find out whether function is there or not")
+                        {
+                            entity
+                                .set(
+                                    "scripts",
+                                    lua.load(
+                                        entity
+                                            .get::<&str, String>("scripts_str")
+                                            .expect("Couldn't get scripts string"),
+                                    )
+                                    .eval::<LuaTable>()
+                                    .expect("Coudln't load scripts module"),
+                                )
+                                .expect("Couldn't set scripts table")
+                        }
+                        entity
+                            .get::<&str, LuaTable>("scripts")
+                            .expect("Couldn't get scripts table")
+                            .get::<String, LuaFunction>(function)
+                            .expect("Couldn't get function")
+                            .call::<_, ()>(entity)
                             .expect("Couldn't call script");
                     }
                     LuaMessage::Die => break, // TODO trigger any shutdown code
@@ -355,10 +377,16 @@ fn json_value_to_lua<'lua>(
 
 #[tauri::command]
 pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
-    state
-        .tx
-        .send(LuaMessage::Tick(dt))
-        .map_err(|e| e.to_string())
+    let scene: LuaTable = lua
+        .globals()
+        .get("currentScene")
+        .expect("Couldn't get Lua scene");
+    let update: LuaFunction = scene
+        .get("emit_update")
+        .expect("Couldn't get Lua emit_update function");
+    update
+        .call::<_, ()>((scene, dt))
+        .expect("Failed calling emit_update")
 }
 
 #[tauri::command]
