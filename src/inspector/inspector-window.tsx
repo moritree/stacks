@@ -177,6 +177,7 @@ export default function InspectorWindow() {
       icon: <Code />,
       component: (
         <Scripts
+          key={openScripts}
           entity={entity}
           openScripts={openScripts}
           onOpenScriptsChange={setOpenScripts}
