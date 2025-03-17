@@ -1,10 +1,12 @@
 mod frontend_commands;
+mod lua_commands;
 mod lua_setup;
+mod lua_types;
 use frontend_commands::{resize_window, set_frontend_ready, window_scale, SetupState};
-use lua_setup::{
-    delete_entity, duplicate_entity, init_lua_thread, load_scene, run_script, save_scene, tick,
-    update_entity,
+use lua_commands::{
+    delete_entity, duplicate_entity, load_scene, run_script, save_scene, tick, update_entity,
 };
+use lua_setup::init_lua_thread;
 use std::sync::Mutex;
 use tauri::Manager;
 
