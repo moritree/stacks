@@ -1,4 +1,4 @@
-import { Loader } from "preact-feather";
+import { Loader, Plus } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import AceEditor from "react-ace";
 const Accordion = lazy(() => import("../components/accordion"));
@@ -25,9 +25,9 @@ export default function Scripts(props: {
         </div>
       }
     >
-      <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden">
-        {props.contents.size > 0 ? (
-          Array.from(props.contents).map(([key, value]) => (
+      <div class="relative h-full">
+        <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden h-full">
+          {Array.from(props.contents).map(([key, value]) => (
             <Accordion
               label={key}
               open={props.openScripts.has(key)}
@@ -59,10 +59,17 @@ export default function Scripts(props: {
                 />
               </div>
             </Accordion>
-          ))
-        ) : (
-          <Loader />
-        )}
+          ))}
+        </div>
+        <div class="flex flex-row absolute top-1 right-1 justify-center align-middle h-auto">
+          <button
+            class="flex flex-row overflow-hidden gap-2 p-1 justify-center bg-tertiary opacity-30 border-border
+            border-1 rounded-md text-base transition-opacity duration-150 hover:opacity-50
+            active:duration-100 active:opacity-90 active:bg-accent"
+          >
+            <Plus />
+          </button>
+        </div>
       </div>
     </Suspense>
   );
