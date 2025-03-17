@@ -15,7 +15,8 @@
         "title": "stacks",
         "minWidth": 320,
         "minHeight": 180,
-        "resizable": true
+        "resizable": true,
+        "visible": false
       }
     ],
     "security": {

@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { emit, listen } from "@tauri-apps/api/event";
+import { emit, listen, once } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
 import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
@@ -7,6 +7,7 @@ import { save, open } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "preact/hooks";
 import { Entity } from "./entity/entity-type";
+import { Loader } from "preact-feather";
 
 const SCENE_BASE_SIZE = {
   width: 1280,
@@ -57,7 +58,6 @@ export default function Scene() {
     number | undefined
   >();
   const [selectedId, setSelectedId] = useState<string | undefined>();
-
   const [selectedInitialPosition, setSelectedInitialPosition] = useState({
     x: 0,
     y: 0,
@@ -123,7 +123,9 @@ export default function Scene() {
       );
       listeners.push(unsubscribe);
 
-      emit("tauri://resize", await WebviewWindow.getCurrent().size()); // emit at setup
+      emit("tauri://resize", await WebviewWindow.getCurrent().size()).then(() =>
+        invoke("set_frontend_ready"),
+      );
     }
 
     const tick = () => {

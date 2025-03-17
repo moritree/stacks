@@ -1,9 +1,24 @@
+use std::sync::Mutex;
+use tauri::{AppHandle, Manager, State, WebviewWindow};
+
+pub struct SetupState {
+    pub frontend_ready: bool,
+}
+
 #[tauri::command]
-pub async fn resize_window(
-    window: tauri::WebviewWindow,
-    width: u16,
-    height: u16,
-) -> Result<(), String> {
+pub async fn set_frontend_ready(
+    app: AppHandle,
+    state: State<'_, Mutex<SetupState>>,
+) -> Result<(), ()> {
+    let mut state_lock = state.lock().unwrap();
+    state_lock.frontend_ready = true;
+    let main_window = app.get_webview_window("main").unwrap();
+    main_window.show().unwrap();
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn resize_window(window: WebviewWindow, width: u16, height: u16) -> Result<(), String> {
     window
         .set_size(tauri::PhysicalSize::new(width, height))
         .map_err(|e| e.to_string())
