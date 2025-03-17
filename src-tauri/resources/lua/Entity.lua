@@ -33,7 +33,8 @@ function Entity:run_script(funcname)
         print(string.format("Warning: %s is not a valid function on this entity", funcname))
     end
 
-    if (not self.scripts[funcname].func) or (type(self.scripts[funcname]) ~= "function") then
+    if type(self.scripts[funcname].func) ~= "function" then
+        -- loaded through side effect
         if self:load_script(funcname) == false then return end
     end
     self.scripts[funcname].func(self)
