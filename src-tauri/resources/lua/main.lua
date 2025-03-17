@@ -9,7 +9,7 @@ return {
                 content = "vibing",
                 scripts = {
                     on_click = { string = "self.pos = { x = 200, y = 200 }" },
-                    on_tick = { string = "if self.pos.y > 100 then self.pos.y -= 1 end" }
+                    on_tick = { string = "if self.pos.y > 100 then self.pos.y = self.pos.y - 1 end" }
                 }
             }),
             test2 = Entity:new({

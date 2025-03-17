@@ -13,11 +13,7 @@ function Scene:new(o)
 end
 
 function Scene:emit_update(dt)
-    for id, entity in pairs(self.entities) do
-        if entity.scripts.on_tick then
-            emit("run_script", id, "on_tick")
-        end
-    end
+    for _, entity in pairs(self.entities) do if entity.scripts.on_tick then entity:run_script("on_tick") end end
 
     local entities_copy = deep_copy(self.entities)
     for _, entity in pairs(entities_copy) do
