@@ -90,7 +90,7 @@ export default function InspectorWindow() {
 
   const handleSave = async () => {
     const { scripts, ...rest } = entity;
-    let updateData: Partial<Entity> = {};
+    let updateData: any = {};
 
     // deep equality
     const isEqual = (a: any, b: any): boolean => {
@@ -151,7 +151,7 @@ export default function InspectorWindow() {
         id: entity.id,
         data: updateData,
       });
-      if (updateData.id) entity.id = updateData.id;
+      if (updateData.id) entity.id = updateData.id; // so window title updates correctly
     }
     setSaved(true);
   };

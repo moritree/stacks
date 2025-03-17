@@ -24,7 +24,6 @@ export default function Inspector(props: {
         setOptions={{
           tabSize: 2,
           enableBasicAutocompletion: true,
-          enableLiveAutocompletion: true,
           showLineNumbers: true,
         }}
       />
