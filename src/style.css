@@ -49,17 +49,6 @@
 }
 
 @layer components {
-    .entity.text {
-        font-family: var(--font-serif);
-        /* font-size: var(--font-size); */
-    }
-
-    .entity.rect {
-        width: var(--width);
-        height: var(--height);
-        background-color: var(--color);
-    }
-
     .entity.selectable {
         cursor: pointer;
     }

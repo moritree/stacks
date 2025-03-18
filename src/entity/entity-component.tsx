@@ -82,8 +82,8 @@ export default function EntityComponent(props: EntityProps) {
       style = {
         ...style,
         ...{
-          "--font-size": `${(entity.fontSize || 1) * 1.5}em`,
-          fontSize: "calc(var(--font-size) * var(--scene-scale))",
+          fontSize: `calc(${(entity.fontSize || 1) * 1.5}em * var(--scene-scale))`,
+          fontFamily: "var(--font-serif)",
         },
       };
       break;
@@ -91,9 +91,9 @@ export default function EntityComponent(props: EntityProps) {
       style = {
         ...style,
         ...{
-          "--width": `calc(${entity.size.width}px * var(--scene-scale))`,
-          "--height": `calc(${entity.size.height}px * var(--scene-scale))`,
-          "--color": `${entity.color}`,
+          width: `calc(${entity.size.width}px * var(--scene-scale))`,
+          height: `calc(${entity.size.height}px * var(--scene-scale))`,
+          backgroundColor: `${entity.color}`,
         },
       };
       break;
