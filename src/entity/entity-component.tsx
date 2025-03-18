@@ -79,6 +79,13 @@ export default function EntityComponent(props: EntityProps) {
   };
   switch (entity.type) {
     case "text":
+      style = {
+        ...style,
+        ...{
+          "--font-size": `${(entity.fontSize || 1) * 1.5}em`,
+          fontSize: "calc(var(--font-size) * var(--scene-scale))",
+        },
+      };
       break;
     case "rect":
       style = {
@@ -94,7 +101,7 @@ export default function EntityComponent(props: EntityProps) {
 
   return (
     <div
-      class={`absolute left-(--x) top-(--y) text-[calc(1.5em*var(--scene-scale))] entity ${entity.type}
+      class={`absolute left-(--x) top-(--y) entity ${entity.type}
           ${props.entity.selectable ? " selectable" : ""}
           ${props.isSelected ? " selected" : ""}
           ${props.entity.draggable ? " draggable" : ""}`}
@@ -104,10 +111,9 @@ export default function EntityComponent(props: EntityProps) {
         e.stopPropagation();
         props.onSelect(entity.pos, !!entity.draggable);
       }}
-      onDblClick={async (e) => {
+      onDblClick={(e) => {
         e.stopPropagation();
         if (entity.scripts.on_click) {
-          e.preventDefault();
           invoke("run_script", { id: entity.id, function: "on_click" });
           emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
         }

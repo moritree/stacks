@@ -7,6 +7,7 @@ interface RectEntity {
 interface TextEntity {
   type: "text";
   content: string;
+  fontSize?: number;
 }
 
 interface BaseEntity {
