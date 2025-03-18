@@ -1,5 +1,5 @@
 import { JSX, render } from "preact";
-import "../style/main.css";
+import "../style.css";
 import { emit, listen } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
