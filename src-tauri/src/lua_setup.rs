@@ -8,7 +8,6 @@ use tauri::{Emitter, Manager, WebviewWindow};
 /// Set up Lua environment
 pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     let (tx, rx) = mpsc::channel(); // create communication channel
-    let tx_thread = tx.clone();
     let w = window.clone();
 
     let _ = std::thread::Builder::new()
@@ -109,7 +108,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .get::<&str, LuaFunction>("update")
                             .expect("Couldn't get update function")
                             .call::<_, ()>((
-                                entity,
+                                entity.clone(),
                                 json_value_to_lua(&lua, &data)
                                     .expect("Couldn't convert json data to Lua object"),
                             ))
@@ -120,9 +119,12 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                         if data_object.contains_key("scripts")
                             && data_object
                                 .get("scripts")
-                                .expect("Couldn't get scripts vale")
+                                .expect("Couldn't get scripts value")
                                 .is_object()
                         {
+                            let load_func = entity
+                                .get::<_, LuaFunction>("load_script")
+                                .expect("Couldn't get load_script function");
                             data.as_object()
                                 .expect("Data cannot be parsed as object")
                                 .get("scripts")
@@ -131,12 +133,9 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                                 .expect("Couldn't parse scripts as object")
                                 .keys()
                                 .for_each(|script| {
-                                    let _ = tx_thread
-                                        .send(LuaMessage::LoadScript(
-                                            id.clone(),
-                                            script.to_string(),
-                                        ))
-                                        .map_err(|e| e.to_string());
+                                    load_func
+                                        .call::<_, ()>((entity.clone(), script.clone()))
+                                        .expect("Couldn't call load_script function")
                                 });
                         }
                     }
@@ -180,21 +179,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .expect("Couldn't get Lua load_scene function")
                             .call::<_, ()>((scene, path))
                             .expect("Couldn't call load_scene")
-                    }
-                    LuaMessage::LoadScript(id, function) => {
-                        let entity: LuaTable = lua
-                            .globals()
-                            .get::<_, LuaTable>("currentScene")
-                            .expect("Couldn't get Lua scene")
-                            .get::<_, LuaTable>("entities")
-                            .expect("Couldn't get entities table from scene")
-                            .get::<_, LuaTable>(id.clone())
-                            .expect("Couldn't get entity");
-                        entity
-                            .get::<_, LuaFunction>("load_script")
-                            .expect("Couldn't get load_script function")
-                            .call::<_, ()>((entity, function))
-                            .expect("Couldn't call load_script function")
                     }
                     LuaMessage::RunScript(id, function) => {
                         let entity: LuaTable = lua

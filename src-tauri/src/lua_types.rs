@@ -14,6 +14,5 @@ pub enum LuaMessage {
     DuplicateEntity(String),
     SaveScene(String),
     LoadScene(String),
-    LoadScript(String, String),
     RunScript(String, String),
 }
