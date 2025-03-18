@@ -72,10 +72,9 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .globals()
                             .get("currentScene")
                             .expect("Couldn't get Lua scene");
-                        let update: LuaFunction = scene
-                            .get("emit_update")
-                            .expect("Couldn't get Lua emit_update function");
-                        update
+                        scene
+                            .get::<_, LuaFunction>("emit_update")
+                            .expect("Couldn't get Lua emit_update function")
                             .call::<_, ()>((scene, dt))
                             .expect("Failed calling emit_update")
                     }
@@ -154,10 +153,9 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .globals()
                             .get("currentScene")
                             .expect("Couldn't get Lua scene");
-                        let update_func: LuaFunction = scene
-                            .get("duplicate_entity")
-                            .expect("Couldn't get Lua duplicate_entity function");
-                        update_func
+                        scene
+                            .get::<_, LuaFunction>("duplicate_entity")
+                            .expect("Couldn't get Lua duplicate_entity function")
                             .call::<_, ()>((scene, id))
                             .expect("Couldn't call duplicate_entity")
                     }
@@ -166,10 +164,9 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .globals()
                             .get("currentScene")
                             .expect("Couldn't get Lua scene");
-                        let save_func: LuaFunction = scene
-                            .get("save_scene")
-                            .expect("Couldn't get Lua save_scene function");
-                        save_func
+                        scene
+                            .get::<_, LuaFunction>("save_scene")
+                            .expect("Couldn't get Lua save_scene function")
                             .call::<_, ()>((scene, path))
                             .expect("Couldn't call save_scene")
                     }
@@ -178,90 +175,41 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
                             .globals()
                             .get("currentScene")
                             .expect("Couldn't get Lua scene");
-                        let load_func: LuaFunction = scene
-                            .get("load_scene")
-                            .expect("Couldn't get Lua load_scene function");
-                        load_func
+                        scene
+                            .get::<_, LuaTable>("load_scene")
+                            .expect("Couldn't get Lua load_scene function")
                             .call::<_, ()>((scene, path))
                             .expect("Couldn't call load_scene")
                     }
                     LuaMessage::LoadScript(id, function) => {
-                        let script_obj: LuaTable = lua
+                        let entity: LuaTable = lua
                             .globals()
                             .get::<_, LuaTable>("currentScene")
                             .expect("Couldn't get Lua scene")
                             .get::<_, LuaTable>("entities")
                             .expect("Couldn't get entities table from scene")
                             .get::<_, LuaTable>(id.clone())
-                            .expect("Couldn't get entity")
-                            .get::<&str, LuaTable>("scripts")
-                            .expect("Couldn't get scripts table")
-                            .get(function.clone())
-                            .expect("Couldn't get script");
-
-                        let wrapped_script = format!(
-                            "local func = function(self) {} end ; return func",
-                            script_obj
-                                .get::<&str, LuaString>("string")
-                                .expect("Couldn't get function string")
-                                .to_str()
-                                .expect("Couldn't convert Lua string to rust string")
-                                .to_string()
-                        );
-                        script_obj
-                            .set(
-                                "func",
-                                lua.load(wrapped_script)
-                                    .eval::<LuaFunction>()
-                                    .expect("Coudln't load wrapped script module"),
-                            )
-                            .expect("Couldn't set scripts table")
+                            .expect("Couldn't get entity");
+                        entity
+                            .get::<_, LuaFunction>("load_script")
+                            .expect("Couldn't get load_script function")
+                            .call::<_, ()>((entity, function))
+                            .expect("Couldn't call load_script function")
                     }
                     LuaMessage::RunScript(id, function) => {
-                        let scene: LuaTable = lua
+                        let entity: LuaTable = lua
                             .globals()
-                            .get("currentScene")
-                            .expect("Couldn't get Lua scene");
-                        let entity: LuaTable = scene
+                            .get::<_, LuaTable>("currentScene")
+                            .expect("Couldn't get Lua scene")
                             .get::<_, LuaTable>("entities")
                             .expect("Couldn't get entities table from scene")
                             .get::<_, LuaTable>(id.clone())
                             .expect("Couldn't get entity");
-
-                        let script_obj: LuaTable = entity
-                            .get::<&str, LuaTable>("scripts")
-                            .expect("Couldn't get scripts table")
-                            .get(function.clone())
-                            .expect("Couldn't get script");
-                        if !script_obj
-                            .contains_key("func")
-                            .expect("Couldn't find out whether function is there or not")
-                        {
-                            // If the sought script isn't loaded, load it
-                            let script_string = script_obj
-                                .get::<&str, LuaString>("string")
-                                .expect("Couldn't get function string")
-                                .to_str()
-                                .expect("Couldn't convert Lua string to rust string")
-                                .to_string();
-                            let wrapped_script = format!(
-                                "local func = function(self) {} end ; return func",
-                                script_string
-                            );
-                            script_obj
-                                .set(
-                                    "func",
-                                    lua.load(wrapped_script)
-                                        .eval::<LuaFunction>()
-                                        .expect("Coudln't load wrapped script module"),
-                                )
-                                .expect("Couldn't set scripts table")
-                        }
-                        script_obj
-                            .get::<&str, LuaFunction>("func")
-                            .expect("Couldn't get function")
-                            .call::<_, ()>(entity)
-                            .expect("Couldn't call script");
+                        entity
+                            .get::<_, LuaFunction>("run_script")
+                            .expect("Couldn't get run_script function")
+                            .call::<_, ()>((entity, function))
+                            .expect("Couldn't call run_script function")
                     }
                 }
             }
