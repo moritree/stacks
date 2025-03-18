@@ -178,7 +178,7 @@ fn message_processing_loop(lua: &Lua, rx: std::sync::mpsc::Receiver<LuaMessage>)
                     .get("currentScene")
                     .expect("Couldn't get Lua scene");
                 scene
-                    .get::<_, LuaTable>("load_scene")
+                    .get::<_, LuaFunction>("load_scene")
                     .expect("Couldn't get Lua load_scene function")
                     .call::<_, ()>((scene, path))
                     .expect("Couldn't call load_scene")

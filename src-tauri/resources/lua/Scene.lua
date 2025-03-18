@@ -56,7 +56,13 @@ end
 
 function Scene:save_scene(path)
     local file = assert(io.open(path, "w"), "Couldn't open file")
-    file:write(serializer.dump(self.entities))
+    local to_save = deep_copy(self.entities)
+
+    -- remove script functions, preserve only string representations
+    for _, entity in pairs(to_save) do
+        if entity.scripts then for script, _ in pairs(entity.scripts) do entity.scripts[script].func = nil end end
+    end
+    file:write(serializer.dump(to_save))
     file:close()
 end
 
