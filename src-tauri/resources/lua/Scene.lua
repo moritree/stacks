@@ -56,10 +56,8 @@ end
 
 function Scene:save_scene(path)
     -- remove script functions, preserve only string representations
-    local to_save = deep_copy(self.entities)
-    for _, entity in pairs(to_save) do
-        if entity.scripts then for script, _ in pairs(entity.scripts) do entity.scripts[script].func = nil end end
-    end
+    local to_save = {}
+    for _, entity in pairs(self.entities) do table.insert(to_save, entity:serializable()) end
 
     local file = assert(io.open(path, "w"), "Couldn't open file")
     file:write(serializer.dump(to_save))

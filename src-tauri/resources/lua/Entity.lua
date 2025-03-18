@@ -1,4 +1,5 @@
 local serializer = require('serpent')
+local deep_copy = require('deep_copy')
 
 local Entity = {
     draggable = false,
@@ -38,6 +39,16 @@ function Entity:run_script(funcname)
         if self:load_script(funcname) == false then return end
     end
     self.scripts[funcname].func(self)
+end
+
+function Entity:serializable()
+    local copy = deep_copy(self)
+    if copy.scripts then for script, _ in pairs(copy.scripts) do copy.scripts[script].func = nil end end
+    return copy
+end
+
+function Entity:as_string()
+    return serializer.dump(self:serializable())
 end
 
 return Entity
