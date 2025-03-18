@@ -55,13 +55,13 @@ function Scene:duplicate_entity(id)
 end
 
 function Scene:save_scene(path)
-    local file = assert(io.open(path, "w"), "Couldn't open file")
-    local to_save = deep_copy(self.entities)
-
     -- remove script functions, preserve only string representations
+    local to_save = deep_copy(self.entities)
     for _, entity in pairs(to_save) do
         if entity.scripts then for script, _ in pairs(entity.scripts) do entity.scripts[script].func = nil end end
     end
+
+    local file = assert(io.open(path, "w"), "Couldn't open file")
     file:write(serializer.dump(to_save))
     file:close()
 end
@@ -72,23 +72,20 @@ function Scene:load_scene(path)
         print("Error loading scene: couldn't open test.txt")
         return
     end
-
     local content = file:read("*all")
     file:close()
 
     -- safe mode off to load functions
     -- TODO how do I handle security?
     local success, loaded_entities = serializer.load(content, { safe = false })
-    if success then
-        local new_entities = {}
-        for k, v in pairs(loaded_entities --[[@as table]]) do
-            new_entities[k] = require("Entity"):new(v)
-        end
-
-        self.entities = new_entities
-    else
+    if not success then
         print("Error loading scene: " .. tostring(loaded_entities))
+        return
     end
+
+    local new_entities = {}
+    for k, v in pairs(loaded_entities --[[@as table]]) do new_entities[k] = require("Entity"):new(v) end
+    self.entities = new_entities
 end
 
 return Scene
