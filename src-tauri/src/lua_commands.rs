@@ -16,31 +16,31 @@ pub async fn update_entity(
     id: String,
     data: Value,
 ) -> Result<(), String> {
-    if data.as_object().unwrap().contains_key("id") {
-        let confirmed_id = data
-            .as_object()
-            .unwrap()
-            .get("id")
-            .expect("Couldn't get valid new ID")
-            .as_str()
-            .expect("New ID is not a string")
-            .to_string();
-        let mut trimmed_data = data.clone();
-        trimmed_data
-            .as_object_mut()
-            .expect("Couldn't turn data into object")
-            .remove("id")
-            .expect("Failed to remove id from data");
-        state
-            .tx
-            .send(LuaMessage::UpdateEntityId(id, confirmed_id, trimmed_data))
-            .map_err(|e| e.to_string())
-    } else {
-        state
+    if !data.as_object().unwrap().contains_key("id") {
+        return state
             .tx
             .send(LuaMessage::UpdateEntity(id, data))
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.to_string());
     }
+
+    let confirmed_id = data
+        .as_object()
+        .unwrap()
+        .get("id")
+        .expect("Couldn't get valid new ID")
+        .as_str()
+        .expect("New ID is not a string")
+        .to_string();
+    let mut trimmed_data = data.clone();
+    trimmed_data
+        .as_object_mut()
+        .expect("Couldn't turn data into object")
+        .remove("id")
+        .expect("Failed to remove id from data");
+    state
+        .tx
+        .send(LuaMessage::UpdateEntityId(id, confirmed_id, trimmed_data))
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

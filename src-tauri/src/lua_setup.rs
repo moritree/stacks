@@ -272,63 +272,6 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
 
 /// Preload Lua modules (at runtime) as part of Lua initialization.
 fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
-    fn get_module_path(base_path: &Path, file_path: &Path) -> Option<String> {
-        if let (Some(ext), true) = (file_path.extension(), file_path.is_file()) {
-            if ext == "lua" {
-                // Make sure we strip the base_path and leading separator
-                if let Ok(relative) = file_path.strip_prefix(base_path) {
-                    let relative = relative.to_str()?;
-                    // Remove leading separator if it exists
-                    let relative = relative.trim_start_matches(std::path::MAIN_SEPARATOR);
-                    // Remove .lua extension and convert separators to dots
-                    return Some(
-                        relative
-                            .trim_end_matches(".lua")
-                            .replace(std::path::MAIN_SEPARATOR, "."),
-                    );
-                }
-            }
-        }
-        None
-    }
-
-    fn scan_directory(
-        dir: &Path,
-        preload: &LuaTable,
-        lua: &Lua,
-        loaded: &mut Vec<String>,
-    ) -> LuaResult<()> {
-        for entry in fs::read_dir(dir).expect("Failed to read directory") {
-            let entry = entry.expect("Failed to read directory entry");
-            let path = entry.path();
-
-            if path.is_dir() {
-                scan_directory(&path, preload, lua, loaded)?;
-            } else {
-                if let Some(module_name) = get_module_path(&dir, &path) {
-                    // Skip main.lua since we load it separately
-                    if module_name == "main" || loaded.contains(&module_name) {
-                        continue;
-                    }
-
-                    let source = fs::read_to_string(&path).expect("Failed to read lua file");
-                    let module_name_clone = module_name.clone();
-
-                    preload.set(
-                        module_name.as_str(),
-                        lua.create_function(move |lua, ()| -> LuaResult<LuaValue> {
-                            lua.load(&source)
-                                .set_name(&format!("{}.lua", module_name_clone))
-                                .eval()
-                        })?,
-                    )?;
-                    loaded.push(module_name);
-                }
-            }
-        }
-        Ok(())
-    }
-
     let resource_path = window
         .app_handle()
         .path()
@@ -354,6 +297,64 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
     scan_directory(&resource_path, &preload, lua, &mut loaded)?;
 
     println!("Preloaded Lua modules: {:?}", loaded);
+    Ok(())
+}
+
+fn get_module_path(base_path: &Path, file_path: &Path) -> Option<String> {
+    if let (Some(ext), true) = (file_path.extension(), file_path.is_file()) {
+        if ext != "lua" {
+            return None;
+        }
+
+        // Make sure we strip the base_path and leading separator
+        if let Ok(relative) = file_path.strip_prefix(base_path) {
+            let mut relative = relative.to_str()?;
+            relative = relative.trim_start_matches(std::path::MAIN_SEPARATOR); // Remove any leading separator
+            return Some(
+                relative
+                    .trim_end_matches(".lua") // cemove .lua extension
+                    .replace(std::path::MAIN_SEPARATOR, "."), // convert separators to dots
+            );
+        }
+    }
+    None
+}
+
+fn scan_directory(
+    dir: &Path,
+    preload: &LuaTable,
+    lua: &Lua,
+    loaded: &mut Vec<String>,
+) -> LuaResult<()> {
+    for entry in fs::read_dir(dir).expect("Failed to read directory") {
+        let entry = entry.expect("Failed to read directory entry");
+        let path = entry.path();
+
+        if path.is_dir() {
+            scan_directory(&path, preload, lua, loaded)?;
+            continue;
+        }
+
+        if let Some(module_name) = get_module_path(&dir, &path) {
+            // Skip main.lua since we load it separately
+            if module_name == "main" || loaded.contains(&module_name) {
+                continue;
+            }
+
+            let source = fs::read_to_string(&path).expect("Failed to read lua file");
+            let module_name_clone = module_name.clone();
+
+            preload.set(
+                module_name.as_str(),
+                lua.create_function(move |lua, ()| -> LuaResult<LuaValue> {
+                    lua.load(&source)
+                        .set_name(&format!("{}.lua", module_name_clone))
+                        .eval()
+                })?,
+            )?;
+            loaded.push(module_name);
+        }
+    }
     Ok(())
 }
 
