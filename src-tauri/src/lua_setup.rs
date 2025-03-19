@@ -23,7 +23,7 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
 
 fn set_globals(lua: &Lua, window: WebviewWindow) {
     // let lua emit messages that TS can pick up
-    let w = window.clone();
+    let w_emit = window.clone();
     lua.globals()
         .set(
             "emit",
@@ -32,13 +32,34 @@ fn set_globals(lua: &Lua, window: WebviewWindow) {
                     "Lua event {}: Couldn't convert data to valid JSON value.",
                     evt
                 ));
-                w.emit(&evt, json)
+                w_emit
+                    .emit(&evt, json)
                     .expect(&format!("Couldn't emit event {}", evt));
                 Ok(())
             })
             .expect("Couldn't create Lua emit function"),
         )
         .expect("Couldn't set emit global in Lua");
+
+    let w_emit_to = window.clone();
+    lua.globals()
+        .set(
+            "emit_to",
+            lua.create_function(
+                move |_: &Lua, (evt, window_label, data): (String, String, LuaValue)| {
+                    let json = serde_json::to_value(&data).expect(&format!(
+                        "Lua event {}: Couldn't convert data to valid JSON value.",
+                        evt
+                    ));
+                    w_emit_to
+                        .emit_to(window_label.clone(), &evt, json)
+                        .expect(&format!("Couldn't emit event {} to {}", evt, window_label));
+                    Ok(())
+                },
+            )
+            .expect("Couldn't create Lua emit function"),
+        )
+        .expect("Couldn't set emit_to global in Lua");
 
     // intercept & tag lua prints to stdout
     lua.globals()
@@ -218,10 +239,10 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
             )
             .expect("Couldn't set table string in return data table");
             lua.globals()
-                .get::<_, LuaFunction>("emit")
-                .expect("Couldn't get emit global function")
-                .call::<_, ()>(("entity_string", data))
-                .expect("Couldn't call emit")
+                .get::<_, LuaFunction>("emit_to")
+                .expect("Couldn't get emit_to global function")
+                .call::<_, ()>(("entity_string", window, data))
+                .expect("Couldn't call emit_to")
         }
         LuaMessage::HandleInspectorSave(inspector, scripts) => {
             // Load inspector contents as entity lua table using serpent
