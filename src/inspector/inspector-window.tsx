@@ -90,7 +90,10 @@ export default function InspectorWindow() {
   }, []);
 
   useEffect(() => {
-    if (entity) setSaved(true);
+    if (entity != undefined) {
+      if (saved == false) setSaved(true);
+      else getCurrentWindow().setTitle(entity.id);
+    }
   }, [entity]);
 
   useEffect(() => {

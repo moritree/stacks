@@ -93,11 +93,6 @@ pub async fn get_entity_string(
     id: String,
     window: String,
 ) -> Result<(), String> {
-    println!(
-        "get_entity_string received (id: {}, window: {})",
-        id.clone(),
-        window.clone()
-    );
     state
         .tx
         .send(LuaMessage::EmitEntityString(id, window))
