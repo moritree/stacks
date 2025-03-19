@@ -86,3 +86,20 @@ pub async fn run_script(
         .send(LuaMessage::RunScript(id, function))
         .map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn get_entity_string(
+    state: State<'_, LuaState>,
+    id: String,
+    window: String,
+) -> Result<(), String> {
+    println!(
+        "get_entity_string received (id: {}, window: {})",
+        id.clone(),
+        window.clone()
+    );
+    state
+        .tx
+        .send(LuaMessage::EmitEntityString(id, window))
+        .map_err(|e| e.to_string())
+}

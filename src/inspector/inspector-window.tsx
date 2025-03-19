@@ -1,6 +1,6 @@
 import { JSX, render } from "preact";
 import "../style.css";
-import { emit, listen } from "@tauri-apps/api/event";
+import { emit, listen, once } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -38,14 +38,28 @@ export default function InspectorWindow() {
     async function setupEntityUpdateListener() {
       listeners.push(
         await listen<any>("update_entity", (e) => {
-          const { scripts, ...rest } = e.payload;
-          setInspectorContents(JSON.stringify(rest, null, 2));
           setOpenScripts(new Set<string>());
-          setScriptsContents(
-            scripts ? new Map(Object.entries(scripts)) : new Map(),
-          );
+          const scripts = e.payload.scripts;
+          setScriptsContents(new Map(Object.entries(scripts || {})));
+
+          invoke("get_entity_string", {
+            id: e.payload.id,
+            window: getCurrentWindow().label,
+          });
+
           setEntity(e.payload);
         }),
+      );
+    }
+
+    async function setupEntityStringListener() {
+      listeners.push(
+        await listen<{ id: string; table: string }>(
+          "entity_string",
+          (tableEvent) => {
+            setInspectorContents(tableEvent.payload.table);
+          },
+        ),
       );
     }
 
@@ -59,7 +73,9 @@ export default function InspectorWindow() {
       );
     }
 
-    setupEntityUpdateListener().then(() => emit("mounted"));
+    setupEntityStringListener()
+      .then(() => setupEntityUpdateListener())
+      .then(() => emit("mounted"));
     setupThemeChangeListener().then(async () =>
       setEditorTheme(
         (await getCurrentWindow().theme()) == "light"
@@ -81,7 +97,7 @@ export default function InspectorWindow() {
     if (entity) getCurrentWindow().setTitle(entity.id + (saved ? "" : " *"));
   }, [saved]);
 
-  if (!entity)
+  if (!entity || inspectorContents == "")
     return (
       <div class="w-screen h-screen flex flex-col justify-center">
         <Loader class="w-screen h-10" />
@@ -162,6 +178,7 @@ export default function InspectorWindow() {
       icon: <Info />,
       component: (
         <Inspector
+          key={inspectorContents}
           entity={entity}
           editorTheme={editorTheme}
           contents={inspectorContents}

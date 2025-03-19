@@ -47,9 +47,4 @@ function Entity:serializable()
     return copy
 end
 
-function Entity:as_string(pretty)
-    if (pretty) then return serializer.block(self:serializable()) end
-    return serializer.dump(self:serializable())
-end
-
 return Entity

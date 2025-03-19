@@ -198,6 +198,29 @@ fn message_processing_loop(lua: &Lua, rx: std::sync::mpsc::Receiver<LuaMessage>)
                     .call::<_, ()>((entity, function))
                     .expect("Couldn't call run_script function")
             }
+            LuaMessage::EmitEntityString(id, window) => {
+                let scene: LuaTable = lua
+                    .globals()
+                    .get::<_, LuaTable>("currentScene")
+                    .expect("Couldn't get Lua scene");
+                let data: LuaTable = lua.create_table().expect("Couldn't create new table");
+                data.set("id", id.clone())
+                    .expect("Couldn't set id in return data table");
+                data.set(
+                    "table",
+                    scene
+                        .get::<_, LuaFunction>("entity_as_block_string")
+                        .expect("Couldn't get entity_as_block_string function")
+                        .call::<_, LuaString>((scene, id))
+                        .expect("Couldn't call as_string function"),
+                )
+                .expect("Couldn't set table string in return data table");
+                lua.globals()
+                    .get::<_, LuaFunction>("emit")
+                    .expect("Couldn't get emit global function")
+                    .call::<_, ()>(("entity_string", data))
+                    .expect("Couldn't call emit")
+            }
         }
     }
 }
