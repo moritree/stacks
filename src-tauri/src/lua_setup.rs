@@ -12,7 +12,10 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
         .spawn(move || {
             let lua = Lua::new();
             set_globals(&lua, window);
-            message_processing_loop(&lua, rx)
+
+            while let Ok(msg) = rx.recv() {
+                match_message(&lua, msg);
+            }
         });
 
     LuaState { tx }
@@ -67,166 +70,168 @@ fn set_globals(lua: &Lua, window: WebviewWindow) {
         .expect("Couldn't set scene global in Lua");
 }
 
-fn message_processing_loop(lua: &Lua, rx: std::sync::mpsc::Receiver<LuaMessage>) {
-    while let Ok(msg) = rx.recv() {
-        match msg {
-            LuaMessage::Tick(dt) => {
-                let scene: LuaTable = lua
-                    .globals()
-                    .get("currentScene")
-                    .expect("Couldn't get Lua scene");
-                scene
-                    .get::<_, LuaFunction>("emit_update")
-                    .expect("Couldn't get Lua emit_update function")
-                    .call::<_, ()>((scene, dt))
-                    .expect("Failed calling emit_update")
-            }
-            LuaMessage::UpdateEntityId(original_id, new_id, data) => {
-                let scene: LuaTable = lua
-                    .globals()
-                    .get("currentScene")
-                    .expect("Couldn't get Lua scene");
-                let id_func: LuaFunction = scene
-                    .get("update_entity_id")
-                    .expect("Couldn't get Lua update_entity_id function");
-                id_func
-                    .call::<_, ()>((
-                        scene,
-                        original_id,
-                        new_id,
-                        json_value_to_lua(&lua, &data)
-                            .expect("Couldn't convert json data to Lua object"),
-                    ))
-                    .expect("Couldn't call update_entity_id")
-            }
-            LuaMessage::UpdateEntity(id, data) => {
-                let entity: LuaTable = lua
-                    .globals()
-                    .get::<&str, LuaTable>("currentScene")
-                    .expect("Couldn't get Lua scene")
-                    .get::<&str, LuaTable>("entities")
-                    .expect("Couldn't get entities table")
-                    .get::<String, LuaTable>(id.clone())
-                    .expect(&format!("Couldn't get entity {}", id));
-                entity
-                    .get::<&str, LuaFunction>("update")
-                    .expect("Couldn't get update function")
-                    .call::<_, ()>((
-                        entity.clone(),
-                        json_value_to_lua(&lua, &data)
-                            .expect("Couldn't convert json data to Lua object"),
-                    ))
-                    .expect(&format!("Couldn't call update function on {}", id));
-                // Load scripts if any are updated
-                let data_object = data.as_object().expect("Data cannot be parsed as object");
-                if data_object.contains_key("scripts")
-                    && data_object
-                        .get("scripts")
-                        .expect("Couldn't get scripts value")
-                        .is_object()
-                {
-                    let load_func = entity
-                        .get::<_, LuaFunction>("load_script")
-                        .expect("Couldn't get load_script function");
-                    data.as_object()
-                        .expect("Data cannot be parsed as object")
-                        .get("scripts")
-                        .expect("Couldn't get scripts value")
-                        .as_object()
-                        .expect("Couldn't parse scripts as object")
-                        .keys()
-                        .for_each(|script| {
-                            load_func
-                                .call::<_, ()>((entity.clone(), script.clone()))
-                                .expect("Couldn't call load_script function")
-                        });
-                }
-            }
-            LuaMessage::DeleteEntity(id) => lua
+fn match_message(lua: &Lua, msg: LuaMessage) {
+    match msg {
+        LuaMessage::Tick(dt) => {
+            let scene: LuaTable = lua
+                .globals()
+                .get("currentScene")
+                .expect("Couldn't get Lua scene");
+            scene
+                .get::<_, LuaFunction>("emit_update")
+                .expect("Couldn't get Lua emit_update function")
+                .call::<_, ()>((scene, dt))
+                .expect("Failed calling emit_update")
+        }
+        LuaMessage::UpdateEntityId(original_id, new_id, data) => {
+            let scene: LuaTable = lua
+                .globals()
+                .get("currentScene")
+                .expect("Couldn't get Lua scene");
+            let id_func: LuaFunction = scene
+                .get("update_entity_id")
+                .expect("Couldn't get Lua update_entity_id function");
+            id_func
+                .call::<_, ()>((
+                    scene,
+                    original_id,
+                    new_id,
+                    json_value_to_lua(&lua, &data)
+                        .expect("Couldn't convert json data to Lua object"),
+                ))
+                .expect("Couldn't call update_entity_id")
+        }
+        LuaMessage::UpdateEntity(id, data) => {
+            let entity: LuaTable = lua
                 .globals()
                 .get::<&str, LuaTable>("currentScene")
                 .expect("Couldn't get Lua scene")
                 .get::<&str, LuaTable>("entities")
                 .expect("Couldn't get entities table")
-                .set(id, LuaNil)
-                .expect("Couldn't delete entity"),
-            LuaMessage::DuplicateEntity(id) => {
-                let scene: LuaTable = lua
-                    .globals()
-                    .get("currentScene")
-                    .expect("Couldn't get Lua scene");
+                .get::<String, LuaTable>(id.clone())
+                .expect(&format!("Couldn't get entity {}", id));
+            entity
+                .get::<&str, LuaFunction>("update")
+                .expect("Couldn't get update function")
+                .call::<_, ()>((
+                    entity.clone(),
+                    json_value_to_lua(&lua, &data)
+                        .expect("Couldn't convert json data to Lua object"),
+                ))
+                .expect(&format!("Couldn't call update function on {}", id));
+            // Load scripts if any are updated
+            let data_object = data.as_object().expect("Data cannot be parsed as object");
+            if data_object.contains_key("scripts")
+                && data_object
+                    .get("scripts")
+                    .expect("Couldn't get scripts value")
+                    .is_object()
+            {
+                let load_func = entity
+                    .get::<_, LuaFunction>("load_script")
+                    .expect("Couldn't get load_script function");
+                data.as_object()
+                    .expect("Data cannot be parsed as object")
+                    .get("scripts")
+                    .expect("Couldn't get scripts value")
+                    .as_object()
+                    .expect("Couldn't parse scripts as object")
+                    .keys()
+                    .for_each(|script| {
+                        load_func
+                            .call::<_, ()>((entity.clone(), script.clone()))
+                            .expect("Couldn't call load_script function")
+                    });
+            }
+        }
+        LuaMessage::DeleteEntity(id) => lua
+            .globals()
+            .get::<&str, LuaTable>("currentScene")
+            .expect("Couldn't get Lua scene")
+            .get::<&str, LuaTable>("entities")
+            .expect("Couldn't get entities table")
+            .set(id, LuaNil)
+            .expect("Couldn't delete entity"),
+        LuaMessage::DuplicateEntity(id) => {
+            let scene: LuaTable = lua
+                .globals()
+                .get("currentScene")
+                .expect("Couldn't get Lua scene");
+            scene
+                .get::<_, LuaFunction>("duplicate_entity")
+                .expect("Couldn't get Lua duplicate_entity function")
+                .call::<_, ()>((scene, id))
+                .expect("Couldn't call duplicate_entity")
+        }
+        LuaMessage::SaveScene(path) => {
+            let scene: LuaTable = lua
+                .globals()
+                .get("currentScene")
+                .expect("Couldn't get Lua scene");
+            scene
+                .get::<_, LuaFunction>("save_scene")
+                .expect("Couldn't get Lua save_scene function")
+                .call::<_, ()>((scene, path))
+                .expect("Couldn't call save_scene")
+        }
+        LuaMessage::LoadScene(path) => {
+            let scene: LuaTable = lua
+                .globals()
+                .get("currentScene")
+                .expect("Couldn't get Lua scene");
+            scene
+                .get::<_, LuaFunction>("load_scene")
+                .expect("Couldn't get Lua load_scene function")
+                .call::<_, ()>((scene, path))
+                .expect("Couldn't call load_scene")
+        }
+        LuaMessage::RunScript(id, function) => {
+            let entity: LuaTable = lua
+                .globals()
+                .get::<_, LuaTable>("currentScene")
+                .expect("Couldn't get Lua scene")
+                .get::<_, LuaTable>("entities")
+                .expect("Couldn't get entities table from scene")
+                .get::<_, LuaTable>(id.clone())
+                .expect("Couldn't get entity");
+            entity
+                .get::<_, LuaFunction>("run_script")
+                .expect("Couldn't get run_script function")
+                .call::<_, ()>((entity, function))
+                .expect("Couldn't call run_script function")
+        }
+        LuaMessage::EmitEntityString(id, window) => {
+            let scene: LuaTable = lua
+                .globals()
+                .get::<_, LuaTable>("currentScene")
+                .expect("Couldn't get Lua scene");
+            let data: LuaTable = lua.create_table().expect("Couldn't create new table");
+            data.set("id", id.clone())
+                .expect("Couldn't set id in return data table");
+            data.set(
+                "table",
                 scene
-                    .get::<_, LuaFunction>("duplicate_entity")
-                    .expect("Couldn't get Lua duplicate_entity function")
-                    .call::<_, ()>((scene, id))
-                    .expect("Couldn't call duplicate_entity")
-            }
-            LuaMessage::SaveScene(path) => {
-                let scene: LuaTable = lua
-                    .globals()
-                    .get("currentScene")
-                    .expect("Couldn't get Lua scene");
-                scene
-                    .get::<_, LuaFunction>("save_scene")
-                    .expect("Couldn't get Lua save_scene function")
-                    .call::<_, ()>((scene, path))
-                    .expect("Couldn't call save_scene")
-            }
-            LuaMessage::LoadScene(path) => {
-                let scene: LuaTable = lua
-                    .globals()
-                    .get("currentScene")
-                    .expect("Couldn't get Lua scene");
-                scene
-                    .get::<_, LuaFunction>("load_scene")
-                    .expect("Couldn't get Lua load_scene function")
-                    .call::<_, ()>((scene, path))
-                    .expect("Couldn't call load_scene")
-            }
-            LuaMessage::RunScript(id, function) => {
-                let entity: LuaTable = lua
-                    .globals()
-                    .get::<_, LuaTable>("currentScene")
-                    .expect("Couldn't get Lua scene")
-                    .get::<_, LuaTable>("entities")
-                    .expect("Couldn't get entities table from scene")
-                    .get::<_, LuaTable>(id.clone())
-                    .expect("Couldn't get entity");
-                entity
-                    .get::<_, LuaFunction>("run_script")
-                    .expect("Couldn't get run_script function")
-                    .call::<_, ()>((entity, function))
-                    .expect("Couldn't call run_script function")
-            }
-            LuaMessage::EmitEntityString(id, window) => {
-                let scene: LuaTable = lua
-                    .globals()
-                    .get::<_, LuaTable>("currentScene")
-                    .expect("Couldn't get Lua scene");
-                let data: LuaTable = lua.create_table().expect("Couldn't create new table");
-                data.set("id", id.clone())
-                    .expect("Couldn't set id in return data table");
-                data.set(
-                    "table",
-                    scene
-                        .get::<_, LuaFunction>("entity_as_block_string")
-                        .expect("Couldn't get entity_as_block_string function")
-                        .call::<_, LuaString>((scene, id))
-                        .expect("Couldn't call as_string function"),
-                )
-                .expect("Couldn't set table string in return data table");
-                lua.globals()
-                    .get::<_, LuaFunction>("emit")
-                    .expect("Couldn't get emit global function")
-                    .call::<_, ()>(("entity_string", data))
-                    .expect("Couldn't call emit")
-            }
-            LuaMessage::HandleInspectorSave(inspector, scripts) => {
-                let scene: LuaTable = lua
-                    .globals()
-                    .get::<_, LuaTable>("currentScene")
-                    .expect("Couldn't get Lua scene");
-            }
+                    .get::<_, LuaFunction>("entity_as_block_string")
+                    .expect("Couldn't get entity_as_block_string function")
+                    .call::<_, LuaString>((scene, id))
+                    .expect("Couldn't call as_string function"),
+            )
+            .expect("Couldn't set table string in return data table");
+            lua.globals()
+                .get::<_, LuaFunction>("emit")
+                .expect("Couldn't get emit global function")
+                .call::<_, ()>(("entity_string", data))
+                .expect("Couldn't call emit")
+        }
+        LuaMessage::HandleInspectorSave(inspector, scripts) => {
+            // Load inspector contents as entity lua table using serpent
+            // extract id separately (remove from loaded entity)
+            // scripts are in format (name: string), add them to entity
+            // finally standard update procedure!
+            let scene: LuaTable = lua
+                .globals()
+                .get::<_, LuaTable>("currentScene")
+                .expect("Couldn't get Lua scene");
         }
     }
 }
