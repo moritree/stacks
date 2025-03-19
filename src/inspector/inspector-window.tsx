@@ -107,44 +107,10 @@ export default function InspectorWindow() {
     );
 
   const handleSave = async () => {
-    let updateData: any = {};
-
-    // deep equality
-    const isEqual = (a: any, b: any): boolean => {
-      if (a === b) return true;
-      if (typeof a !== "object" || typeof b !== "object") return false;
-      if (a === null || b === null) return false;
-
-      const keysA = Object.keys(a);
-      const keysB = Object.keys(b);
-
-      if (keysA.length !== keysB.length) return false;
-
-      return keysA.every((key) => isEqual(a[key], b[key]));
-    };
-
-    // save inspector
-    // TODO data validation
-
-    // save scripts
-    // TODO error handling here
-    const scripts = entity.scripts;
-    const newScripts = Object.fromEntries(scriptsContents);
-    if (!isEqual(scripts, newScripts))
-      updateData = {
-        ...updateData,
-        scripts: Object.fromEntries(
-          Array.from(scriptsContents).map(([k, v]) => [k, { string: v }]),
-        ),
-      };
-
-    if (Object.keys(updateData).length > 0) {
-      invoke("update_entity", {
-        id: entity.id,
-        data: updateData,
-      });
-      if (updateData.id) entity.id = updateData.id; // so window title updates correctly
-    }
+    invoke("handle_inspector_save", {
+      inspector: inspectorContents,
+      scripts: scriptsContents,
+    });
     setSaved(true);
   };
 

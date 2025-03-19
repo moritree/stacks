@@ -221,6 +221,12 @@ fn message_processing_loop(lua: &Lua, rx: std::sync::mpsc::Receiver<LuaMessage>)
                     .call::<_, ()>(("entity_string", data))
                     .expect("Couldn't call emit")
             }
+            LuaMessage::HandleInspectorSave(inspector, scripts) => {
+                let scene: LuaTable = lua
+                    .globals()
+                    .get::<_, LuaTable>("currentScene")
+                    .expect("Couldn't get Lua scene");
+            }
         }
     }
 }

@@ -4,8 +4,8 @@ mod lua_setup;
 mod lua_types;
 use frontend_commands::{resize_window, set_frontend_ready, window_scale, SetupState};
 use lua_commands::{
-    delete_entity, duplicate_entity, get_entity_string, load_scene, run_script, save_scene, tick,
-    update_entity,
+    delete_entity, duplicate_entity, get_entity_string, handle_inspector_save, load_scene,
+    run_script, save_scene, tick, update_entity,
 };
 use lua_setup::init_lua_thread;
 use std::sync::Mutex;
@@ -37,7 +37,8 @@ pub fn run() {
             resize_window,
             window_scale,
             set_frontend_ready,
-            get_entity_string
+            get_entity_string,
+            handle_inspector_save
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
