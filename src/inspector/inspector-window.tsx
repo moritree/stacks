@@ -1,6 +1,6 @@
 import { JSX, render } from "preact";
 import "../style.css";
-import { emit, listen, once } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -46,7 +46,6 @@ export default function InspectorWindow() {
             id: e.payload.id,
             window: getCurrentWindow().label,
           });
-
           setEntity(e.payload);
         }),
       );
@@ -108,7 +107,6 @@ export default function InspectorWindow() {
     );
 
   const handleSave = async () => {
-    const { scripts, ...rest } = entity;
     let updateData: any = {};
 
     // deep equality
@@ -127,35 +125,10 @@ export default function InspectorWindow() {
 
     // save inspector
     // TODO data validation
-    try {
-      const parsedInspectorContents = JSON.parse(inspectorContents);
-
-      const jsonDiff = Object.keys({
-        ...rest,
-        ...parsedInspectorContents,
-      }).reduce<Record<string, any>>((diff, key) => {
-        const entityValue = (entity as Record<string, any>)[key];
-        const inspectorValue = (parsedInspectorContents as Record<string, any>)[
-          key
-        ];
-
-        if (!isEqual(inspectorValue, entityValue)) {
-          diff[key] = inspectorValue ?? null;
-        }
-        return diff;
-      }, {});
-
-      updateData = jsonDiff;
-    } catch (e) {
-      await message("Invalid formatting in inspector", {
-        title: "Couldn't save entity",
-        kind: "error",
-      });
-      return;
-    }
 
     // save scripts
     // TODO error handling here
+    const scripts = entity.scripts;
     const newScripts = Object.fromEntries(scriptsContents);
     if (!isEqual(scripts, newScripts))
       updateData = {
