@@ -76,6 +76,7 @@ export default function EntityComponent(props: EntityProps) {
   let style = {
     "--x": `calc(${entity.pos.x}px * var(--scene-scale))`,
     "--y": `calc(${entity.pos.y}px * var(--scene-scale))`,
+    rotate: `${entity.rotation || 0}deg`,
   };
   switch (entity.type) {
     case "text":

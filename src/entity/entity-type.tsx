@@ -15,6 +15,7 @@ interface BaseEntity {
   scripts: any;
   pos: { x: number; y: number };
   draggable?: Boolean;
+  rotation?: number;
 }
 
 export type Entity = BaseEntity & (RectEntity | TextEntity);
