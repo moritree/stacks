@@ -302,26 +302,60 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
             let scripts_table: LuaTable = entity
                 .get("scripts")
                 .expect("Couldn't get entity scripts table");
+            let load_script_function: LuaFunction = lua
+                .load(
+                    r#"
+                        function(self, data)
+                            as_string = "local func = function(self) " .. (data) .. " ; end ; return func"
+                            local success, loaded = require("serpent").load(as_string, { safe = false })
+                            if not success then return false end
+                            return (loaded --[[@as function]])
+                        end
+                        "#,
+                )
+                .eval::<LuaFunction>()
+                .expect("Couldn't load load_script_function function");
             for script in scripts
                 .as_object()
                 .expect("Couldn't parse scripts as object")
                 .iter()
             {
-                // TODO load scripts, return false if any are invalid
                 scripts_table
                     .set(
                         script.0.as_str(),
                         lua.create_table().expect("Couldn't create empty table"),
                     )
                     .expect("Couldn't set script key on scripts table");
-                scripts_table
+                let script_table = scripts_table
                     .get::<_, LuaTable>(script.0.as_str())
-                    .expect("Couldn't get script table")
+                    .expect("Couldn't get script table");
+                script_table
                     .set(
                         "string",
                         script.1.as_str().expect("Couldn't parse script as string"),
                     )
                     .expect("Couldn't set script string");
+
+                let loaded_func: LuaFunction = match load_script_function
+                    .call::<(LuaTable, LuaString), LuaFunction>((
+                        entity.clone(),
+                        script_table
+                            .get("string")
+                            .expect("Couldn't get script string"),
+                    )) {
+                    Ok(loaded_func) => loaded_func,
+                    Err(_) => {
+                        let _ = response_tx.send((
+                            false,
+                            format!("Invalid syntax in {} script.", script.0.as_str()),
+                            "".to_string(),
+                        ));
+                        return;
+                    }
+                };
+                script_table
+                    .set("func", loaded_func)
+                    .expect("Couldn't set script function");
             }
 
             // finally, more standard update procedure!
@@ -333,8 +367,6 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
                 .expect("Couldn't get scene entities");
 
             if id != original_id {
-                // if id is different, remove original from table
-                // TODO: let frontend know ID has changed so it can update its title properly!
                 entities
                     .set(original_id, LuaNil)
                     .expect("Couldn't clear original entity from entities table")
