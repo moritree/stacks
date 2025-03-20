@@ -17,6 +17,7 @@ import { lazy, Suspense } from "preact/compat";
 import Inspector from "./inspect-component";
 import { platform } from "@tauri-apps/plugin-os";
 import { invoke } from "@tauri-apps/api/core";
+import { message } from "@tauri-apps/plugin-dialog";
 
 export default function InspectorWindow() {
   const [editorTheme, setEditorTheme] = useState<string>(
@@ -113,6 +114,11 @@ export default function InspectorWindow() {
     });
     console.log(success);
     if (success) setSaved(true);
+    else
+      message("Error in inspector or script", {
+        title: "Could not save",
+        kind: "error",
+      });
   };
 
   const tabs: { label: string; icon: JSX.Element; component: JSX.Element }[] = [
