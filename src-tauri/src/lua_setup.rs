@@ -5,20 +5,21 @@ use std::path::Path;
 use std::sync::mpsc;
 use tauri::{Emitter, Manager, WebviewWindow};
 
-pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
+pub fn init_lua_thread(window: WebviewWindow) -> Result<LuaState, LuaError> {
     let (tx, rx) = mpsc::channel(); // create communication channel
     let _ = std::thread::Builder::new()
         .name("Lua Environment".to_string())
-        .spawn(move || {
+        .spawn(move || -> Result<(), LuaError> {
             let lua = Lua::new();
-            set_globals(&lua, window);
+            set_globals(&lua, window)?;
 
             while let Ok(msg) = rx.recv() {
                 match_message(&lua, msg);
             }
+            Ok(())
         });
 
-    LuaState { tx }
+    Ok(LuaState { tx })
 }
 
 fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
