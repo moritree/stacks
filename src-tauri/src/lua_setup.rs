@@ -1,4 +1,4 @@
-use crate::lua_types::{LuaMessage, LuaState};
+use crate::lua_types::{LuaError, LuaMessage, LuaState};
 use mlua::prelude::*;
 use std::fs;
 use std::path::Path;
@@ -21,45 +21,45 @@ pub fn init_lua_thread(window: WebviewWindow) -> LuaState {
     LuaState { tx }
 }
 
-fn set_globals(lua: &Lua, window: WebviewWindow) {
-    // let lua emit messages that TS can pick up
+fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
     let w_emit = window.clone();
-    lua.globals()
-        .set(
-            "emit",
-            lua.create_function(move |_: &Lua, (evt, data): (String, LuaValue)| {
-                let json = serde_json::to_value(&data).expect(&format!(
-                    "Lua event {}: Couldn't convert data to valid JSON value.",
-                    evt
-                ));
-                w_emit
-                    .emit(&evt, json)
-                    .expect(&format!("Couldn't emit event {}", evt));
-                Ok(())
-            })
-            .expect("Couldn't create Lua emit function"),
-        )
-        .expect("Couldn't set emit global in Lua");
+    lua.globals().set(
+        "emit",
+        lua.create_function(move |_: &Lua, (evt, data): (String, LuaValue)| {
+            let json = serde_json::to_value(&data)
+                .map_err(|e| LuaError::FormatError(format!("JSON conversion error: {}", e)))?;
+            w_emit.emit(&evt, json).map_err(|e| {
+                LuaError::CommunicationError(format!("Couldn't emit event {}: {}", evt, e))
+            })?;
+            Ok(())
+        })
+        .map_err(|e| {
+            LuaError::InitializationError(format!("Couldn't create Lua emit function: {}", e))
+        })?,
+    )?;
 
     let w_emit_to = window.clone();
-    lua.globals()
-        .set(
-            "emit_to",
-            lua.create_function(
-                move |_: &Lua, (evt, window_label, data): (String, String, LuaValue)| {
-                    let json = serde_json::to_value(&data).expect(&format!(
-                        "Lua event {}: Couldn't convert data to valid JSON value.",
-                        evt
-                    ));
-                    w_emit_to
-                        .emit_to(window_label.clone(), &evt, json)
-                        .expect(&format!("Couldn't emit event {} to {}", evt, window_label));
-                    Ok(())
-                },
-            )
-            .expect("Couldn't create Lua emit function"),
+    lua.globals().set(
+        "emit_to",
+        lua.create_function(
+            move |_: &Lua, (evt, window_label, data): (String, String, LuaValue)| {
+                let json = serde_json::to_value(&data)
+                    .map_err(|e| LuaError::FormatError(format!("JSON conversion error: {}", e)))?;
+                w_emit_to
+                    .emit_to(window_label.clone(), &evt, json)
+                    .map_err(|e| {
+                        LuaError::CommunicationError(format!(
+                            "Failed to emit event {} to {}: {}",
+                            evt, window_label, e
+                        ))
+                    })?;
+                Ok(())
+            },
         )
-        .expect("Couldn't set emit_to global in Lua");
+        .map_err(|e| {
+            LuaError::InitializationError(format!("Failed to create Lua emit_to function: {}", e))
+        })?,
+    )?;
 
     // intercept & tag lua prints to stdout
     lua.globals()
@@ -68,27 +68,26 @@ fn set_globals(lua: &Lua, window: WebviewWindow) {
             lua.create_function(|_, msg: String| {
                 println!("[lua] {}", msg);
                 Ok(())
-            })
-            .expect("Couldn't create Lua custom print function"),
+            })?,
         )
-        .expect("Couldn't set print global in Lua");
+        .map_err(|e| {
+            LuaError::InitializationError(format!("Failed to set Lua print function: {}", e))
+        })?;
 
     // Preload modules
-    preload_lua_modules(window.clone(), &lua).expect("Failed to preload Lua modules");
+    preload_lua_modules(window.clone(), &lua)
+        .map_err(|e| LuaError::InitializationError(e.to_string()))?;
 
     // load main scene
     let lua_main: LuaTable = lua // Do this last to minimise risk of any code on .eval() not working
         .load(include_str!("../resources/lua/main.lua"))
-        .eval()
-        .expect("Couldn't load lua scene file");
+        .eval::<LuaTable>()
+        .map_err(|e| LuaError::InitializationError(format!("Failed loading main scene: {}", e)))?;
     lua.globals()
-        .set(
-            "currentScene",
-            lua_main
-                .get::<_, mlua::Table>("scene")
-                .expect("Couldn't get Lua scene"),
-        )
-        .expect("Couldn't set scene global in Lua");
+        .set("currentScene", lua_main)
+        .map_err(|e| LuaError::InitializationError(format!("Failed to set main scene: {}", e)))?;
+
+    Ok(())
 }
 
 fn match_message(lua: &Lua, msg: LuaMessage) {
