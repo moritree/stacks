@@ -116,6 +116,7 @@ export default function Scripts(props: {
                     props.onContentsChange(
                       new Map([...Array.from(props.contents), [trimmed, ""]]),
                     );
+                    props.onAddScriptsOpenChange();
                   }
                 }}
               />
