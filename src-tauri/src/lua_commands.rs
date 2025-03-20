@@ -106,7 +106,7 @@ pub async fn handle_inspector_save(
     original_id: String,
     inspector: String,
     scripts: Value,
-) -> Result<bool, String> {
+) -> Result<(bool, String), String> {
     let (response_tx, response_rx) = mpsc::channel();
 
     state

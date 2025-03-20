@@ -263,7 +263,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
             {
                 Ok(entity) => entity,
                 Err(_) => {
-                    let _ = response_tx.send(false); // fail and abort save if entity cannot be deserialized valid
+                    let _ = response_tx.send((false, "Invalid syntax in inspector.".to_string())); // fail and abort save if entity cannot be deserialized valid
                     return;
                 }
             };
@@ -273,12 +273,12 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
                 Ok(id) => match id {
                     Some(id) => id,
                     None => {
-                        let _ = response_tx.send(false);
+                        let _ = response_tx.send((false, "Entity must have an ID.".to_string()));
                         return;
                     }
                 },
                 Err(_) => {
-                    let _ = response_tx.send(false);
+                    let _ = response_tx.send((false, "Entity must have an ID.".to_string()));
                     return;
                 }
             };
@@ -332,7 +332,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
                 .set(id, entity)
                 .expect("Couldn't update entities table with new entity");
             response_tx
-                .send(true)
+                .send((true, "Success".to_string()))
                 .expect("Failed to send success response (ha)")
         }
     }
