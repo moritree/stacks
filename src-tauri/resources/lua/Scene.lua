@@ -55,9 +55,8 @@ function Scene:duplicate_entity(id)
 end
 
 function Scene:save_scene(path)
-    -- remove script functions, preserve only string representations
     local to_save = {}
-    for _, entity in pairs(self.entities) do table.insert(to_save, entity:serializable()) end
+    for id, entity in pairs(self.entities) do to_save[id] = entity:serializable() end
 
     local file = assert(io.open(path, "w"), "Couldn't open file")
     file:write(serializer.dump(to_save))
