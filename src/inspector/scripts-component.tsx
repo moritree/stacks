@@ -83,7 +83,12 @@ export default function Scripts(props: {
               <input
                 type="text"
                 placeholder="Script name..."
-                class="w-full p-2 h-fit bg-base"
+                spellcheck={false}
+                autocomplete="off"
+                autoCorrect="off"
+                class="grow p-1 h-full bg-base border border-base rounded-sm\
+                data-[invalid=true]:text-red-600/75 data-[invalid=true]:border-red-600/75 transition-colors"
+                data-invalid={props.contents.has(newScriptName.trim())}
                 value={newScriptName}
                 onInput={(e) => setNewScriptName(e.currentTarget.value)}
                 onKeyUp={(e) => {
@@ -122,7 +127,10 @@ export default function Scripts(props: {
                 active:duration-100 active:opacity-90 active:bg-accent" +
                 (!props.addScriptsOpen && " m-[1px]")
               }
-              onClick={props.onAddScriptsOpenChange}
+              onClick={() => {
+                setNewScriptName("");
+                props.onAddScriptsOpenChange();
+              }}
             >
               {props.addScriptsOpen ? <Minus /> : <Plus />}
             </button>{" "}
