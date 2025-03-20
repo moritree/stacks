@@ -93,6 +93,7 @@ export default function Scripts(props: {
                     trimmed !== "" &&
                     !props.contents.has(trimmed)
                   ) {
+                    // TODO return success
                     invoke("update_entity", {
                       id: props.entity.id,
                       data: {
@@ -107,6 +108,9 @@ export default function Scripts(props: {
                         },
                       },
                     });
+                    props.onContentsChange(
+                      new Map([...Array.from(props.contents), [trimmed, ""]]),
+                    );
                   }
                 }}
               />
