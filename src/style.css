@@ -49,7 +49,12 @@
 }
 
 @layer components {
-    .entity.selectable {
+    .entity {
+        cursor: default;
+    }
+
+    .entity.selectable,
+    .entity.draggable {
         cursor: pointer;
     }
 
