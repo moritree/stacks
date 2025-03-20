@@ -107,7 +107,7 @@ export default function InspectorWindow() {
     );
 
   const handleSave = async () => {
-    const [success, msg] = await invoke<[boolean, string]>(
+    const [success, msg, id] = await invoke<[boolean, string, string]>(
       "handle_inspector_save",
       {
         originalId: entity.id,
@@ -115,10 +115,13 @@ export default function InspectorWindow() {
         scripts: scriptsContents,
       },
     );
-    if (success) setSaved(true);
-    else
+
+    if (success) {
+      if (entity.id != id) entity.id = id;
+      setSaved(true);
+    } else
       message(msg, {
-        title: "Could not save",
+        title: "Could not save entity",
         kind: "error",
       });
   };
