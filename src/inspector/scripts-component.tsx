@@ -82,11 +82,11 @@ export default function Scripts(props: {
             {props.addScriptsOpen && (
               <input
                 type="text"
-                placeholder="Script name..."
+                placeholder="Name for new script..."
                 spellcheck={false}
                 autocomplete="off"
                 autoCorrect="off"
-                class="grow p-1 h-full bg-base border border-base rounded-sm\
+                class="grow p-1 h-full bg-base border border-base rounded-sm \
                 data-[invalid=true]:text-red-600/75 data-[invalid=true]:border-red-600/75 transition-colors"
                 data-invalid={props.contents.has(newScriptName.trim())}
                 value={newScriptName}
