@@ -38,7 +38,7 @@ async function openInspector(entity: Entity) {
   // If window already exists, focus & update instead of creating a new one
   const existing = await WebviewWindow.getByLabel("inspector");
   if (existing) {
-    emitTo("inspector", "update_entity", entity);
+    emitTo("inspector", "provide_entity", entity);
     existing.setFocus();
     return;
   }
@@ -55,7 +55,7 @@ async function openInspector(entity: Entity) {
   });
 
   inspectorWindow.once("mounted", () => {
-    emitTo("inspector", "update_entity", entity);
+    emitTo("inspector", "provide_entity", entity);
   });
 
   inspectorWindow.once("tauri://error", (e) => {

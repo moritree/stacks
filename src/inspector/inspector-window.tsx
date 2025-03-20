@@ -38,7 +38,7 @@ export default function InspectorWindow() {
 
     async function setupEntityUpdateListener() {
       listeners.push(
-        await listen<any>("update_entity", (e) => {
+        await listen<any>("provide_entity", (e) => {
           setOpenScripts(new Set<string>());
           const scripts = e.payload.scripts;
           setScriptsContents(new Map(Object.entries(scripts || {})));
