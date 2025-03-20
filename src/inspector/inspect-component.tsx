@@ -1,7 +1,7 @@
 import AceEditor from "react-ace";
 import { Entity } from "../entity/entity-type";
 
-import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/mode-lua";
 import "ace-builds/src-noconflict/theme-github_light_default";
 import "ace-builds/src-noconflict/theme-cloud9_night";
 import "ace-builds/src-noconflict/ext-language_tools";
@@ -17,7 +17,7 @@ export default function Inspector(props: {
       <AceEditor
         height="100%"
         width="100%"
-        mode="javascript"
+        mode="lua"
         value={props.contents}
         onChange={props.onContentsChange}
         theme={props.editorTheme}

@@ -38,14 +38,27 @@ export default function InspectorWindow() {
     async function setupEntityUpdateListener() {
       listeners.push(
         await listen<any>("update_entity", (e) => {
-          const { scripts, ...rest } = e.payload;
-          setInspectorContents(JSON.stringify(rest, null, 2));
           setOpenScripts(new Set<string>());
-          setScriptsContents(
-            scripts ? new Map(Object.entries(scripts)) : new Map(),
-          );
+          const scripts = e.payload.scripts;
+          setScriptsContents(new Map(Object.entries(scripts || {})));
+
+          invoke("get_entity_string", {
+            id: e.payload.id,
+            window: getCurrentWindow().label,
+          });
           setEntity(e.payload);
         }),
+      );
+    }
+
+    async function setupEntityStringListener() {
+      listeners.push(
+        await listen<{ id: string; table: string }>(
+          "entity_string",
+          (tableEvent) => {
+            setInspectorContents(tableEvent.payload.table);
+          },
+        ),
       );
     }
 
@@ -59,7 +72,9 @@ export default function InspectorWindow() {
       );
     }
 
-    setupEntityUpdateListener().then(() => emit("mounted"));
+    setupEntityStringListener()
+      .then(() => setupEntityUpdateListener())
+      .then(() => emit("mounted"));
     setupThemeChangeListener().then(async () =>
       setEditorTheme(
         (await getCurrentWindow().theme()) == "light"
@@ -74,14 +89,17 @@ export default function InspectorWindow() {
   }, []);
 
   useEffect(() => {
-    if (entity) setSaved(true);
+    if (entity != undefined) {
+      if (saved == false) setSaved(true);
+      else getCurrentWindow().setTitle(entity.id);
+    }
   }, [entity]);
 
   useEffect(() => {
     if (entity) getCurrentWindow().setTitle(entity.id + (saved ? "" : " *"));
   }, [saved]);
 
-  if (!entity)
+  if (!entity || inspectorContents == "")
     return (
       <div class="w-screen h-screen flex flex-col justify-center">
         <Loader class="w-screen h-10" />
@@ -89,71 +107,18 @@ export default function InspectorWindow() {
     );
 
   const handleSave = async () => {
-    const { scripts, ...rest } = entity;
-    let updateData: any = {};
-
-    // deep equality
-    const isEqual = (a: any, b: any): boolean => {
-      if (a === b) return true;
-      if (typeof a !== "object" || typeof b !== "object") return false;
-      if (a === null || b === null) return false;
-
-      const keysA = Object.keys(a);
-      const keysB = Object.keys(b);
-
-      if (keysA.length !== keysB.length) return false;
-
-      return keysA.every((key) => isEqual(a[key], b[key]));
-    };
-
-    // save inspector
-    // TODO data validation
-    try {
-      const parsedInspectorContents = JSON.parse(inspectorContents);
-
-      const jsonDiff = Object.keys({
-        ...rest,
-        ...parsedInspectorContents,
-      }).reduce<Record<string, any>>((diff, key) => {
-        const entityValue = (entity as Record<string, any>)[key];
-        const inspectorValue = (parsedInspectorContents as Record<string, any>)[
-          key
-        ];
-
-        if (!isEqual(inspectorValue, entityValue)) {
-          diff[key] = inspectorValue ?? null;
-        }
-        return diff;
-      }, {});
-
-      updateData = jsonDiff;
-    } catch (e) {
-      await message("Invalid formatting in inspector", {
-        title: "Couldn't save entity",
+    const success = await invoke("handle_inspector_save", {
+      originalId: entity.id,
+      inspector: inspectorContents,
+      scripts: scriptsContents,
+    });
+    console.log(success);
+    if (success) setSaved(true);
+    else
+      message("Error in inspector or script", {
+        title: "Could not save",
         kind: "error",
       });
-      return;
-    }
-
-    // save scripts
-    // TODO error handling here
-    const newScripts = Object.fromEntries(scriptsContents);
-    if (!isEqual(scripts, newScripts))
-      updateData = {
-        ...updateData,
-        scripts: Object.fromEntries(
-          Array.from(scriptsContents).map(([k, v]) => [k, { string: v }]),
-        ),
-      };
-
-    if (Object.keys(updateData).length > 0) {
-      invoke("update_entity", {
-        id: entity.id,
-        data: updateData,
-      });
-      if (updateData.id) entity.id = updateData.id; // so window title updates correctly
-    }
-    setSaved(true);
   };
 
   const tabs: { label: string; icon: JSX.Element; component: JSX.Element }[] = [

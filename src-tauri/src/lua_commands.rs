@@ -1,5 +1,6 @@
 use crate::lua_types::{LuaMessage, LuaState};
 use serde_json::Value;
+use std::sync::mpsc;
 use tauri::State;
 
 #[tauri::command]
@@ -85,4 +86,38 @@ pub async fn run_script(
         .tx
         .send(LuaMessage::RunScript(id, function))
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_entity_string(
+    state: State<'_, LuaState>,
+    id: String,
+    window: String,
+) -> Result<(), String> {
+    state
+        .tx
+        .send(LuaMessage::EmitEntityString(id, window))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn handle_inspector_save(
+    state: State<'_, LuaState>,
+    original_id: String,
+    inspector: String,
+    scripts: Value,
+) -> Result<bool, String> {
+    let (response_tx, response_rx) = mpsc::channel();
+
+    state
+        .tx
+        .send(LuaMessage::HandleInspectorSave(
+            original_id,
+            inspector,
+            scripts,
+            response_tx,
+        ))
+        .expect("Failed calling HandleInspectorSave");
+
+    response_rx.recv().map_err(|e| e.to_string())
 }

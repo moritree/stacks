@@ -1,5 +1,5 @@
 use serde_json::Value;
-use std::sync::mpsc;
+use std::sync::mpsc::{self, Sender};
 
 #[derive(Clone)]
 pub struct LuaState {
@@ -15,4 +15,6 @@ pub enum LuaMessage {
     SaveScene(String),
     LoadScene(String),
     RunScript(String, String),
+    EmitEntityString(String, String),
+    HandleInspectorSave(String, String, Value, Sender<bool>),
 }
