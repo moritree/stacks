@@ -244,26 +244,44 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
                 .call::<_, ()>(("entity_string", window, data))
                 .expect("Couldn't call emit_to")
         }
-        LuaMessage::HandleInspectorSave(original_id, inspector, scripts) => {
+        LuaMessage::HandleInspectorSave(original_id, inspector, scripts, response_tx) => {
             // Load inspector contents as entity lua table using serpent
-            let entity: LuaTable = lua
+            let entity: LuaTable = match lua
                 .load(
                     r#"
-                function(data)
-                    local success, loaded = require("serpent").load(data)
-                    local entity = require("Entity"):new(loaded --[[@as table]])
-                    entity.scripts = {} -- otherwise we can edit the metatable?
-                    return entity
-                end
-                "#,
+                        function(data)
+                            local success, loaded = require("serpent").load(data)
+                            local entity = require("Entity"):new(loaded --[[@as table]])
+                            entity.scripts = {} -- otherwise we can edit the metatable?
+                            return entity
+                        end
+                        "#,
                 )
                 .eval::<LuaFunction>()
                 .expect("Couldn't load deserialize function")
                 .call(inspector)
-                .expect("Couldn't call deserialize function"); // fails here if invalid
+            {
+                Ok(entity) => entity,
+                Err(_) => {
+                    let _ = response_tx.send(false); // fail and abort save if entity cannot be deserialized valid
+                    return;
+                }
+            };
 
             // extract id separately (remove from loaded entity)
-            let id: LuaString = entity.get("id").expect("Couldn't get entity id");
+            let id: LuaString = match entity.get("id") {
+                Ok(id) => match id {
+                    Some(id) => id,
+                    None => {
+                        let _ = response_tx.send(false);
+                        return;
+                    }
+                },
+                Err(_) => {
+                    let _ = response_tx.send(false);
+                    return;
+                }
+            };
             entity
                 .set("id", LuaNil)
                 .expect("Couldn't clear id from entity table");
@@ -277,6 +295,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
                 .expect("Couldn't parse scripts as object")
                 .iter()
             {
+                // TODO load scripts, return false if any are invalid
                 scripts_table
                     .set(
                         script.0.as_str(),
@@ -312,7 +331,9 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
             entities
                 .set(id, entity)
                 .expect("Couldn't update entities table with new entity");
-            println!("handle save done")
+            response_tx
+                .send(true)
+                .expect("Failed to send success response (ha)")
         }
     }
 }

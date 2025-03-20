@@ -106,12 +106,13 @@ export default function InspectorWindow() {
     );
 
   const handleSave = async () => {
-    invoke("handle_inspector_save", {
+    const success = await invoke("handle_inspector_save", {
       originalId: entity.id,
       inspector: inspectorContents,
       scripts: scriptsContents,
     });
-    setSaved(true);
+    console.log(success);
+    if (success) setSaved(true);
   };
 
   const tabs: { label: string; icon: JSX.Element; component: JSX.Element }[] = [
