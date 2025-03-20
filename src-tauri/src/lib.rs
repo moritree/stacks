@@ -56,15 +56,13 @@ pub fn run() {
 
             app.set_menu(menu)?;
             app.on_menu_event(move |app_handle: &tauri::AppHandle, event| {
-                println!("menu event: {:?}", event.id());
-
                 match event.id().0.as_str() {
-                    op @ ("save_scene" | "load_scene") => {
+                    file_op @ ("save_scene" | "load_scene") => {
                         app_handle
-                            .emit_to("main", "file_operation", op)
-                            .expect(&format!("Failed to emit {}", op));
+                            .emit_to("main", "file_operation", file_op)
+                            .expect(&format!("Failed to emit {}", file_op));
                     }
-                    _ => println!("unexpected menu event"),
+                    _ => return,
                 }
             });
 
