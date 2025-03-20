@@ -87,7 +87,7 @@ function Scene:entity_as_block_string(id)
     local copy = self.entities[id]:serializable()
     copy.id = id
     copy.scripts = nil
-    return serializer.block(copy)
+    return serializer.block(copy, { comment = false })
 end
 
 return Scene
