@@ -13,37 +13,30 @@ const SCENE_BASE_SIZE = {
   height: 720,
 };
 
+async function saveScene() {
+  await invoke("save_scene", {
+    path: await save({
+      filters: [{ name: "scene", extensions: ["txt"] }],
+    }),
+  });
+}
+
+async function loadScene() {
+  await invoke("load_scene", {
+    path: await open({
+      multiple: false,
+      directory: false,
+    }),
+  });
+}
+
 async function handleContextMenu(event: Event) {
   event.preventDefault();
   (
     await Menu.new({
       items: [
-        {
-          id: "save_scene",
-          text: "Save Scene",
-          action: async (_: string) =>
-            await invoke("save_scene", {
-              path: await save({
-                filters: [
-                  {
-                    name: "scene",
-                    extensions: ["txt"],
-                  },
-                ],
-              }),
-            }),
-        },
-        {
-          id: "load_scene",
-          text: "Load Scene",
-          action: async (_: string) =>
-            await invoke("load_scene", {
-              path: await open({
-                multiple: false,
-                directory: false,
-              }),
-            }),
-        },
+        { id: "save_scene", text: "Save Scene" },
+        { id: "load_scene", text: "Load Scene" },
       ],
     })
   ).popup();
@@ -127,6 +120,24 @@ export default function Scene() {
       );
     }
 
+    async function setupFileOperationListener() {
+      const unsubscribe = await listen<string>("file_operation", (e) => {
+        switch (e.payload) {
+          case "load_scene": {
+            loadScene();
+            break;
+          }
+          case "save_scene": {
+            saveScene();
+            break;
+          }
+          default:
+            console.warn("Unhandled file operation", e.payload);
+        }
+      });
+      listeners.push(unsubscribe);
+    }
+
     const tick = () => {
       const now = performance.now();
       const dt = (now - lastTime) / 1000;
@@ -139,6 +150,7 @@ export default function Scene() {
     setupUpdateListener();
     setupResizeListener();
     setupSelectEntityListener();
+    setupFileOperationListener();
 
     return () => {
       listeners.forEach((unsubscribe) => unsubscribe());

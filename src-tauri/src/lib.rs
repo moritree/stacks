@@ -9,7 +9,10 @@ use lua_commands::{
 };
 use lua_setup::init_lua_thread;
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{
+    menu::{Menu, MenuItem, SubmenuBuilder},
+    Emitter, Manager,
+};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -23,6 +26,48 @@ pub fn run() {
             let window = app.get_webview_window("main").unwrap();
             let state = init_lua_thread(window.clone());
             app.manage(state);
+
+            let handle = app.handle();
+
+            // setup system menu
+            let menu = Menu::new(handle)?;
+            let stacks_menu = SubmenuBuilder::new(handle, "Stacks")
+                .item(&MenuItem::new(handle, "&Quit", true, None::<&str>)?)
+                .build()?;
+            menu.append(&stacks_menu)?;
+
+            let file_menu = SubmenuBuilder::new(handle, "File")
+                .item(&MenuItem::with_id(
+                    handle,
+                    "save_scene",
+                    "Save Scene",
+                    true,
+                    None::<&str>,
+                )?)
+                .item(&MenuItem::with_id(
+                    handle,
+                    "load_scene",
+                    "Load Scene",
+                    true,
+                    None::<&str>,
+                )?)
+                .build()?;
+            menu.append(&file_menu)?;
+
+            app.set_menu(menu)?;
+            app.on_menu_event(move |app_handle: &tauri::AppHandle, event| {
+                println!("menu event: {:?}", event.id());
+
+                match event.id().0.as_str() {
+                    op @ ("save_scene" | "load_scene") => {
+                        app_handle
+                            .emit_to("main", "file_operation", op)
+                            .expect(&format!("Failed to emit {}", op));
+                    }
+                    _ => println!("unexpected menu event"),
+                }
+            });
+
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
