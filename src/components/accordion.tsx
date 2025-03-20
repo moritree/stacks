@@ -7,6 +7,7 @@ export default function Accordion(props: {
   children?: ComponentChild | ComponentChild[];
   open?: boolean;
   onToggle?: (isOpen: boolean) => void;
+  onContextMenu?: (event: MouseEvent) => void;
 }) {
   const [open, setOpen] = useState<boolean>(props.open || false);
 
@@ -18,6 +19,7 @@ export default function Accordion(props: {
           props.onToggle?.(!open);
           setOpen(!open);
         }}
+        onContextMenu={props.onContextMenu}
       >
         <div class="shrink-0">
           {(open && <ChevronDown size={20} />) || <ChevronRight size={20} />}

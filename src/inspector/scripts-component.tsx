@@ -9,6 +9,36 @@ import "ace-builds/src-noconflict/theme-github_dark";
 import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense, useState } from "preact/compat";
 import { invoke } from "@tauri-apps/api/core";
+import { Menu } from "@tauri-apps/api/menu";
+
+async function handleContextMenu(
+  script: string,
+  contents: Map<string, string>,
+  onContentsChange: (scripts: Map<string, string>) => void,
+) {
+  (
+    await Menu.new({
+      items: [
+        {
+          id: "delete_script",
+          text: "Delete Script",
+          action: async (_: string) => {
+            let toUpdate = new Map([...Array.from(contents)]);
+            if (!toUpdate.delete(script)) {
+              console.error(
+                "Trying to delete script that couldn't be found",
+                script,
+              );
+              return;
+            }
+
+            onContentsChange(toUpdate);
+          },
+        },
+      ],
+    })
+  ).popup();
+}
 
 export default function Scripts(props: {
   entity: Entity;
@@ -40,6 +70,10 @@ export default function Scripts(props: {
                 if (open) clone.add(key);
                 else clone.delete(key);
                 props.onOpenScriptsChange(clone);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                handleContextMenu(key, props.contents, props.onContentsChange);
               }}
             >
               <div class="overflow-auto w-full h-32">
