@@ -151,8 +151,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
                 let load_func = entity
                     .get::<_, LuaFunction>("load_script")
                     .expect("Couldn't get load_script function");
-                data.as_object()
-                    .expect("Data cannot be parsed as object")
+                data_object
                     .get("scripts")
                     .expect("Couldn't get scripts value")
                     .as_object()

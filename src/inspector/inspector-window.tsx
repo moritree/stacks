@@ -26,6 +26,7 @@ export default function InspectorWindow() {
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
   const [openScripts, setOpenScripts] = useState(new Set<string>());
+  const [addScriptsOpen, setAddScriptsOpen] = useState(false);
   const [inspectorContents, setInspectorContents] = useState<string>("");
   const [scriptsContents, setScriptsContents] = useState<Map<string, string>>(
     new Map(),
@@ -160,6 +161,8 @@ export default function InspectorWindow() {
             setSaved(false);
           }}
           editorTheme={editorTheme}
+          addScriptsOpen={addScriptsOpen}
+          onAddScriptsOpenChange={() => setAddScriptsOpen(!addScriptsOpen)}
         />
       ),
     },
