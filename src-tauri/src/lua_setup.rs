@@ -244,15 +244,75 @@ fn match_message(lua: &Lua, msg: LuaMessage) {
                 .call::<_, ()>(("entity_string", window, data))
                 .expect("Couldn't call emit_to")
         }
-        LuaMessage::HandleInspectorSave(inspector, scripts) => {
+        LuaMessage::HandleInspectorSave(original_id, inspector, scripts) => {
             // Load inspector contents as entity lua table using serpent
+            let entity: LuaTable = lua
+                .load(
+                    r#"
+                function(data)
+                    local success, loaded = require("serpent").load(data)
+                    local entity = require("Entity"):new(loaded --[[@as table]])
+                    entity.scripts = {} -- otherwise we can edit the metatable?
+                    return entity
+                end
+                "#,
+                )
+                .eval::<LuaFunction>()
+                .expect("Couldn't load deserialize function")
+                .call(inspector)
+                .expect("Couldn't call deserialize function"); // fails here if invalid
+
             // extract id separately (remove from loaded entity)
-            // scripts are in format (name: string), add them to entity
-            // finally standard update procedure!
-            let scene: LuaTable = lua
+            let id: LuaString = entity.get("id").expect("Couldn't get entity id");
+            entity
+                .set("id", LuaNil)
+                .expect("Couldn't clear id from entity table");
+
+            // scripts are in object format (name: string), add them to entity in format [name] = { string = [str]}
+            let scripts_table: LuaTable = entity
+                .get("scripts")
+                .expect("Couldn't get entity scripts table");
+            for script in scripts
+                .as_object()
+                .expect("Couldn't parse scripts as object")
+                .iter()
+            {
+                scripts_table
+                    .set(
+                        script.0.as_str(),
+                        lua.create_table().expect("Couldn't create empty table"),
+                    )
+                    .expect("Couldn't set script key on scripts table");
+                scripts_table
+                    .get::<_, LuaTable>(script.0.as_str())
+                    .expect("Couldn't get script table")
+                    .set(
+                        "string",
+                        script.1.as_str().expect("Couldn't parse script as string"),
+                    )
+                    .expect("Couldn't set script string");
+            }
+
+            // finally, more standard update procedure!
+            let entities: LuaTable = lua
                 .globals()
                 .get::<_, LuaTable>("currentScene")
-                .expect("Couldn't get Lua scene");
+                .expect("Couldn't get Lua scene")
+                .get("entities")
+                .expect("Couldn't get scene entities");
+
+            if id != original_id {
+                // if id is different, remove original from table
+                // TODO: let frontend know ID has changed so it can update its title properly!
+                entities
+                    .set(original_id, LuaNil)
+                    .expect("Couldn't clear original entity from entities table")
+            }
+
+            entities
+                .set(id, entity)
+                .expect("Couldn't update entities table with new entity");
+            println!("handle save done")
         }
     }
 }

@@ -102,11 +102,16 @@ pub async fn get_entity_string(
 #[tauri::command]
 pub async fn handle_inspector_save(
     state: State<'_, LuaState>,
+    original_id: String,
     inspector: String,
     scripts: Value,
 ) -> Result<(), String> {
     state
         .tx
-        .send(LuaMessage::HandleInspectorSave(inspector, scripts))
+        .send(LuaMessage::HandleInspectorSave(
+            original_id,
+            inspector,
+            scripts,
+        ))
         .map_err(|e| e.to_string())
 }

@@ -107,6 +107,7 @@ export default function InspectorWindow() {
 
   const handleSave = async () => {
     invoke("handle_inspector_save", {
+      originalId: entity.id,
       inspector: inspectorContents,
       scripts: scriptsContents,
     });

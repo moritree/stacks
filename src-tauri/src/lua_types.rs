@@ -16,5 +16,5 @@ pub enum LuaMessage {
     LoadScene(String),
     RunScript(String, String),
     EmitEntityString(String, String),
-    HandleInspectorSave(String, Value),
+    HandleInspectorSave(String, String, Value),
 }
