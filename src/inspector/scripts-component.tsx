@@ -10,6 +10,7 @@ import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense, useState } from "preact/compat";
 import { invoke } from "@tauri-apps/api/core";
 import { Menu } from "@tauri-apps/api/menu";
+import { confirm } from "@tauri-apps/plugin-dialog";
 
 async function handleContextMenu(
   script: string,
@@ -32,7 +33,10 @@ async function handleContextMenu(
               return;
             }
 
-            onContentsChange(toUpdate);
+            (await confirm("This action cannot be reverted.\nAre you sure?", {
+              title: `Delete ${script} script`,
+              kind: "warning",
+            })) && onContentsChange(toUpdate);
           },
         },
       ],
