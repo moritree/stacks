@@ -72,16 +72,19 @@ export default function InspectorWindow() {
       );
     }
 
-    setupEntityStringListener()
-      .then(() => setupEntityUpdateListener())
-      .then(() => emit("mounted"));
-    setupThemeChangeListener().then(async () =>
-      setEditorTheme(
-        (await getCurrentWindow().theme()) == "light"
-          ? "github_light_default"
-          : "cloud9_night",
-      ),
-    );
+    setupThemeChangeListener()
+      .then(async () =>
+        setEditorTheme(
+          (await getCurrentWindow().theme()) == "light"
+            ? "github_light_default"
+            : "cloud9_night",
+        ),
+      )
+      .then(() =>
+        setupEntityStringListener()
+          .then(() => setupEntityUpdateListener())
+          .then(() => emit("mounted")),
+      );
 
     return () => {
       listeners.forEach((unsubscribe) => unsubscribe());
@@ -90,7 +93,7 @@ export default function InspectorWindow() {
 
   useEffect(() => {
     if (entity != undefined) {
-      if (saved == false) setSaved(true);
+      if (!saved) setSaved(true);
       else getCurrentWindow().setTitle(entity.id);
     }
   }, [entity]);
