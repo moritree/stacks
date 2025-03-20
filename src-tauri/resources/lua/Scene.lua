@@ -73,9 +73,7 @@ function Scene:load_scene(path)
     local content = file:read("*all")
     file:close()
 
-    -- safe mode off to load functions
-    -- TODO how do I handle security?
-    local success, loaded_entities = serializer.load(content, { safe = false })
+    local success, loaded_entities = serializer.load(content)
     if not success then
         print("Error loading scene: " .. tostring(loaded_entities))
         return
