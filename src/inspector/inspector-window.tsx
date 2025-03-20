@@ -115,7 +115,6 @@ export default function InspectorWindow() {
         scripts: scriptsContents,
       },
     );
-    console.log(success);
     if (success) setSaved(true);
     else
       message(msg, {
