@@ -28,8 +28,8 @@ pub enum LuaError {
     #[error("Failed to load Lua module: {0}")]
     ModuleLoadError(String),
 
-    #[error("Failed to process entity: {0}")]
-    EntityProcessingError(String),
+    #[error("Failed to process entity {0}: {1}")]
+    EntityProcessingError(String, String),
 
     #[error("Invalid data format: {0}")]
     FormatError(String),
