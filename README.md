@@ -11,19 +11,7 @@ A Tauri (Rust) app, using TypeScript with Preact for the frontend and Lua for mo
 
 So deeply WIP, I'm not even going to explain what this is for yet.
 
-# Architecture TL;DR
-
-Stack responsibilities are split fairly evenly between Tauri, TypeScript, and Lua.
-
-Tauri provides a backend which:
-- Creates a webview that we can run our UI on
-- Connects this webview to system stuff which websites usually can't do (read files, talk to hardware, run system commands, etc.)
-
-This is the code's main entry point. The app is setup and run from `src-tauri/src/lib.rs`. 
-
-As part of Tauri's initialization, it creates a thread running a Lua environment & preloads all the modules. A channel to this thread allows bidirectional communication, and Tauri commands provide hooks for the TypeScript frontend to send/recieve messages and data into/from Lua. The Lua component handles the state of the scene graph and any entities within it, and updates TypeScript with this state for rendering.
-
-The TypeScript component is light on logic. Its job is to render the scene graph and UI for interaction. Tailwind CSS is used for style.
+![Visualization of the codebase](./diagram.svg)
 
 # Run locally
 1. Clone the repository
