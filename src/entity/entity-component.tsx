@@ -4,6 +4,7 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
 import { Entity } from "./entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import Markdown from "marked-react";
 
 async function handleContextMenu(event: Event, entity: Entity) {
   event.preventDefault();
@@ -123,7 +124,7 @@ export default function EntityComponent(props: EntityProps) {
         handleContextMenu(e, entity);
       }}
     >
-      {entity.type == "text" && entity.content}
+      {entity.type == "text" && <Markdown>{entity.content}</Markdown>}
     </div>
   );
 }
