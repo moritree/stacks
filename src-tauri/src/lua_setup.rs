@@ -363,7 +363,7 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
 
     // Start recursive scan from the root lua directory
     scan_directory(&resource_path, &preload, lua, &mut loaded)
-        .map_err(|e| LuaError::InitializationError(format!("Failed scanning directory: {}", e)))?;
+        .map_err(|e| LuaError::ModuleLoadError(format!("Failed scanning directory: {}", e)))?;
 
     println!("Preloaded Lua modules: {:?}", loaded);
     Ok(())

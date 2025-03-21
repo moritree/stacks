@@ -37,12 +37,6 @@ pub enum LuaError {
     #[error("Communication error: {0}")]
     CommunicationError(String),
 
-    #[error("Invalid user syntax: {0}")]
-    UserSyntaxError(String),
-
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-
     #[error("Lua error: {0}")]
     LuaError(#[from] mlua::Error),
 }
