@@ -113,8 +113,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
         LuaMessage::Tick(dt) => {
             let scene = get_scene(lua)?;
             scene
-                .get::<_, LuaFunction>("emit_update")
-                .expect("Couldn't get Lua emit_update function")
+                .get::<_, LuaFunction>("emit_update")?
                 .call::<_, ()>((scene, dt))
                 .map_err(|e| LuaError::LuaError(e))?
         }
@@ -231,8 +230,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                         end
                         "#,
                 )
-                .eval::<LuaFunction>()
-                .expect("Couldn't load deserialize function")
+                .eval::<LuaFunction>()?
                 .call(inspector)
             {
                 Ok(entity) => entity,
@@ -268,9 +266,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                     return Ok(());
                 }
             };
-            entity
-                .set("id", LuaNil)
-                .expect("Couldn't clear id from entity table");
+            entity.set("id", LuaNil)?;
 
             // scripts are in object format (name: string), add them to entity in format [name] = { string = [str]}
             let scripts_table: LuaTable = entity.get("scripts")?;
@@ -286,16 +282,18 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                         "#,
                 )
                 .eval::<LuaFunction>()?;
-            for script in scripts
+            for (key, value) in scripts
                 .as_object()
-                .expect("Couldn't parse scripts as object")
+                .ok_or_else(|| {
+                    LuaError::FormatError("Couldn't parse script as object".to_string())
+                })?
                 .iter()
             {
-                scripts_table.set(script.0.as_str(), lua.create_table()?)?;
-                let script_table = scripts_table.get::<_, LuaTable>(script.0.as_str())?;
+                scripts_table.set(key.to_string(), lua.create_table()?)?;
+                let script_table = scripts_table.get::<_, LuaTable>(key.to_string())?;
                 script_table.set(
                     "string",
-                    script.1.as_str().ok_or_else(|| {
+                    value.as_str().ok_or_else(|| {
                         LuaError::FormatError("Couldn't parse script as string".to_string())
                     })?,
                 )?;
@@ -303,15 +301,13 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 let loaded_func: LuaFunction = match load_script_function
                     .call::<(LuaTable, LuaString), LuaFunction>((
                         entity.clone(),
-                        script_table
-                            .get("string")
-                            .expect("Couldn't get script string"),
+                        script_table.get("string")?,
                     )) {
                     Ok(loaded_func) => loaded_func,
                     Err(_) => {
                         let _ = response_tx.send((
                             false,
-                            format!("Invalid syntax in {} script.", script.0.as_str()),
+                            format!("Invalid syntax in {} script.", key),
                             "".to_string(),
                         ));
                         return Ok(());
@@ -323,31 +319,18 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
             }
 
             // finally, more standard update procedure!
-            let entities: LuaTable = lua
-                .globals()
-                .get::<_, LuaTable>("currentScene")
-                .expect("Couldn't get Lua scene")
-                .get("entities")
-                .expect("Couldn't get scene entities");
+            let entities: LuaTable = get_scene(lua)?.get("entities")?;
 
             if id != original_id {
-                entities
-                    .set(original_id, LuaNil)
-                    .expect("Couldn't clear original entity from entities table")
+                entities.set(original_id, LuaNil)?;
             }
 
-            entities
-                .set(&id, entity)
-                .expect("Couldn't update entities table with new entity");
+            entities.set(&id, entity)?;
             response_tx
-                .send((
-                    true,
-                    "Success".to_string(),
-                    id.to_str()
-                        .expect("Couldn't convert ID into String")
-                        .to_string(),
-                ))
-                .expect("Failed to send success response (ha)")
+                .send((true, "Success".to_string(), id.to_str()?.to_string()))
+                .map_err(|e| {
+                    LuaError::CommunicationError(format!("Failed to send success response: {}", e))
+                })?
         }
     }
     Ok(())
@@ -359,14 +342,16 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
         .app_handle()
         .path()
         .resource_dir()
-        .expect("Failed to get resource dir")
+        .map_err(|e| LuaError::InitializationError(format!("Failed to get resource dir: {}", e)))?
         .join("resources")
         .join("lua");
     println!(
         "Looking for Lua files in: {}",
-        resource_path
-            .to_str()
-            .expect("Couldn't resolve resource path to string")
+        resource_path.to_str().ok_or_else(|| {
+            LuaError::InitializationError(
+                "Couldn't resolve resource dir path to string".to_string(),
+            )
+        })?
     );
 
     let preload = lua
@@ -377,7 +362,8 @@ fn preload_lua_modules(window: WebviewWindow, lua: &Lua) -> LuaResult<()> {
     let mut loaded = Vec::new();
 
     // Start recursive scan from the root lua directory
-    scan_directory(&resource_path, &preload, lua, &mut loaded)?;
+    scan_directory(&resource_path, &preload, lua, &mut loaded)
+        .map_err(|e| LuaError::InitializationError(format!("Failed scanning directory: {}", e)))?;
 
     println!("Preloaded Lua modules: {:?}", loaded);
     Ok(())
@@ -409,8 +395,8 @@ fn scan_directory(
     lua: &Lua,
     loaded: &mut Vec<String>,
 ) -> LuaResult<()> {
-    for entry in fs::read_dir(dir).expect("Failed to read directory") {
-        let entry = entry.expect("Failed to read directory entry");
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
         let path = entry.path();
 
         if path.is_dir() {
@@ -424,7 +410,7 @@ fn scan_directory(
                 continue;
             }
 
-            let source = fs::read_to_string(&path).expect("Failed to read lua file");
+            let source = fs::read_to_string(&path)?;
             let module_name_clone = module_name.clone();
 
             preload.set(
