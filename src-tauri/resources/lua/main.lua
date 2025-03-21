@@ -5,7 +5,9 @@ return require('Scene'):new({
         test1 = Entity:new({
             type = "text",
             pos = { x = 100, y = 100 },
-            content = "vibing",
+            content = [[vibing
+
+next line]],
             scripts = {
                 on_click = { string = "self.pos = { x = 200, y = 200 }" },
                 on_tick = {
