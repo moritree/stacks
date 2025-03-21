@@ -12,7 +12,7 @@ interface TextEntity {
 
 interface BaseEntity {
   id: string;
-  scripts: any;
+  scripts: { [key: string]: string };
   pos: { x: number; y: number };
   draggable?: Boolean;
   rotation?: number;
