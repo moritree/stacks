@@ -24,7 +24,7 @@ pub fn run() {
         }))
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
-            let state = init_lua_thread(window.clone());
+            let state = init_lua_thread(window.clone())?;
             app.manage(state);
 
             let handle = app.handle();
