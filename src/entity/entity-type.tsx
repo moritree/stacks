@@ -10,6 +10,12 @@ interface TextEntity {
   fontSize?: number;
 }
 
+interface SvgEntity {
+  type: "svg";
+  content: string;
+  size: { width: number; height: number };
+}
+
 interface BaseEntity {
   id: string;
   scripts: { [key: string]: string };
@@ -18,4 +24,4 @@ interface BaseEntity {
   rotation?: number;
 }
 
-export type Entity = BaseEntity & (RectEntity | TextEntity);
+export type Entity = BaseEntity & (RectEntity | TextEntity | SvgEntity);

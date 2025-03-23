@@ -31,5 +31,11 @@ end]]
             size = { width = 200, height = 100 },
             color = "#ff0000"
         }),
+        test4 = Entity:new({
+            type = "svg",
+            pos = { x = 600, y = 200 },
+            size = { width = 300, height = 300 },
+            content = [[<circle cx="50" cy="50" r="50" fill="olive" />]]
+        })
     }
 })
