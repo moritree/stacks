@@ -22,7 +22,7 @@ export default function TabBar(props: TabBarProps) {
     : [props.children];
 
   return (
-    <div
+    <nav
       class={`w-screen flex flex-row ${props.atBottom ? "border-t" : "border-b"} border-border bg-secondary`}
     >
       {children.map((child, index) => {
@@ -38,6 +38,6 @@ export default function TabBar(props: TabBarProps) {
           );
         }
       })}
-    </div>
+    </nav>
   );
 }
