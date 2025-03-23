@@ -18,7 +18,6 @@ export default function TabItem(props: TabItemProps) {
       class={`flex flex-row overflow-hidden gap-2 p-1 grow justify-center transition-colors duration-200 ${activeClasses}`}
       onClick={props.onClick}
     >
-      {/* {props.label || "X"} */}
       {props.children}
     </button>
   );
