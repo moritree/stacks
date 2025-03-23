@@ -89,6 +89,15 @@ export default function EntityComponent(props: EntityProps) {
         },
       };
       break;
+    case "svg":
+      style = {
+        ...style,
+        ...{
+          width: `calc(${entity.size.width}px * var(--scene-scale))`,
+          height: `calc(${entity.size.height}px * var(--scene-scale))`,
+        },
+      };
+      break;
     case "rect":
       style = {
         ...style,
@@ -124,7 +133,18 @@ export default function EntityComponent(props: EntityProps) {
         handleContextMenu(e, entity);
       }}
     >
-      {entity.type == "text" && <Markdown>{entity.content}</Markdown>}
+      {entity.type == "text" ? (
+        <Markdown>{entity.content}</Markdown>
+      ) : (
+        entity.type == "svg" && (
+          <svg
+            width={`calc(${entity.size.width}px * var(--scene-scale))`}
+            height={`calc(${entity.size.height}px * var(--scene-scale))`}
+            viewBox={"0 0 100 100"}
+            dangerouslySetInnerHTML={{ __html: entity.content }}
+          />
+        )
+      )}
     </div>
   );
 }
