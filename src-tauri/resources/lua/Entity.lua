@@ -43,6 +43,7 @@ end
 
 function Entity:serializable()
     local copy = deep_copy(self)
+    copy.scene = nil
     if copy.scripts then for _, script in pairs(copy.scripts) do script.func = nil end end
     return copy
 end

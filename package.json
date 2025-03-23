@@ -17,6 +17,8 @@
     "@tauri-apps/plugin-os": "~2",
     "@types/ace": "^0.0.52",
     "ace-builds": "^1.39.0",
+    "marked": "^15.0.7",
+    "marked-react": "^3.0.0",
     "preact": "^10.25.1",
     "preact-feather": "^4.2.1",
     "preact-moveable": "^0.55.0",
