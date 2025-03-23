@@ -7,9 +7,9 @@
 [![TailwindCSS](https://img.shields.io/badge/Tailwind%20CSS-%2338B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Preact](https://img.shields.io/badge/Preact-673AB8?logo=preact&logoColor=fff)](https://preactjs.com/)
 
-A Tauri (Rust) app, using TypeScript with Preact for the frontend and Lua for model & scripting.
+I spent a lot of time as a child making little games in the educational programming language Scratch, and it was a major inspiration for me to continue programming as an adult. However, programming tools aimed at non-technical beginners (and particularly children) have a frustrating habit of arbitrarily limiting what you can do. This means there’s still a big jump to get to “real programming”.
 
-So deeply WIP, I'm not even going to explain what this is for yet.
+This is my attempt to build something for this in-between space and bridge visual intuition with powerful scripting — it’s what I wish I always had.  
 
 ![Visualization of the codebase](./diagram.svg)
 
