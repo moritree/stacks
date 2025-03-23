@@ -169,25 +169,25 @@ export default function InspectorWindow() {
   ];
 
   return (
-    <div
-      class="w-screen h-screen flex flex-col"
-      onKeyUp={(e) => {
-        const os = platform();
-        if (
-          ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
-          e.code === "KeyS"
-        )
-          handleSave();
-      }}
+    <Suspense
+      fallback={
+        <div class="flex justify-center">
+          <Loader />
+        </div>
+      }
     >
-      <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
-      <Suspense
-        fallback={
-          <div class="flex justify-center">
-            <Loader />
-          </div>
-        }
+      <div
+        class="w-screen h-screen flex flex-col"
+        onKeyUp={(e) => {
+          const os = platform();
+          if (
+            ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
+            e.code === "KeyS"
+          )
+            handleSave();
+        }}
       >
+        <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
         <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
           {tabs.map((tab) => (
             <TabItem>
@@ -196,8 +196,8 @@ export default function InspectorWindow() {
             </TabItem>
           ))}
         </TabBar>
-      </Suspense>
-    </div>
+      </div>
+    </Suspense>
   );
 }
 
