@@ -12,23 +12,25 @@ export default function Accordion(props: {
   const [open, setOpen] = useState<boolean>(props.open || false);
 
   return (
-    <div class="w-full h-auto flex flex-col">
-      <button
-        class="text-sm w-full flex flex-row gap-2 p-1 bg-secondary border-b border-border"
-        onClick={() => {
-          props.onToggle?.(!open);
-          setOpen(!open);
-        }}
-        onContextMenu={props.onContextMenu}
-      >
-        <div class="shrink-0">
-          {(open && <ChevronDown size={20} />) || <ChevronRight size={20} />}
-        </div>
-        <span class="whitespace-nowrap overflow-hidden text-ellipsis">
-          {props.label}
-        </span>
-      </button>
+    <section class="w-full h-auto flex flex-col">
+      <h2>
+        <button
+          class="text-sm w-full flex flex-row gap-2 p-1 bg-secondary border-b border-border"
+          onClick={() => {
+            props.onToggle?.(!open);
+            setOpen(!open);
+          }}
+          onContextMenu={props.onContextMenu}
+        >
+          <div class="shrink-0">
+            {(open && <ChevronDown size={20} />) || <ChevronRight size={20} />}
+          </div>
+          <span class="whitespace-nowrap overflow-hidden text-ellipsis">
+            {props.label}
+          </span>
+        </button>
+      </h2>
       {open && props.children}
-    </div>
+    </section>
   );
 }

@@ -125,7 +125,7 @@ export default function Scripts(props: {
                 autocomplete="off"
                 autoCorrect="off"
                 class="grow p-1 h-full bg-base border border-base rounded-sm transition-colors \
-                  data-[invalid=true]:text-red-600/75 data-[invalid=true]:border-red-600/75"
+                    data-[invalid=true]:text-red-600/75 data-[invalid=true]:border-red-600/75"
                 data-invalid={props.contents.has(newScriptName.trim())}
                 value={newScriptName}
                 onInput={(e) => setNewScriptName(e.currentTarget.value)}
@@ -162,8 +162,8 @@ export default function Scripts(props: {
             <button
               class={
                 "flex flex-row overflow-hidden gap-2 p-1 justify-center bg-tertiary opacity-30 \
-                text-base border-border border-1 rounded-md transition-opacity duration-150 \
-                hover:opacity-50 active:duration-100 active:opacity-90 active:bg-accent" +
+                  text-base border-border border-1 rounded-md transition-opacity duration-150 \
+                  hover:opacity-50 active:duration-100 active:opacity-90 active:bg-accent" +
                 (!props.addScriptsOpen && " m-[1px]")
               }
               onClick={() => {
@@ -172,7 +172,7 @@ export default function Scripts(props: {
               }}
             >
               {props.addScriptsOpen ? <Minus /> : <Plus />}
-            </button>{" "}
+            </button>
           </div>
         </div>
       </div>
