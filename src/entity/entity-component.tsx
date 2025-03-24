@@ -128,7 +128,7 @@ export default function EntityComponent(props: EntityProps) {
       style={style}
       onMouseDown={(e) => {
         e.stopPropagation();
-        props.onSelect(props.entity.pos, !!props.entity.draggable);
+        props.onSelect(props.entity.pos, !!props.entity.selectable);
       }}
       onDblClick={(e) => {
         e.stopPropagation();

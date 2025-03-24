@@ -207,9 +207,9 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      // onContextMenu={(e) =>
-      //   e.target === e.currentTarget && handleContextMenu(e)
-      // }
+      onContextMenu={(e) =>
+        e.target === e.currentTarget && handleContextMenu(e)
+      }
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
@@ -224,7 +224,7 @@ export default function Scene() {
       {selectedEntity && (
         <Moveable
           target={`#${selectedId}`}
-          draggable={true}
+          draggable={selectedEntity.draggable || false}
           onDrag={handleDrag}
           className="[z-index:0!important]"
         />
