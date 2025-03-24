@@ -5,6 +5,7 @@ import { emitTo } from "@tauri-apps/api/event";
 import { Entity } from "./entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
+import { JSX } from "preact/jsx-runtime";
 
 async function handleContextMenu(event: Event, entity: Entity) {
   event.preventDefault();
@@ -79,6 +80,7 @@ export default function EntityComponent(props: EntityProps) {
     "--y": `calc(${entity.pos.y}px * var(--scene-scale))`,
     rotate: `${entity.rotation || 0}deg`,
   };
+  let content: JSX.Element | null = null;
   switch (entity.type) {
     case "text":
       style = {
@@ -88,6 +90,7 @@ export default function EntityComponent(props: EntityProps) {
           fontFamily: "var(--font-serif)",
         },
       };
+      content = <Markdown>{entity.content}</Markdown>;
       break;
     case "svg":
       style = {
@@ -97,6 +100,14 @@ export default function EntityComponent(props: EntityProps) {
           height: `calc(${entity.size.height}px * var(--scene-scale))`,
         },
       };
+      content = (
+        <svg
+          width={`calc(${entity.size.width}px * var(--scene-scale))`}
+          height={`calc(${entity.size.height}px * var(--scene-scale))`}
+          viewBox={"0 0 100 100"}
+          dangerouslySetInnerHTML={{ __html: entity.content }}
+        />
+      );
       break;
     case "rect":
       style = {
@@ -133,18 +144,7 @@ export default function EntityComponent(props: EntityProps) {
         handleContextMenu(e, entity);
       }}
     >
-      {entity.type == "text" ? (
-        <Markdown>{entity.content}</Markdown>
-      ) : (
-        entity.type == "svg" && (
-          <svg
-            width={`calc(${entity.size.width}px * var(--scene-scale))`}
-            height={`calc(${entity.size.height}px * var(--scene-scale))`}
-            viewBox={"0 0 100 100"}
-            dangerouslySetInnerHTML={{ __html: entity.content }}
-          />
-        )
-      )}
+      {content}
     </div>
   );
 }
