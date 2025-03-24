@@ -214,7 +214,6 @@ export default function Scene() {
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
           key={id}
-          id={id}
           entity={entity}
           onSelect={(pos, selectable) =>
             handleEntitySelect(id, pos, selectable)
