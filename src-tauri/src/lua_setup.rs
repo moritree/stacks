@@ -190,17 +190,26 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 .call::<_, ()>((scene, path))
                 .map_err(|e| LuaError::LuaError(e))?
         }
-        LuaMessage::RunScript(id, function) => {
+        LuaMessage::RunScript(id, function, response_tx) => {
             let entity: LuaTable = get_scene(lua)?
                 .get::<_, LuaTable>("entities")?
                 .get::<_, LuaTable>(id.clone())
                 .map_err(|e| {
-                    LuaError::EntityProcessingError(id, format!("Couldn't get entity: {}", e))
+                    LuaError::EntityProcessingError(
+                        id.clone(),
+                        format!("Couldn't get entity: {}", e),
+                    )
                 })?;
             entity
                 .get::<_, LuaFunction>("run_script")?
-                .call::<_, ()>((entity, function))
-                .map_err(|e| LuaError::LuaError(e))?
+                .call::<_, ()>((entity, function.clone()))
+                .map_err(|e| {
+                    let _ = response_tx.send((
+                        false,
+                        format!("Script {} failed to execute on {}", function, id),
+                    ));
+                    LuaError::LuaError(e)
+                })?;
         }
         LuaMessage::EmitEntityString(id, window) => {
             let scene = get_scene(lua)?;
