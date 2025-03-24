@@ -122,10 +122,14 @@ export default function EntityComponent(props: EntityProps) {
         e.stopPropagation();
         props.onSelect(entity.pos, !!entity.draggable);
       }}
-      onDblClick={(e) => {
+      onDblClick={async (e) => {
         e.stopPropagation();
         if (entity.scripts.on_click) {
-          invoke("run_script", { id: entity.id, function: "on_click" });
+          const [success, msg] = await invoke<[boolean, string]>("run_script", {
+            id: entity.id,
+            function: "on_click",
+          });
+          console.log("on_click", success, msg);
           emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
         }
       }}

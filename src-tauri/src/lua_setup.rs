@@ -210,6 +210,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                     ));
                     LuaError::LuaError(e)
                 })?;
+            let _ = response_tx.send((true, "Script executed successfully".to_string()));
         }
         LuaMessage::EmitEntityString(id, window) => {
             let scene = get_scene(lua)?;
