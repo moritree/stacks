@@ -60,9 +60,19 @@ export default function Scene() {
     let listeners: (() => void)[] = [];
 
     async function setupUpdateListener() {
-      const unsubscribe = await listen<any>("scene_update", (e) => {
-        setEntities(new Map(Object.entries(e.payload)));
-      });
+      const unsubscribe = await listen<{ [id: string]: Partial<Entity> }>(
+        "scene_update",
+        (e) => {
+          setEntities(
+            new Map(
+              Object.entries(e.payload).map(([id, ent]) => [
+                id,
+                { ...ent, id: id } as Entity,
+              ]),
+            ),
+          );
+        },
+      );
       listeners.push(unsubscribe);
     }
 
@@ -197,9 +207,9 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      onContextMenu={(e) =>
-        e.target === e.currentTarget && handleContextMenu(e)
-      }
+      // onContextMenu={(e) =>
+      //   e.target === e.currentTarget && handleContextMenu(e)
+      // }
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
