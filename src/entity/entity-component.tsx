@@ -5,6 +5,7 @@ import { emitTo } from "@tauri-apps/api/event";
 import { Entity } from "./entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
+import { JSX } from "preact/jsx-runtime";
 
 async function handleContextMenu(event: Event, entity: Entity) {
   event.preventDefault();
@@ -65,46 +66,53 @@ async function openInspector(entity: Entity) {
 }
 
 interface EntityProps {
-  id: string;
   entity: any;
   onSelect: (pos: { x: number; y: number }, selectable: boolean) => void;
   isSelected: boolean;
 }
 
 export default function EntityComponent(props: EntityProps) {
-  const entity: Entity = { ...{ id: props.id }, ...props.entity };
-
   let style = {
-    "--x": `calc(${entity.pos.x}px * var(--scene-scale))`,
-    "--y": `calc(${entity.pos.y}px * var(--scene-scale))`,
-    rotate: `${entity.rotation || 0}deg`,
+    "--x": `calc(${props.entity.pos.x}px * var(--scene-scale))`,
+    "--y": `calc(${props.entity.pos.y}px * var(--scene-scale))`,
+    rotate: `${props.entity.rotation || 0}deg`,
   };
-  switch (entity.type) {
+  let content: JSX.Element | null = null;
+  switch (props.entity.type) {
     case "text":
       style = {
         ...style,
         ...{
-          fontSize: `calc(${(entity.fontSize || 1) * 1.5}em * var(--scene-scale))`,
+          fontSize: `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`,
           fontFamily: "var(--font-serif)",
         },
       };
+      content = <Markdown>{props.entity.content}</Markdown>;
       break;
     case "svg":
       style = {
         ...style,
         ...{
-          width: `calc(${entity.size.width}px * var(--scene-scale))`,
-          height: `calc(${entity.size.height}px * var(--scene-scale))`,
+          width: `calc(${props.entity.size.width}px * var(--scene-scale))`,
+          height: `calc(${props.entity.size.height}px * var(--scene-scale))`,
         },
       };
+      content = (
+        <svg
+          width={`calc(${props.entity.size.width}px * var(--scene-scale))`}
+          height={`calc(${props.entity.size.height}px * var(--scene-scale))`}
+          viewBox={"0 0 100 100"}
+          dangerouslySetInnerHTML={{ __html: props.entity.content }}
+        />
+      );
       break;
     case "rect":
       style = {
         ...style,
         ...{
-          width: `calc(${entity.size.width}px * var(--scene-scale))`,
-          height: `calc(${entity.size.height}px * var(--scene-scale))`,
-          backgroundColor: `${entity.color}`,
+          width: `calc(${props.entity.size.width}px * var(--scene-scale))`,
+          height: `calc(${props.entity.size.height}px * var(--scene-scale))`,
+          backgroundColor: `${props.entity.color}`,
         },
       };
       break;
@@ -112,21 +120,21 @@ export default function EntityComponent(props: EntityProps) {
 
   return (
     <div
-      class={`absolute left-(--x) top-(--y) entity ${entity.type}
+      class={`absolute left-(--x) top-(--y) entity ${props.entity.type}
           ${props.entity.selectable ? " selectable" : ""}
           ${props.isSelected ? " selected" : ""}
           ${props.entity.draggable ? " draggable" : ""}`}
-      id={entity.id}
+      id={props.entity.id}
       style={style}
       onMouseDown={(e) => {
         e.stopPropagation();
-        props.onSelect(entity.pos, !!entity.draggable);
+        props.onSelect(props.entity.pos, !!props.entity.selectable);
       }}
       onDblClick={async (e) => {
         e.stopPropagation();
-        if (entity.scripts.on_click) {
+        if (props.entity.scripts.on_click) {
           const [success, msg] = await invoke<[boolean, string]>("run_script", {
-            id: entity.id,
+            id: props.entity.id,
             function: "on_click",
           });
           console.log("on_click", success, msg);
@@ -134,21 +142,10 @@ export default function EntityComponent(props: EntityProps) {
         }
       }}
       onContextMenu={(e) => {
-        handleContextMenu(e, entity);
+        handleContextMenu(e, props.entity);
       }}
     >
-      {entity.type == "text" ? (
-        <Markdown>{entity.content}</Markdown>
-      ) : (
-        entity.type == "svg" && (
-          <svg
-            width={`calc(${entity.size.width}px * var(--scene-scale))`}
-            height={`calc(${entity.size.height}px * var(--scene-scale))`}
-            viewBox={"0 0 100 100"}
-            dangerouslySetInnerHTML={{ __html: entity.content }}
-          />
-        )
-      )}
+      {content}
     </div>
   );
 }

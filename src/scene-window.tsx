@@ -60,9 +60,19 @@ export default function Scene() {
     let listeners: (() => void)[] = [];
 
     async function setupUpdateListener() {
-      const unsubscribe = await listen<any>("scene_update", (e) => {
-        setEntities(new Map(Object.entries(e.payload)));
-      });
+      const unsubscribe = await listen<{ [id: string]: Partial<Entity> }>(
+        "scene_update",
+        (e) => {
+          setEntities(
+            new Map(
+              Object.entries(e.payload).map(([id, ent]) => [
+                id,
+                { ...ent, id: id } as Entity,
+              ]),
+            ),
+          );
+        },
+      );
       listeners.push(unsubscribe);
     }
 
@@ -204,7 +214,6 @@ export default function Scene() {
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
           key={id}
-          id={id}
           entity={entity}
           onSelect={(pos, selectable) =>
             handleEntitySelect(id, pos, selectable)
@@ -215,7 +224,7 @@ export default function Scene() {
       {selectedEntity && (
         <Moveable
           target={`#${selectedId}`}
-          draggable={true}
+          draggable={selectedEntity.draggable || false}
           onDrag={handleDrag}
           className="[z-index:0!important]"
         />

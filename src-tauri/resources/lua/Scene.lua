@@ -9,10 +9,6 @@ function Scene:new(o)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
-
-    for _, entity in pairs(self.entities) do
-        entity.scene = self
-    end
     return o
 end
 
