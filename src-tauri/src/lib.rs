@@ -32,7 +32,13 @@ pub fn run() {
             // setup system menu
             let menu = Menu::new(handle)?;
             let stacks_menu = SubmenuBuilder::new(handle, "Stacks")
-                .item(&MenuItem::new(handle, "&Quit", true, None::<&str>)?)
+                .item(&MenuItem::with_id(
+                    handle,
+                    "quit",
+                    "Quit",
+                    true,
+                    Some("CmdOrCtrl+Q"),
+                )?)
                 .build()?;
             menu.append(&stacks_menu)?;
 
@@ -42,14 +48,14 @@ pub fn run() {
                     "save_scene",
                     "Save Scene",
                     true,
-                    None::<&str>,
+                    Some("CmdOrCtrl+S"),
                 )?)
                 .item(&MenuItem::with_id(
                     handle,
-                    "load_scene",
-                    "Load Scene",
+                    "open_scene",
+                    "Open Scene",
                     true,
-                    None::<&str>,
+                    Some("CmdOrCtrl+O"),
                 )?)
                 .build()?;
             menu.append(&file_menu)?;
@@ -57,10 +63,13 @@ pub fn run() {
             app.set_menu(menu)?;
             app.on_menu_event(move |app_handle: &tauri::AppHandle, event| {
                 match event.id().0.as_str() {
-                    file_op @ ("save_scene" | "load_scene") => {
+                    file_op @ ("save_scene" | "open_scene") => {
                         app_handle
                             .emit_to("main", "file_operation", file_op)
                             .expect(&format!("Failed to emit {}", file_op));
+                    }
+                    "quit" => {
+                        app_handle.exit(0);
                     }
                     _ => return,
                 }
