@@ -42,14 +42,14 @@ pub fn run() {
                     "save_scene",
                     "Save Scene",
                     true,
-                    None::<&str>,
+                    Some("CmdOrCtrl+S"),
                 )?)
                 .item(&MenuItem::with_id(
                     handle,
                     "load_scene",
                     "Load Scene",
                     true,
-                    None::<&str>,
+                    Some("CmdOrCtrl+O"),
                 )?)
                 .build()?;
             menu.append(&file_menu)?;
