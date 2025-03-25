@@ -32,7 +32,13 @@ pub fn run() {
             // setup system menu
             let menu = Menu::new(handle)?;
             let stacks_menu = SubmenuBuilder::new(handle, "Stacks")
-                .item(&MenuItem::new(handle, "&Quit", true, None::<&str>)?)
+                .item(&MenuItem::with_id(
+                    handle,
+                    "quit",
+                    "Quit",
+                    true,
+                    Some("CmdOrCtrl+Q"),
+                )?)
                 .build()?;
             menu.append(&stacks_menu)?;
 
@@ -61,6 +67,9 @@ pub fn run() {
                         app_handle
                             .emit_to("main", "file_operation", file_op)
                             .expect(&format!("Failed to emit {}", file_op));
+                    }
+                    "quit" => {
+                        app_handle.exit(0);
                     }
                     _ => return,
                 }
