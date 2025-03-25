@@ -46,8 +46,8 @@ pub fn run() {
                 )?)
                 .item(&MenuItem::with_id(
                     handle,
-                    "load_scene",
-                    "Load Scene",
+                    "open_scene",
+                    "Open Scene",
                     true,
                     Some("CmdOrCtrl+O"),
                 )?)
@@ -57,7 +57,7 @@ pub fn run() {
             app.set_menu(menu)?;
             app.on_menu_event(move |app_handle: &tauri::AppHandle, event| {
                 match event.id().0.as_str() {
-                    file_op @ ("save_scene" | "load_scene") => {
+                    file_op @ ("save_scene" | "open_scene") => {
                         app_handle
                             .emit_to("main", "file_operation", file_op)
                             .expect(&format!("Failed to emit {}", file_op));
