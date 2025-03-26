@@ -322,6 +322,18 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
             let entities: LuaTable = get_scene(lua)?.get("entities")?;
 
             if id != original_id {
+                if entities.get::<_, LuaTable>(id.clone()).is_ok() {
+                    response_tx
+                        .send((
+                            false,
+                            format!("An entity with ID {:?} already exists.", id.clone()),
+                            "".to_string(),
+                        ))
+                        .map_err(|e| {
+                            LuaError::CommunicationError(format!("Failed to send response: {}", e))
+                        })?;
+                    return Ok(());
+                }
                 entities.set(original_id, LuaNil)?;
             }
 
