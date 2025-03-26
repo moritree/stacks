@@ -14,15 +14,13 @@ import "ace-builds/src-noconflict/theme-github_light_default";
 import "ace-builds/src-noconflict/theme-cloud9_night";
 import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense } from "preact/compat";
-import Inspector from "./inspect-component";
 import { platform } from "@tauri-apps/plugin-os";
 import { invoke } from "@tauri-apps/api/core";
 import { message } from "@tauri-apps/plugin-dialog";
+import CodeEditor from "../components/code-editor";
 
 export default function InspectorWindow() {
-  const [editorTheme, setEditorTheme] = useState<string>(
-    "github_light_default",
-  );
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
   const [openScripts, setOpenScripts] = useState(new Set<string>());
@@ -65,22 +63,14 @@ export default function InspectorWindow() {
 
     async function setupThemeChangeListener() {
       listeners.push(
-        await getCurrentWindow().onThemeChanged(({ payload: theme }) => {
-          setEditorTheme(
-            theme == "light" ? "github_light_default" : "cloud9_night",
-          );
-        }),
+        await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
+          setTheme(theme),
+        ),
       );
     }
 
     setupThemeChangeListener()
-      .then(async () =>
-        setEditorTheme(
-          (await getCurrentWindow().theme()) == "light"
-            ? "github_light_default"
-            : "cloud9_night",
-        ),
-      )
+      .then(async () => setTheme((await getCurrentWindow().theme()) || "light"))
       .then(() =>
         setupEntityStringListener()
           .then(() => setupEntityUpdateListener())
@@ -135,14 +125,13 @@ export default function InspectorWindow() {
       label: "Inspect",
       icon: <Info />,
       component: (
-        <Inspector
-          entity={entity}
-          editorTheme={editorTheme}
-          contents={inspectorContents}
-          onContentsChange={(newVal) => {
+        <CodeEditor
+          value={inspectorContents}
+          onChange={(newVal) => {
             setInspectorContents(newVal);
             setSaved(false);
           }}
+          theme={theme}
         />
       ),
     },
@@ -160,7 +149,7 @@ export default function InspectorWindow() {
             setScriptsContents(newVal);
             setSaved(false);
           }}
-          editorTheme={editorTheme}
+          editorTheme={theme}
           addScriptsOpen={addScriptsOpen}
           onAddScriptsOpenChange={() => setAddScriptsOpen(!addScriptsOpen)}
         />
