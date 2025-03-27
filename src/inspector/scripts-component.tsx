@@ -1,16 +1,11 @@
 import { Loader, Minus, Plus } from "preact-feather";
 import { Entity } from "../entity/entity-type";
-import AceEditor from "react-ace";
 const Accordion = lazy(() => import("../components/accordion"));
-
-import "ace-builds/src-noconflict/mode-lua";
-import "ace-builds/src-noconflict/theme-github_light_default";
-import "ace-builds/src-noconflict/theme-github_dark";
-import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense, useState } from "preact/compat";
 import { invoke } from "@tauri-apps/api/core";
 import { Menu } from "@tauri-apps/api/menu";
 import { confirm } from "@tauri-apps/plugin-dialog";
+import CodeEditor from "../components/code-editor";
 
 async function handleContextMenu(
   script: string,
@@ -46,7 +41,7 @@ async function handleContextMenu(
 
 export default function Scripts(props: {
   entity: Entity;
-  editorTheme: string;
+  theme: "light" | "dark";
   openScripts: Set<string>;
   onOpenScriptsChange: (sections: Set<string>) => void;
   contents: Map<string, string>;
@@ -80,24 +75,15 @@ export default function Scripts(props: {
                 handleContextMenu(key, props.contents, props.onContentsChange);
               }}
             >
-              <div class="overflow-auto w-full h-32">
-                <AceEditor
-                  height="100%"
-                  mode="lua"
+              <div class="w-full h-32">
+                <CodeEditor
                   value={value}
                   onChange={(newVal) => {
                     const newContents = new Map(props.contents);
                     newContents.set(key, newVal);
                     props.onContentsChange(newContents);
                   }}
-                  theme={props.editorTheme}
-                  width="100%"
-                  setOptions={{
-                    tabSize: 2,
-                    enableBasicAutocompletion: true,
-                    enableLiveAutocompletion: true,
-                    showLineNumbers: true,
-                  }}
+                  theme={props.theme}
                 />
               </div>
             </Accordion>

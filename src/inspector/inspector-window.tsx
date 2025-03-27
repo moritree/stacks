@@ -8,11 +8,6 @@ const TabBar = lazy(() => import("../components/tab-bar/tab-bar"));
 import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
 import Scripts from "./scripts-component";
-
-import "ace-builds/src-noconflict/mode-javascript";
-import "ace-builds/src-noconflict/theme-github_light_default";
-import "ace-builds/src-noconflict/theme-cloud9_night";
-import "ace-builds/src-noconflict/ext-language_tools";
 import { lazy, Suspense } from "preact/compat";
 import { platform } from "@tauri-apps/plugin-os";
 import { invoke } from "@tauri-apps/api/core";
@@ -149,7 +144,7 @@ export default function InspectorWindow() {
             setScriptsContents(newVal);
             setSaved(false);
           }}
-          editorTheme={theme}
+          theme={theme}
           addScriptsOpen={addScriptsOpen}
           onAddScriptsOpenChange={() => setAddScriptsOpen(!addScriptsOpen)}
         />
