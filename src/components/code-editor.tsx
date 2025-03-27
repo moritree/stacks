@@ -32,7 +32,7 @@ export default function CodeEditor(props: {
           exec: () => {},
         },
       ]}
-      onCopy={(text) => console.log("COPY", text)}
+      // onCopy={(text) => console.log("COPY", text)}
     />
   );
   return <div class="overflow-auto size-full">{editor}</div>;
