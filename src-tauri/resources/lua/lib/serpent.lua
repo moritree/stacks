@@ -37,9 +37,24 @@ local function s(t, opts)
             end))
     end
     local function safestr(s)
-        return type(s) == "number" and (huge and snum[tostring(s)] or numformat:format(s))
-            or type(s) ~= "string" and tostring(s) -- escape NEWLINE/010 and EOF/026
-            or ("%q"):format(s):gsub("\010", "n"):gsub("\026", "\\026")
+        if type(s) == "number" then
+            return huge and snum[tostring(s)] or numformat:format(s)
+        elseif type(s) ~= "string" then
+            return tostring(s)
+        else
+            -- Check if string contains newlines or quotes
+            if s:find("\n") or s:find('"') or s:find("'") then
+                -- Find the appropriate number of equal signs needed
+                local eq = ""
+                while s:find("%[" .. eq .. "%[") or s:find("%]" .. eq .. "%]") do
+                    eq = eq .. "="
+                end
+                return "[" .. eq .. "[" .. s .. "]" .. eq .. "]"
+            else
+                -- Use regular quoted string for simple strings
+                return ("%q"):format(s):gsub("\010", "n"):gsub("\026", "\\026")
+            end
+        end
     end
     -- handle radix changes in some locales
     if opts.fixradix and (".1f"):format(1.2) ~= "1.2" then
