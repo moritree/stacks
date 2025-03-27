@@ -77,6 +77,7 @@ export default function Scripts(props: {
             >
               <div class="w-full h-32">
                 <CodeEditor
+                  name={key + "-editor"}
                   value={value}
                   onChange={(newVal) => {
                     const newContents = new Map(props.contents);

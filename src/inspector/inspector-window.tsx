@@ -121,6 +121,7 @@ export default function InspectorWindow() {
       icon: <Info />,
       component: (
         <CodeEditor
+          name="inspector-editor"
           value={inspectorContents}
           onChange={(newVal) => {
             setInspectorContents(newVal);
@@ -164,11 +165,12 @@ export default function InspectorWindow() {
         class="w-screen h-screen flex flex-col"
         onKeyUp={(e) => {
           const os = platform();
-          if (
-            ((os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey)) &&
-            e.code === "KeyS"
-          )
-            handleSave();
+          const ctrlOrCmd =
+            (os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey);
+          if (ctrlOrCmd && e.code === "KeyS") handleSave();
+          if (ctrlOrCmd && e.code === "KeyC") {
+            console.log("COPY");
+          }
         }}
       >
         <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
