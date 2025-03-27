@@ -42,8 +42,8 @@ local function s(t, opts)
         elseif type(s) ~= "string" then
             return tostring(s)
         else
-            -- Check if string contains newlines
-            if s:find("\n") then
+            -- Check if string contains newlines or quotes
+            if s:find("\n") or s:find('"') or s:find("'") then
                 -- Find the appropriate number of equal signs needed
                 local eq = ""
                 while s:find("%[" .. eq .. "%[") or s:find("%]" .. eq .. "%]") do
@@ -51,7 +51,7 @@ local function s(t, opts)
                 end
                 return "[" .. eq .. "[" .. s .. "]" .. eq .. "]"
             else
-                -- Use regular quoted string for single-line strings
+                -- Use regular quoted string for simple strings
                 return ("%q"):format(s):gsub("\010", "n"):gsub("\026", "\\026")
             end
         end
