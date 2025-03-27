@@ -89,9 +89,7 @@ export default function EntityComponent(props: EntityProps) {
       case "rotation":
         style = {
           ...style,
-          ...{
-            rotate: `${props.entity.rotation || 0}deg`,
-          },
+          ...{ rotate: `${props.entity.rotation || 0}deg` },
         };
         break;
       case "size":
@@ -106,9 +104,7 @@ export default function EntityComponent(props: EntityProps) {
       case "color":
         style = {
           ...style,
-          ...{
-            backgroundColor: `${props.entity.color}`,
-          },
+          ...{ backgroundColor: `${props.entity.color}` },
         };
         break;
       case "type":
@@ -154,9 +150,7 @@ export default function EntityComponent(props: EntityProps) {
           emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
         }
       }}
-      onContextMenu={(e) => {
-        handleContextMenu(e, props.entity);
-      }}
+      onContextMenu={(e) => handleContextMenu(e, props.entity)}
     >
       {content}
     </div>
