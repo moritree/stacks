@@ -165,12 +165,8 @@ export default function InspectorWindow() {
         class="w-screen h-screen flex flex-col"
         onKeyUp={(e) => {
           const os = platform();
-          const ctrlOrCmd =
-            (os == "macos" && e.metaKey) || (os != "macos" && e.ctrlKey);
-          if (ctrlOrCmd && e.code === "KeyS") handleSave();
-          if (ctrlOrCmd && e.code === "KeyC") {
-            console.log("COPY");
-          }
+          if ((os == "macos" ? e.metaKey : e.ctrlKey) && e.code === "KeyS")
+            handleSave();
         }}
       >
         <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
