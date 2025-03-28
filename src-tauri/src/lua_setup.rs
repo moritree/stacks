@@ -195,21 +195,32 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 .get::<_, LuaTable>("entities")?
                 .get::<_, LuaTable>(id.clone())
                 .map_err(|e| {
+                    let _ = response_tx.send((false, "Couldn't find entity".to_string()));
                     LuaError::EntityProcessingError(
                         id.clone(),
                         format!("Couldn't get entity: {}", e),
                     )
                 })?;
-            entity
-                .get::<_, LuaFunction>("run_script")?
-                .call::<_, ()>((entity, function.clone()))
-                .map_err(|e| {
-                    let _ = response_tx.send((
-                        false,
-                        format!("Script {} failed to execute on {}", function, id),
-                    ));
-                    LuaError::LuaError(e)
-                })?;
+
+            // Wrap the script execution in pcall to catch Lua runtime errors
+            let pcall: LuaFunction = lua.globals().get("pcall")?;
+            let run_script: LuaFunction = entity.get("run_script")?;
+
+            let (success, error): (bool, Option<String>) =
+                pcall.call((run_script, entity, function.clone()))?;
+
+            if !success {
+                let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());
+                let _ = response_tx.send((
+                    false,
+                    format!(
+                        "Script {} failed to execute on {}: {}",
+                        function, id, error_msg
+                    ),
+                ));
+                return Ok(());
+            }
+
             let _ = response_tx.send((true, "Script executed successfully".to_string()));
         }
         LuaMessage::EmitEntityString(id, window) => {
