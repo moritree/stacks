@@ -110,7 +110,7 @@ export default function InspectorWindow() {
       setSaved(true);
     } else
       message(msg, {
-        title: "Could not save entity",
+        title: "Could not save entity.",
         kind: "error",
       });
   };

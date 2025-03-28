@@ -211,13 +211,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
 
             if !success {
                 let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());
-                let _ = response_tx.send((
-                    false,
-                    format!(
-                        "Script {} failed to execute on {}: {}",
-                        function, id, error_msg
-                    ),
-                ));
+                let _ = response_tx.send((false, error_msg));
                 return Ok(());
             }
 
