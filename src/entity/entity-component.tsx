@@ -6,6 +6,7 @@ import { Entity } from "./entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
 import { JSX } from "preact/jsx-runtime";
+import { message } from "@tauri-apps/plugin-dialog";
 
 async function handleContextMenu(event: Event, entity: Entity) {
   event.preventDefault();
@@ -32,6 +33,18 @@ async function handleContextMenu(event: Event, entity: Entity) {
       ],
     })
   ).popup();
+}
+
+async function runScript(entity: Entity, script: string) {
+  const [success, msg] = await invoke<[boolean, string]>("run_script", {
+    id: entity.id,
+    function: script,
+  });
+  if (!success)
+    message(msg, {
+      title: `Error executing script "${script}" on entity "${entity.id}"`,
+      kind: "error",
+    });
 }
 
 async function openInspector(entity: Entity) {
@@ -143,12 +156,10 @@ export default function EntityComponent(props: EntityProps) {
         e.stopPropagation();
         props.onSelect(props.entity.pos, !!props.entity.selectable);
       }}
-      onDblClick={(e) => {
+      onDblClick={async (e) => {
         e.stopPropagation();
-        if (props.entity.scripts.on_click) {
-          invoke("run_script", { id: props.entity.id, function: "on_click" });
-          emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
-        }
+        emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
+        if (props.entity.scripts.on_click) runScript(props.entity, "on_click");
       }}
       onContextMenu={(e) => handleContextMenu(e, props.entity)}
     >

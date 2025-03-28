@@ -15,7 +15,7 @@ pub enum LuaMessage {
     DuplicateEntity(String),
     SaveScene(String),
     LoadScene(String),
-    RunScript(String, String),
+    RunScript(String, String, Sender<(bool, String)>),
     EmitEntityString(String, String),
     HandleInspectorSave(String, String, Value, Sender<(bool, String, String)>),
 }

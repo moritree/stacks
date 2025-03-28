@@ -81,11 +81,13 @@ pub async fn run_script(
     state: State<'_, LuaState>,
     id: String,
     function: String,
-) -> Result<(), String> {
+) -> Result<(bool, String), String> {
+    let (response_tx, response_rx) = mpsc::channel();
     state
         .tx
-        .send(LuaMessage::RunScript(id, function))
-        .map_err(|e| e.to_string())
+        .send(LuaMessage::RunScript(id, function, response_tx))
+        .expect("Failed sending RunScript");
+    response_rx.recv().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -108,7 +110,6 @@ pub async fn handle_inspector_save(
     scripts: Value,
 ) -> Result<(bool, String, String), String> {
     let (response_tx, response_rx) = mpsc::channel();
-
     state
         .tx
         .send(LuaMessage::HandleInspectorSave(
@@ -117,7 +118,6 @@ pub async fn handle_inspector_save(
             scripts,
             response_tx,
         ))
-        .expect("Failed calling HandleInspectorSave");
-
+        .expect("Failed sending HandleInspectorSave");
     response_rx.recv().map_err(|e| e.to_string())
 }
