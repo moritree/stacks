@@ -15,17 +15,12 @@ const SCENE_BASE_SIZE = {
 
 async function saveScene() {
   invoke("save_scene", {
-    path: await save({
-      filters: [{ name: "scene", extensions: ["txt"] }],
-    }),
+    path: await save({ filters: [{ name: "scene", extensions: ["txt"] }] }),
   });
 }
 
 async function openScene() {
-  const path = await open({
-    multiple: false,
-    directory: false,
-  });
+  const path = await open({ multiple: false, directory: false });
   if (path) {
     invoke("load_scene", { path: path });
     const inspector = await WebviewWindow.getByLabel("inspector");
@@ -179,9 +174,7 @@ export default function Scene() {
     if (selectable) {
       setSelectedId(id);
       setSelectedInitialPosition(pos);
-    } else {
-      setSelectedId(undefined);
-    }
+    } else setSelectedId(undefined);
   };
 
   const calculateNewPosition = (transform: string) => {
