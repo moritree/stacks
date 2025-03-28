@@ -11,13 +11,14 @@ use lua_setup::init_lua_thread;
 use std::sync::Mutex;
 use tauri::{
     menu::{Menu, MenuItem, SubmenuBuilder},
-    Emitter, Manager,
+    Emitter, Listener, Manager,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(Mutex::new(SetupState {
             frontend_ready: false,
@@ -32,37 +33,94 @@ pub fn run() {
             // setup system menu
             let menu = Menu::new(handle)?;
             let stacks_menu = SubmenuBuilder::new(handle, "Stacks")
-                .item(&MenuItem::new(handle, "&Quit", true, None::<&str>)?)
+                .item(&MenuItem::with_id(
+                    handle,
+                    "quit",
+                    "Quit",
+                    true,
+                    Some("CmdOrCtrl+Q"),
+                )?)
                 .build()?;
             menu.append(&stacks_menu)?;
 
-            let file_menu = SubmenuBuilder::new(handle, "File")
+            let file_menu = SubmenuBuilder::with_id(handle, "file", "File")
                 .item(&MenuItem::with_id(
                     handle,
                     "save_scene",
                     "Save Scene",
                     true,
-                    None::<&str>,
+                    Some("CmdOrCtrl+S"),
                 )?)
                 .item(&MenuItem::with_id(
                     handle,
-                    "load_scene",
-                    "Load Scene",
+                    "open_scene",
+                    "Open Scene",
                     true,
-                    None::<&str>,
+                    Some("CmdOrCtrl+O"),
                 )?)
                 .build()?;
             menu.append(&file_menu)?;
 
+            let window_clone = window.clone();
             app.set_menu(menu)?;
             app.on_menu_event(move |app_handle: &tauri::AppHandle, event| {
                 match event.id().0.as_str() {
-                    file_op @ ("save_scene" | "load_scene") => {
-                        app_handle
-                            .emit_to("main", "file_operation", file_op)
-                            .expect(&format!("Failed to emit {}", file_op));
+                    file_op @ ("save_scene" | "open_scene") => {
+                        if window_clone
+                            .is_focused()
+                            .expect("Couldn't find main window focus status")
+                        {
+                            app_handle
+                                .emit_to("main", "file_operation", file_op)
+                                .expect(&format!("Failed to emit {}", file_op));
+                        }
+                    }
+                    "quit" => {
+                        app_handle.exit(0);
                     }
                     _ => return,
+                }
+            });
+
+            // enable/disable menu items based on focused window
+            fn on_focus_change(handle: &tauri::AppHandle, focus_window: String) {
+                if let Some(menu) = handle.menu() {
+                    if let Some(file_menu) = menu.get("file") {
+                        if let Some(submenu) = file_menu.as_submenu() {
+                            if let Some(save_item) = submenu.get("save_scene") {
+                                if let Some(menu_item) = save_item.as_menuitem() {
+                                    let _ = menu_item.set_enabled(focus_window == "main");
+                                }
+                            }
+
+                            if let Some(open_item) = submenu.get("open_scene") {
+                                if let Some(menu_item) = open_item.as_menuitem() {
+                                    let _ = menu_item.set_enabled(focus_window == "main");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            let handle_for_main = handle.clone();
+            window.listen("tauri://focus", move |_| {
+                on_focus_change(&handle_for_main, "main".to_string())
+            });
+
+            let handle_for_created = handle.clone();
+            app.listen("tauri://window-created", move |event| {
+                if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
+                    if let Some(label) = payload.get("label").and_then(|l| l.as_str()) {
+                        let label = label.to_string();
+                        if let Some(w) = handle_for_created.get_webview_window(label.as_str()) {
+                            let handle_for_focus = handle_for_created.clone();
+                            let label_for_focus = label.clone();
+                            w.listen("tauri://focus", move |_| {
+                                on_focus_change(&handle_for_focus, label_for_focus.clone());
+                            });
+                        }
+                    }
                 }
             });
 

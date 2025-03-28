@@ -72,51 +72,64 @@ interface EntityProps {
 }
 
 export default function EntityComponent(props: EntityProps) {
-  let style = {
-    "--x": `calc(${props.entity.pos.x}px * var(--scene-scale))`,
-    "--y": `calc(${props.entity.pos.y}px * var(--scene-scale))`,
-    rotate: `${props.entity.rotation || 0}deg`,
-  };
+  let style = {};
   let content: JSX.Element | null = null;
-  switch (props.entity.type) {
-    case "text":
-      style = {
-        ...style,
-        ...{
-          fontSize: `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`,
-          fontFamily: "var(--font-serif)",
-        },
-      };
-      content = <Markdown>{props.entity.content}</Markdown>;
-      break;
-    case "svg":
-      style = {
-        ...style,
-        ...{
-          width: `calc(${props.entity.size.width}px * var(--scene-scale))`,
-          height: `calc(${props.entity.size.height}px * var(--scene-scale))`,
-        },
-      };
-      content = (
-        <svg
-          width={`calc(${props.entity.size.width}px * var(--scene-scale))`}
-          height={`calc(${props.entity.size.height}px * var(--scene-scale))`}
-          viewBox={"0 0 100 100"}
-          dangerouslySetInnerHTML={{ __html: props.entity.content }}
-        />
-      );
-      break;
-    case "rect":
-      style = {
-        ...style,
-        ...{
-          width: `calc(${props.entity.size.width}px * var(--scene-scale))`,
-          height: `calc(${props.entity.size.height}px * var(--scene-scale))`,
-          backgroundColor: `${props.entity.color}`,
-        },
-      };
-      break;
-  }
+
+  Array.from(Object.entries(props.entity)).forEach(([key, value]) => {
+    switch (key) {
+      case "pos":
+        style = {
+          ...style,
+          ...{
+            "--x": `calc(${props.entity.pos.x}px * var(--scene-scale))`,
+            "--y": `calc(${props.entity.pos.y}px * var(--scene-scale))`,
+          },
+        };
+        break;
+      case "rotation":
+        style = {
+          ...style,
+          ...{ rotate: `${props.entity.rotation || 0}deg` },
+        };
+        break;
+      case "size":
+        style = {
+          ...style,
+          ...{
+            width: `calc(${props.entity.size.width}px * var(--scene-scale))`,
+            height: `calc(${props.entity.size.height}px * var(--scene-scale))`,
+          },
+        };
+        break;
+      case "color":
+        style = {
+          ...style,
+          ...{ backgroundColor: `${props.entity.color}` },
+        };
+        break;
+      case "type":
+        if (value == "text") {
+          style = {
+            ...style,
+            ...{
+              fontSize: `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`,
+              fontFamily: "var(--font-serif)",
+            },
+          };
+          content = <Markdown>{props.entity.content}</Markdown>;
+          break;
+        } else if (value == "svg") {
+          content = (
+            <svg
+              width={`calc(${props.entity.size.width}px * var(--scene-scale))`}
+              height={`calc(${props.entity.size.height}px * var(--scene-scale))`}
+              viewBox={"0 0 100 100"}
+              dangerouslySetInnerHTML={{ __html: props.entity.content }}
+            />
+          );
+        }
+    }
+  });
 
   return (
     <div
@@ -141,9 +154,7 @@ export default function EntityComponent(props: EntityProps) {
           emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
         }
       }}
-      onContextMenu={(e) => {
-        handleContextMenu(e, props.entity);
-      }}
+      onContextMenu={(e) => handleContextMenu(e, props.entity)}
     >
       {content}
     </div>

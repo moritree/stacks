@@ -17,6 +17,12 @@ declare module "react-ace" {
       showLineNumbers?: boolean;
       tabSize?: number;
     };
+    commands?: {
+      name: string;
+      bindKey: any;
+      exec: ((editor: any) => void) | string;
+    }[];
+    onCopy?: (text: string) => void;
   }
 
   const ReactAce: ComponentType<IAceEditorProps>;

@@ -21,7 +21,7 @@ async function saveScene() {
   });
 }
 
-async function loadScene() {
+async function openScene() {
   await invoke("load_scene", {
     path: await open({
       multiple: false,
@@ -133,8 +133,8 @@ export default function Scene() {
     async function setupFileOperationListener() {
       const unsubscribe = await listen<string>("file_operation", (e) => {
         switch (e.payload) {
-          case "load_scene": {
-            loadScene();
+          case "open_scene": {
+            openScene();
             break;
           }
           case "save_scene": {
