@@ -85,50 +85,29 @@ interface EntityProps {
 }
 
 export default function EntityComponent(props: EntityProps) {
-  let style = {};
+  const style: Record<string, string> = {};
   let content: JSX.Element | null = null;
 
   Array.from(Object.entries(props.entity)).forEach(([key, value]) => {
     switch (key) {
       case "pos":
-        style = {
-          ...style,
-          ...{
-            "--x": `calc(${props.entity.pos.x}px * var(--scene-scale))`,
-            "--y": `calc(${props.entity.pos.y}px * var(--scene-scale))`,
-          },
-        };
+        style["--x"] = `calc(${props.entity.pos.x}px * var(--scene-scale))`;
+        style["--y"] = `calc(${props.entity.pos.y}px * var(--scene-scale))`;
         break;
       case "rotation":
-        style = {
-          ...style,
-          ...{ rotate: `${props.entity.rotation || 0}deg` },
-        };
+        style.rotate = `${props.entity.rotation || 0}deg`;
         break;
       case "size":
-        style = {
-          ...style,
-          ...{
-            width: `calc(${props.entity.size.width}px * var(--scene-scale))`,
-            height: `calc(${props.entity.size.height}px * var(--scene-scale))`,
-          },
-        };
+        style.width = `calc(${props.entity.size.width}px * var(--scene-scale))`;
+        style.height = `calc(${props.entity.size.height}px * var(--scene-scale))`;
         break;
       case "color":
-        style = {
-          ...style,
-          ...{ backgroundColor: `${props.entity.color}` },
-        };
+        style.backgroundColor = `${props.entity.color}`;
         break;
       case "type":
         if (value == "text") {
-          style = {
-            ...style,
-            ...{
-              fontSize: `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`,
-              fontFamily: "var(--font-serif)",
-            },
-          };
+          style.fontSize = `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`;
+          style.fontFamily = "var(--font-serif)";
           content = <Markdown>{props.entity.content}</Markdown>;
           break;
         } else if (value == "svg") {
