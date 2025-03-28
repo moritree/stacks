@@ -14,7 +14,7 @@ const SCENE_BASE_SIZE = {
 };
 
 async function saveScene() {
-  await invoke("save_scene", {
+  invoke("save_scene", {
     path: await save({
       filters: [{ name: "scene", extensions: ["txt"] }],
     }),
@@ -22,12 +22,15 @@ async function saveScene() {
 }
 
 async function openScene() {
-  await invoke("load_scene", {
-    path: await open({
-      multiple: false,
-      directory: false,
-    }),
+  const path = await open({
+    multiple: false,
+    directory: false,
   });
+  if (path) {
+    invoke("load_scene", { path: path });
+    const inspector = await WebviewWindow.getByLabel("inspector");
+    if (inspector) inspector.close();
+  }
 }
 
 async function handleContextMenu(event: Event) {
