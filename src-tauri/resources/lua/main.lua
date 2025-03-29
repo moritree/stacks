@@ -31,6 +31,12 @@ end]]
             size = { width = 200, height = 100 },
             color = "#ff0000"
         }),
+        testinput = Entity:new({
+            type = "text_input",
+            pos = { x = 100, y = 600 },
+            size = { width = 200, height = 50 },
+            color = "#dddddd"
+        }),
         test4 = Entity:new({
             type = "svg",
             pos = { x = 600, y = 200 },
