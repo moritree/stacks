@@ -292,11 +292,19 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 .iter()
             {
                 entity
-                    .call_method::<(String, String), _>( // TODO fix rustc complaint
+                    .call_method::<(String, String), ()>(
                         "load_script",
-                        (key.to_string(), value.as_str().ok_or_else(|| {
-                            LuaError::FormatError("Couldn't parse script as string".to_string())
-                        })?.to_string()),
+                        (
+                            key.to_string(),
+                            value
+                                .as_str()
+                                .ok_or_else(|| {
+                                    LuaError::FormatError(
+                                        "Couldn't parse script as string".to_string(),
+                                    )
+                                })?
+                                .to_string(),
+                        ),
                     )
                     .map_err(|e| {
                         let _ = response_tx.send((
