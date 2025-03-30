@@ -286,18 +286,6 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
 
             // scripts are in object format (name: string), add them to entity in format [name] = { string = [str]}
             let scripts_table: LuaTable = entity.get("scripts")?;
-            let load_script_function: LuaFunction = lua
-                .load(
-                    r#"
-                        function(self, data)
-                            as_string = "local func = function(self) " .. (data) .. " ; end ; return func"
-                            local success, loaded = require("serpent").load(as_string, { safe = false })
-                            if not success then return false end
-                            return (loaded --[[@as function]])
-                        end
-                        "#,
-                )
-                .eval::<LuaFunction>()?;
             for (key, value) in scripts
                 .as_object()
                 .ok_or_else(|| {
@@ -307,31 +295,29 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
             {
                 scripts_table.set(key.to_string(), lua.create_table()?)?;
                 let script_table = scripts_table.get::<_, LuaTable>(key.to_string())?;
-                script_table.set(
-                    "string",
-                    value.as_str().ok_or_else(|| {
-                        LuaError::FormatError("Couldn't parse script as string".to_string())
-                    })?,
-                )?;
 
-                let loaded_func: LuaFunction = match load_script_function
-                    .call::<(LuaTable, LuaString), LuaFunction>((
-                        entity.clone(),
-                        script_table.get("string")?,
-                    )) {
-                    Ok(loaded_func) => loaded_func,
-                    Err(_) => {
+                let value_str = value.as_str().ok_or_else(|| {
+                    LuaError::FormatError("Couldn't parse script as string".to_string())
+                })?;
+
+                entity
+                    .call_method::<(String, String), _>(
+                        "load_script",
+                        (key.to_string(), value_str.to_string()),
+                    )
+                    .map_err(|e| {
                         let _ = response_tx.send((
                             false,
-                            format!("Invalid syntax in {} script.", key),
+                            format!("Invalid syntax in {} script: {}", key, e),
                             "".to_string(),
                         ));
-                        return Ok(());
-                    }
-                };
-                script_table
-                    .set("func", loaded_func)
-                    .map_err(|e| LuaError::LuaError(e))?
+                        scripts_table
+                            .set(key.to_string(), LuaNil)
+                            .expect("Couldn't remove script table.");
+                        LuaError::LuaError(e)
+                    })?;
+
+                script_table.set("string", value_str)?;
             }
 
             // finally, more standard update procedure!

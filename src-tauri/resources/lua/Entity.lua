@@ -18,14 +18,11 @@ function Entity:update(data)
 end
 
 function Entity:load_script(funcname, as_string)
-    as_string = "local func = function(self) " .. (as_string or self.scripts[funcname].string) .. " ; end ; return func"
+    as_string = "local func = function(self, params) " ..
+        (as_string or self.scripts[funcname].string) .. " ; end ; return func"
     local success, loaded = serializer.load(as_string, { safe = false })
-    if not success then
-        print(string.format("Warning: Couldn't load script as function: %s", as_string))
-        return false
-    end
+    if not success then error("Serializer couldn't load script as function.") end
     self.scripts[funcname].func = (loaded --[[@as function]])
-    return true
 end
 
 function Entity:run_script(funcname, params)
