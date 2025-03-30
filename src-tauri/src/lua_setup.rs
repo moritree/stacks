@@ -190,7 +190,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 .call::<_, ()>((scene, path))
                 .map_err(|e| LuaError::LuaError(e))?
         }
-        LuaMessage::RunScript(id, function, response_tx) => {
+        LuaMessage::RunScript(id, function, params, response_tx) => {
             let entity: LuaTable = get_scene(lua)?
                 .get::<_, LuaTable>("entities")?
                 .get::<_, LuaTable>(id.clone())
@@ -205,9 +205,10 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
             // Wrap the script execution in pcall to catch Lua runtime errors
             let pcall: LuaFunction = lua.globals().get("pcall")?;
             let run_script: LuaFunction = entity.get("run_script")?;
+            let lua_params = json_value_to_lua(lua, &params)?;
 
             let (success, error): (bool, Option<String>) =
-                pcall.call((run_script, entity, function.clone()))?;
+                pcall.call((run_script, entity, function.clone(), lua_params))?;
 
             if !success {
                 let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());

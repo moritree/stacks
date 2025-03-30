@@ -28,7 +28,7 @@ function Entity:load_script(funcname, as_string)
     return true
 end
 
-function Entity:run_script(funcname)
+function Entity:run_script(funcname, params)
     -- TODO pass errors up?
     if not self.scripts[funcname] then
         print(string.format("Warning: %s is not a valid function on this entity", funcname))
@@ -38,7 +38,7 @@ function Entity:run_script(funcname)
         -- loaded through side effect
         if self:load_script(funcname) == false then return end
     end
-    self.scripts[funcname].func(self)
+    self.scripts[funcname].func(self, params)
 end
 
 function Entity:serializable()

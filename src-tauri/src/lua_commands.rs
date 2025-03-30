@@ -81,11 +81,12 @@ pub async fn run_script(
     state: State<'_, LuaState>,
     id: String,
     function: String,
+    params: Value,
 ) -> Result<(bool, String), String> {
     let (response_tx, response_rx) = mpsc::channel();
     state
         .tx
-        .send(LuaMessage::RunScript(id, function, response_tx))
+        .send(LuaMessage::RunScript(id, function, params, response_tx))
         .expect("Failed sending RunScript");
     response_rx.recv().map_err(|e| e.to_string())
 }
