@@ -29,15 +29,14 @@ function Entity:load_script(funcname, as_string)
 end
 
 function Entity:run_script(funcname, params)
-    -- TODO pass errors up?
     if not self.scripts[funcname] then
-        print(string.format("Warning: %s is not a valid function on this entity", funcname))
+        error(string.format("Warning: %s is not a valid function on this entity.", funcname))
     end
 
-    if type(self.scripts[funcname].func) ~= "function" then
-        -- loaded through side effect
-        if self:load_script(funcname) == false then return end
+    if type(self.scripts[funcname].func) ~= "function" and self:load_script(funcname) == false then
+        error("Couldn't load script.")
     end
+
     self.scripts[funcname].func(self, params)
 end
 
