@@ -284,8 +284,6 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
             };
             entity.set("id", LuaNil)?;
 
-            // scripts are in object format (name: string), add them to entity in format [name] = { string = [str]}
-            let scripts_table: LuaTable = entity.get("scripts")?;
             for (key, value) in scripts
                 .as_object()
                 .ok_or_else(|| {
@@ -293,17 +291,12 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 })?
                 .iter()
             {
-                scripts_table.set(key.to_string(), lua.create_table()?)?;
-                let script_table = scripts_table.get::<_, LuaTable>(key.to_string())?;
-
-                let value_str = value.as_str().ok_or_else(|| {
-                    LuaError::FormatError("Couldn't parse script as string".to_string())
-                })?;
-
                 entity
-                    .call_method::<(String, String), _>(
+                    .call_method::<(String, String), _>( // TODO fix rustc complaint
                         "load_script",
-                        (key.to_string(), value_str.to_string()),
+                        (key.to_string(), value.as_str().ok_or_else(|| {
+                            LuaError::FormatError("Couldn't parse script as string".to_string())
+                        })?.to_string()),
                     )
                     .map_err(|e| {
                         let _ = response_tx.send((
@@ -311,13 +304,8 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                             format!("Invalid syntax in {} script: {}", key, e),
                             "".to_string(),
                         ));
-                        scripts_table
-                            .set(key.to_string(), LuaNil)
-                            .expect("Couldn't remove script table.");
                         LuaError::LuaError(e)
                     })?;
-
-                script_table.set("string", value_str)?;
             }
 
             // finally, more standard update procedure!

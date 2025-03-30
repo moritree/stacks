@@ -17,11 +17,23 @@ function Entity:update(data)
     for k, v in pairs(data) do self[k] = v end
 end
 
-function Entity:load_script(funcname, as_string)
-    as_string = "local func = function(self, params) " ..
-        (as_string or self.scripts[funcname].string) .. " ; end ; return func"
-    local success, loaded = serializer.load(as_string, { safe = false })
+function Entity:load_script(funcname, script_string)
+    if not script_string then
+        if self.scripts[funcname].string then
+            script_string = self.scripts[funcname].string
+        else
+            error "Can't load an empty function."
+        end
+    end
+
+    local full_string = "local func = function(self, params) " ..
+        (script_string) .. " ; end ; return func"
+    local success, loaded = serializer.load(full_string, { safe = false })
+
     if not success then error "Serializer couldn't load script as function." end
+
+    if not self.scripts[funcname] then self.scripts[funcname] = {} end
+    self.scripts[funcname].string = script_string
     self.scripts[funcname].func = (loaded --[[@as function]])
 end
 
