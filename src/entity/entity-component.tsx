@@ -140,7 +140,7 @@ export default function EntityComponent(props: EntityProps) {
         e.stopPropagation();
         emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
         if (props.entity.scripts.on_click)
-          runScript(props.entity, "on_click", { message: "aaaaa" });
+          runScript(props.entity, "on_click", {});
       }}
       onContextMenu={(e) => handleContextMenu(e, props.entity)}
     >
