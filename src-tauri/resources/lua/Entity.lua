@@ -30,7 +30,7 @@ function Entity:run_script(funcname, params)
         error(string.format("Warning: %s is not a valid function on this entity.", funcname))
     end
 
-    if type(self.scripts[funcname].func) ~= "function" and self:load_script(funcname) == false then
+    if type(self.scripts[funcname].func) ~= "function" and not pcall(self.load_script, self, funcname) then
         error("Couldn't load script.")
     end
 
