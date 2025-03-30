@@ -21,7 +21,7 @@ function Entity:load_script(funcname, as_string)
     as_string = "local func = function(self, params) " ..
         (as_string or self.scripts[funcname].string) .. " ; end ; return func"
     local success, loaded = serializer.load(as_string, { safe = false })
-    if not success then error("Serializer couldn't load script as function.") end
+    if not success then error "Serializer couldn't load script as function." end
     self.scripts[funcname].func = (loaded --[[@as function]])
 end
 
@@ -31,7 +31,7 @@ function Entity:run_script(funcname, params)
     end
 
     if type(self.scripts[funcname].func) ~= "function" and not pcall(self.load_script, self, funcname) then
-        error("Couldn't load script.")
+        error "Couldn't load script."
     end
 
     self.scripts[funcname].func(self, params)
