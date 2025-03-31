@@ -35,10 +35,11 @@ async function handleContextMenu(event: Event, entity: Entity) {
   ).popup();
 }
 
-async function runScript(entity: Entity, script: string) {
+async function runScript(entity: Entity, script: string, params: any) {
   const [success, msg] = await invoke<[boolean, string]>("run_script", {
     id: entity.id,
     function: script,
+    params: params,
   });
   if (!success)
     message(msg, {
@@ -151,7 +152,8 @@ export default function EntityComponent(props: EntityProps) {
       onDblClick={async (e) => {
         e.stopPropagation();
         emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
-        if (props.entity.scripts.on_click) runScript(props.entity, "on_click");
+        if (props.entity.scripts.on_click)
+          runScript(props.entity, "on_click", {});
       }}
       onContextMenu={(e) => handleContextMenu(e, props.entity)}
     >
