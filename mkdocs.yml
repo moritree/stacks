@@ -3,7 +3,9 @@ site_description: Stacks documentation
 repo_url: https://github.com/moritree/stacks
 
 theme:
-  name: readthedocs # material
+  name: material
+  palette:
+    primary: deep purple
 
 nav:
   - Home: index.md
