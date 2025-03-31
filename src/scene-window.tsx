@@ -3,7 +3,7 @@ import { emit, listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
 import Moveable from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
-import { save, open } from "@tauri-apps/plugin-dialog";
+import { save, open, message } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "preact/hooks";
 import { Entity } from "./entity/entity-type";
@@ -22,7 +22,16 @@ async function saveScene() {
 async function openScene() {
   const path = await open({ multiple: false, directory: false });
   if (path) {
-    invoke("load_scene", { path: path });
+    const [success, msg] = await invoke<[boolean, string]>("load_scene", {
+      path: path,
+    });
+    if (!success) {
+      message(msg, {
+        title: `Error`,
+        kind: "error",
+      });
+      return;
+    }
     const inspector = await WebviewWindow.getByLabel("inspector");
     if (inspector) inspector.close();
   }

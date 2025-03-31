@@ -183,12 +183,22 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 .call::<_, ()>((scene, path))
                 .map_err(|e| LuaError::LuaError(e))?;
         }
-        LuaMessage::LoadScene(path) => {
+        LuaMessage::LoadScene(path, response_tx) => {
             let scene = get_scene(lua)?;
-            scene
-                .get::<_, LuaFunction>("load_scene")?
-                .call::<_, ()>((scene, path))
-                .map_err(|e| LuaError::LuaError(e))?
+            let pcall: LuaFunction = lua.globals().get("pcall")?;
+            let (success, error): (bool, Option<String>) = pcall.call(
+                scene
+                    .get::<_, LuaFunction>("load_scene")?
+                    .call::<_, ()>((scene, path)),
+            )?;
+
+            if !success {
+                let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());
+                let _ = response_tx.send((false, format!("Failed loading: {}", error_msg)));
+                return Ok(());
+            }
+
+            let _ = response_tx.send((true, "Successfully loaded scene".to_string()));
         }
         LuaMessage::RunScript(id, function, params, response_tx) => {
             let entity: LuaTable = get_scene(lua)?

@@ -1,5 +1,6 @@
 local deep_copy = require('deep_copy')
 local serializer = require('serpent')
+local Entity = require('Entity')
 
 local Scene = {
     entities = {}
@@ -26,8 +27,7 @@ end
 
 function Scene:update_entity_id(original_id, new_id, data)
     if self.entities[original_id] == nil then
-        print(string.format("Error: Cannot update entity ID, %s is not an existing entity ID", original_id))
-        return
+        error(string.format("Cannot update ID, %s is not an existing ID", original_id))
     end
 
     if (new_id ~= original_id) then
@@ -39,15 +39,11 @@ end
 
 function Scene:duplicate_entity(id)
     if not self.entities[id] then
-        print(string.format(
-            "Warning: Can't duplicate entity %s, this id does not exist on the scene", id))
-        return
+        error(string.format("Can't duplicate %s, no entity with this id exists.", id))
     end
 
     local new_key = id .. "_clone"
-    while self.entities[new_key] do
-        new_key = new_key .. "_clone"
-    end
+    while self.entities[new_key] do new_key = new_key .. "_clone" end
 
     self.entities[new_key] = deep_copy(self.entities[id])
     self.entities[new_key].pos.x = self.entities[new_key].pos.x + 15
@@ -64,22 +60,15 @@ function Scene:save_scene(path)
 end
 
 function Scene:load_scene(path)
-    local file = io.open(path, "r")
-    if not file then
-        print("Error loading scene: couldn't open test.txt")
-        return
-    end
+    local file = assert(io.open(path, "r"), string.format("Couldn't open file at \"%s\".", path))
     local content = file:read("*all")
     file:close()
 
     local success, loaded_entities = serializer.load(content)
-    if not success then
-        print("Error loading scene: " .. tostring(loaded_entities))
-        return
-    end
+    if not success then error "Couldn't deserialize scene." end
 
     local new_entities = {}
-    for k, v in pairs(loaded_entities --[[@as table]]) do new_entities[k] = require("Entity"):new(v) end
+    for k, v in pairs(loaded_entities --[[@as table]]) do new_entities[k] = Entity:new(v) end
     self.entities = new_entities
 end
 

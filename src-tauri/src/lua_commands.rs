@@ -69,11 +69,16 @@ pub async fn save_scene(state: State<'_, LuaState>, path: String) -> Result<(), 
 }
 
 #[tauri::command]
-pub async fn load_scene(state: State<'_, LuaState>, path: String) -> Result<(), String> {
+pub async fn load_scene(
+    state: State<'_, LuaState>,
+    path: String,
+) -> Result<(bool, String), String> {
+    let (response_tx, response_rx) = mpsc::channel();
     state
         .tx
-        .send(LuaMessage::LoadScene(path))
-        .map_err(|e| e.to_string())
+        .send(LuaMessage::LoadScene(path, response_tx))
+        .expect("Failed sending LoadScene");
+    response_rx.recv().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
