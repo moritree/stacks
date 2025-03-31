@@ -1,0 +1,10 @@
+site_name: Stacks
+site_description: Stacks documentation
+repo_url: https://github.com/moritree/stacks
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - About: about.md
