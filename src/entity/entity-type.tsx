@@ -23,6 +23,7 @@ interface TextInputEntity {
   size: { width: number; height: number };
   fontSize?: number;
   color: string;
+  disabled?: string;
 }
 
 interface BaseEntity {

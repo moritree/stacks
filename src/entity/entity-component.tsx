@@ -115,15 +115,16 @@ export default function EntityComponent(props: EntityProps) {
           style.fontSize = `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`;
           style.fontFamily = "var(--font-sans)";
 
-          content = (
-            <input
-              class="w-full h-full pl-1 pr-1"
-              value={props.entity.content}
-              placeholder={props.entity.placeholder}
-              autocomplete="off"
-              autoCorrect="off"
-            />
-          );
+          if (!props.entity.disabled)
+            content = (
+              <input
+                class="w-full h-full pl-1 pr-1"
+                value={props.entity.content}
+                placeholder={props.entity.placeholder}
+                autocomplete="off"
+                autoCorrect="off"
+              />
+            );
         } else if (value == "svg") {
           content = (
             <svg
