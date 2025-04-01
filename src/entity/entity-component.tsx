@@ -111,6 +111,40 @@ export default function EntityComponent(props: EntityProps) {
           style.fontFamily = "var(--font-serif)";
           content = <Markdown>{props.entity.content}</Markdown>;
           break;
+        } else if (value == "text_input") {
+          style.fontSize = `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`;
+          style.fontFamily = "var(--font-sans)";
+
+          content = (
+            <input
+              class="w-full h-full pl-1 pr-1 disabled:text-text-color/50"
+              value={props.entity.content}
+              placeholder={props.entity.placeholder}
+              autocomplete="off"
+              autoCorrect="off"
+              disabled={props.entity.disabled}
+              onInput={(e) => {
+                props.entity.content = e.currentTarget.value;
+                invoke("update_entity", {
+                  id: props.entity.id,
+                  data: { content: e.currentTarget.value },
+                });
+                if (props.entity.scripts.on_change) {
+                  runScript(props.entity, "on_change", {
+                    text: props.entity.content,
+                  });
+                }
+              }}
+              onKeyUp={(e) => {
+                if (e.key === "Enter" && props.entity.scripts.on_submit) {
+                  e.currentTarget.blur();
+                  runScript(props.entity, "on_submit", {
+                    text: props.entity.content,
+                  });
+                }
+              }}
+            />
+          );
         } else if (value == "svg") {
           content = (
             <svg

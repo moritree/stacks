@@ -16,6 +16,16 @@ interface SvgEntity {
   size: { width: number; height: number };
 }
 
+interface TextInputEntity {
+  type: "text_input";
+  content?: string;
+  placeholder?: string;
+  size: { width: number; height: number };
+  fontSize?: number;
+  color: string;
+  disabled?: string;
+}
+
 interface BaseEntity {
   id: string;
   scripts: { [key: string]: string };
@@ -24,4 +34,5 @@ interface BaseEntity {
   rotation?: number;
 }
 
-export type Entity = BaseEntity & (RectEntity | TextEntity | SvgEntity);
+export type Entity = BaseEntity &
+  (RectEntity | TextEntity | SvgEntity | TextInputEntity);
