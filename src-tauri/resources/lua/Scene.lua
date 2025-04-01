@@ -88,4 +88,10 @@ function Scene:handle_broadcast(message, data)
     end
 end
 
+-- Invoke script on specific entity
+function Scene:handle_message(target, message, data)
+    if not (self.entities[target] and self.entities[target].scripts[message]) then return end
+    self.entities[target]:run_script(message, data)
+end
+
 return Scene
