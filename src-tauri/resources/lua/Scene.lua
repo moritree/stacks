@@ -79,4 +79,13 @@ function Scene:entity_as_block_string(id)
     return serializer.block(copy, { comment = false })
 end
 
+-- Invoke script on any listening entity
+function Scene:handle_broadcast(message, data)
+    for _, entity in pairs(self.entities) do
+        for script, _ in pairs(entity.scripts) do
+            if script == message then entity:run_script(script, data) end
+        end
+    end
+end
+
 return Scene

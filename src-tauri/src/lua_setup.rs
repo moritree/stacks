@@ -62,6 +62,19 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
         })?,
     )?;
 
+    // script broadcasting
+    lua.globals().set(
+        "broadcast",
+        lua.create_function(move |l: &Lua, (msg, params): (String, LuaValue)| {
+            get_scene(l)?
+                .call_method::<(String, LuaValue), ()>("handle_broadcast", (msg, params))?;
+            Ok(())
+        })
+        .map_err(|e| {
+            LuaError::InitializationError(format!("Failed to create Lua emit_to function: {}", e))
+        })?,
+    )?;
+
     // intercept & tag lua prints to stdout
     lua.globals()
         .set(
