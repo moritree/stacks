@@ -123,6 +123,26 @@ export default function EntityComponent(props: EntityProps) {
                 placeholder={props.entity.placeholder}
                 autocomplete="off"
                 autoCorrect="off"
+                onInput={(e) => {
+                  props.entity.content = e.currentTarget.value;
+                  invoke("update_entity", {
+                    id: props.entity.id,
+                    data: { content: e.currentTarget.value },
+                  });
+                  if (props.entity.scripts.on_change) {
+                    runScript(props.entity, "on_change", {
+                      text: props.entity.content,
+                    });
+                  }
+                }}
+                onKeyUp={(e) => {
+                  if (e.key === "Enter" && props.entity.scripts.on_submit) {
+                    e.currentTarget.blur();
+                    runScript(props.entity, "on_submit", {
+                      text: props.entity.content,
+                    });
+                  }
+                }}
               />
             );
         } else if (value == "svg") {
