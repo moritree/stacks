@@ -106,9 +106,11 @@ end
 
 -- Invoke script on specific entity
 function Scene:handle_message(target, message, data)
-    assert(self.entities[target], "Couldn't invoke message \"%s\" because the target \"%s\" wasn't found.")
+    assert(self.entities[target],
+        string.format("Couldn't invoke message \"%s\" because the target \"%s\" wasn't found.", message, target))
     assert(self.entities[target].scripts[message],
-        "Couldn't invoke message \"%s\" because the matching script on \"%s\" wasn't found.")
+        string.format("Couldn't invoke message \"%s\" because the matching script on \"%s\" wasn't found.",
+            message, target))
 
     local success, result = pcall(self.entities[target].run_script, self.entities[target], message, data)
     assert(success, string.format("Couldn't invoke message \"%s\" on \"%s\": %s", message, target, tostring(result)))

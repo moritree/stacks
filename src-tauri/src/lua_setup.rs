@@ -80,10 +80,23 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
         "message",
         lua.create_function(
             move |l: &Lua, (target, msg, params): (String, String, LuaValue)| {
-                get_scene(l)?.call_method::<(String, String, LuaValue), ()>(
-                    "handle_message",
-                    (target, msg, params),
-                )?;
+                let pcall: LuaFunction = l.globals().get("pcall")?;
+                let scene = get_scene(l)?;
+                let (success, error): (bool, Option<String>) = pcall.call((
+                    scene
+                        .get::<_, LuaFunction>("handle_message")
+                        .map_err(|e| LuaError::LuaError(e))?,
+                    scene,
+                    target,
+                    msg,
+                    params,
+                ))?;
+                if !success {
+                    println!(
+                        "Message failed: {}",
+                        error.unwrap_or_else(|| "Unknown error".to_string())
+                    );
+                }
                 Ok(())
             },
         )
