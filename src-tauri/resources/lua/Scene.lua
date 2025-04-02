@@ -79,4 +79,41 @@ function Scene:entity_as_block_string(id)
     return serializer.block(copy, { comment = false })
 end
 
+-- Invoke script on any listening entity
+function Scene:handle_broadcast(message, data)
+    local failed = {}
+    for _, entity in pairs(self.entities) do
+        for script, _ in pairs(entity.scripts) do
+            if script == message then
+                local success, result = pcall(entity.run_script, entity, script, data)
+                if not success then table.insert(failed, { entity = entity.id, error = result }) end
+            end
+        end
+    end
+
+    local fails = #failed
+    if fails == 0 then return end
+    if fails == 1 then
+        error(string.format("Script on \"%s\" failed: %s", failed[1].entity, tostring(failed[1].error)))
+    else
+        local err_total = string.format("%i scripts failed.", fails)
+        for _, fail in ipairs(failed) do
+            err_total = err_total .. string.format("\n%s: %s", fail.entity, fail.error)
+        end
+        error(err_total)
+    end
+end
+
+-- Invoke script on specific entity
+function Scene:handle_message(target, message, data)
+    assert(self.entities[target],
+        string.format("Couldn't invoke message \"%s\" because the target \"%s\" wasn't found.", message, target))
+    assert(self.entities[target].scripts[message],
+        string.format("Couldn't invoke message \"%s\" because the matching script on \"%s\" wasn't found.",
+            message, target))
+
+    local success, result = pcall(self.entities[target].run_script, self.entities[target], message, data)
+    assert(success, string.format("Couldn't invoke message \"%s\" on \"%s\": %s", message, target, tostring(result)))
+end
+
 return Scene

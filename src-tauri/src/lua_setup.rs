@@ -4,6 +4,7 @@ use std::fs;
 use std::path::Path;
 use std::sync::mpsc;
 use tauri::{Emitter, Manager, WebviewWindow};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 pub fn init_lua_thread(window: WebviewWindow) -> Result<LuaState, LuaError> {
     let (tx, rx) = mpsc::channel(); // create communication channel
@@ -59,6 +60,71 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
         )
         .map_err(|e| {
             LuaError::InitializationError(format!("Failed to create Lua emit_to function: {}", e))
+        })?,
+    )?;
+
+    // broadcasting
+    let w_broadcast = window.clone();
+    lua.globals().set(
+        "broadcast",
+        lua.create_function(move |l: &Lua, (msg, params): (String, LuaValue)| {
+            let pcall: LuaFunction = l.globals().get("pcall")?;
+            let scene = get_scene(l)?;
+            let (success, error): (bool, Option<String>) = pcall.call((
+                scene
+                    .get::<_, LuaFunction>("handle_broadcast")
+                    .map_err(|e| LuaError::LuaError(e))?,
+                scene,
+                msg,
+                params,
+            ))?;
+            if !success {
+                let _ = w_broadcast
+                    .app_handle()
+                    .dialog()
+                    .message(error.unwrap_or_else(|| "Unknown error".to_string()))
+                    .kind(MessageDialogKind::Error)
+                    .title("Broadcast failed")
+                    .blocking_show();
+            }
+            Ok(())
+        })
+        .map_err(|e| {
+            LuaError::InitializationError(format!("Failed to create Lua broadcast function: {}", e))
+        })?,
+    )?;
+
+    // messaging
+    let w_message = window.clone();
+    lua.globals().set(
+        "message",
+        lua.create_function(
+            move |l: &Lua, (target, msg, params): (String, String, LuaValue)| {
+                let pcall: LuaFunction = l.globals().get("pcall")?;
+                let scene = get_scene(l)?;
+                let (success, error): (bool, Option<String>) = pcall.call((
+                    scene
+                        .get::<_, LuaFunction>("handle_message")
+                        .map_err(|e| LuaError::LuaError(e))?,
+                    scene,
+                    target,
+                    msg,
+                    params,
+                ))?;
+                if !success {
+                    let _ = w_message
+                        .app_handle()
+                        .dialog()
+                        .message(error.unwrap_or_else(|| "Unknown error".to_string()))
+                        .kind(MessageDialogKind::Error)
+                        .title("Message failed")
+                        .blocking_show();
+                }
+                Ok(())
+            },
+        )
+        .map_err(|e| {
+            LuaError::InitializationError(format!("Failed to create Lua message function: {}", e))
         })?,
     )?;
 
