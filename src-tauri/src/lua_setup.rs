@@ -4,6 +4,7 @@ use std::fs;
 use std::path::Path;
 use std::sync::mpsc;
 use tauri::{Emitter, Manager, WebviewWindow};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 pub fn init_lua_thread(window: WebviewWindow) -> Result<LuaState, LuaError> {
     let (tx, rx) = mpsc::channel(); // create communication channel
@@ -63,6 +64,7 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
     )?;
 
     // broadcasting
+    let w_broadcast = window.clone();
     lua.globals().set(
         "broadcast",
         lua.create_function(move |l: &Lua, (msg, params): (String, LuaValue)| {
@@ -77,10 +79,13 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
                 params,
             ))?;
             if !success {
-                println!(
-                    "Broadcast failed: {}",
-                    error.unwrap_or_else(|| "Unknown error".to_string())
-                );
+                let _ = w_broadcast
+                    .app_handle()
+                    .dialog()
+                    .message(error.unwrap_or_else(|| "Unknown error".to_string()))
+                    .kind(MessageDialogKind::Error)
+                    .title("Broadcast failed")
+                    .blocking_show();
             }
             Ok(())
         })
@@ -90,6 +95,7 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
     )?;
 
     // messaging
+    let w_message = window.clone();
     lua.globals().set(
         "message",
         lua.create_function(
@@ -106,10 +112,13 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
                     params,
                 ))?;
                 if !success {
-                    println!(
-                        "Message failed: {}",
-                        error.unwrap_or_else(|| "Unknown error".to_string())
-                    );
+                    let _ = w_message
+                        .app_handle()
+                        .dialog()
+                        .message(error.unwrap_or_else(|| "Unknown error".to_string()))
+                        .kind(MessageDialogKind::Error)
+                        .title("Message failed")
+                        .blocking_show();
                 }
                 Ok(())
             },
