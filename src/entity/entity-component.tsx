@@ -1,12 +1,16 @@
 import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  getCurrentWebviewWindow,
+  WebviewWindow,
+} from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
 import { Entity } from "./entity-type";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, Window } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
 import { JSX } from "preact/jsx-runtime";
 import { message } from "@tauri-apps/plugin-dialog";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 async function handleContextMenu(event: Event, entity: Entity) {
   event.preventDefault();
@@ -68,6 +72,7 @@ async function openInspector(entity: Entity) {
     resizable: true,
     minWidth: 200,
     minHeight: 300,
+    focus: false,
   });
 
   inspectorWindow.once("mounted", () => {

@@ -13,6 +13,7 @@ import { platform } from "@tauri-apps/plugin-os";
 import { invoke } from "@tauri-apps/api/core";
 import { message } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../components/code-editor";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 export default function InspectorWindow() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -51,6 +52,7 @@ export default function InspectorWindow() {
           "entity_string",
           (tableEvent) => {
             setInspectorContents(tableEvent.payload.table);
+            getCurrentWebviewWindow().setFocus();
           },
         ),
       );
