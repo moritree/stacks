@@ -174,24 +174,16 @@ export default function Scene() {
     } else setSelectedId(undefined);
   };
 
-  const handleDrag = ({ transform }: { transform: string }) => {
-    let newPos;
-
-    // transform will be, annoyingly, a string in the format "translate(Xpx, Ypx)"
-    const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
-    if (matches) {
-      newPos = {
-        x: selectedInitialPosition.x + parseFloat(matches[1]) * transformScale,
-        y: selectedInitialPosition.y + parseFloat(matches[2]) * transformScale,
-      };
-    } else {
-      console.error("Drag transform format couldn't be parsed", transform);
-      newPos = selectedEntity?.pos; // fallback
-    }
-
+  const handleDrag = ({ beforeTranslate }: { beforeTranslate: number[] }) => {
+    const [dx, dy] = beforeTranslate;
     invoke("update_entity", {
       id: selectedId,
-      data: { pos: newPos },
+      data: {
+        pos: {
+          x: selectedInitialPosition.x + dx * transformScale,
+          y: selectedInitialPosition.y + dy * transformScale,
+        },
+      },
     });
   };
 
@@ -208,9 +200,9 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      onContextMenu={(e) =>
-        e.target === e.currentTarget && handleContextMenu(e)
-      }
+      // onContextMenu={(e) =>
+      //   e.target === e.currentTarget && handleContextMenu(e)
+      // }
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
