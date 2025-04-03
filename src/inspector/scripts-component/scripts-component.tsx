@@ -55,43 +55,41 @@ export default function Scripts(props: {
         </div>
       }
     >
-      <div class="relative h-full">
-        <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden h-full">
-          {Array.from(props.contents).map(([key, value]) => (
-            <Accordion
-              label={key}
-              open={props.openScripts.has(key)}
-              onToggle={(open) => {
-                const clone = new Set(props.openScripts);
-                if (open) clone.add(key);
-                else clone.delete(key);
-                props.onOpenScriptsChange(clone);
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                handleContextMenu(key, props.contents, props.onContentsChange);
-              }}
-            >
-              <div class="w-full h-32">
-                <CodeEditor
-                  name={key + "-editor"}
-                  value={value}
-                  onChange={(newVal) => {
-                    const newContents = new Map(props.contents);
-                    newContents.set(key, newVal);
-                    props.onContentsChange(newContents);
-                  }}
-                  theme={props.theme}
-                />
-              </div>
-            </Accordion>
-          ))}
-          <AddScriptForm
-            entityId={props.entity.id}
-            contents={props.contents}
-            onContentsChange={props.onContentsChange}
-          />
-        </div>
+      <div class="relative h-full flex flex-col font-mono overflow-y-auto overflow-x-hidden">
+        {Array.from(props.contents).map(([key, value]) => (
+          <Accordion
+            label={key}
+            open={props.openScripts.has(key)}
+            onToggle={(open) => {
+              const clone = new Set(props.openScripts);
+              if (open) clone.add(key);
+              else clone.delete(key);
+              props.onOpenScriptsChange(clone);
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              handleContextMenu(key, props.contents, props.onContentsChange);
+            }}
+          >
+            <div class="w-full h-32">
+              <CodeEditor
+                name={key + "-editor"}
+                value={value}
+                onChange={(newVal) => {
+                  const newContents = new Map(props.contents);
+                  newContents.set(key, newVal);
+                  props.onContentsChange(newContents);
+                }}
+                theme={props.theme}
+              />
+            </div>
+          </Accordion>
+        ))}
+        <AddScriptForm
+          entityId={props.entity.id}
+          contents={props.contents}
+          onContentsChange={props.onContentsChange}
+        />
       </div>
     </Suspense>
   );
