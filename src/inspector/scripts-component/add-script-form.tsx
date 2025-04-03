@@ -32,8 +32,8 @@ export default function AddScriptForm(props: {
             spellcheck={false}
             autocomplete="off"
             autoCorrect="off"
-            class="grow p-1 h-full bg-base border border-base rounded-sm transition-colors \
-              data-[invalid=true]:text-red-600/75 data-[invalid=true]:border-red-600/75 font-sans"
+            class="grow p-1 h-full bg-base border border-base rounded-sm transition-colors font-sans \
+              data-[invalid=true]:text-red-600/75 data-[invalid=true]:border-red-600/75"
             data-invalid={props.contents.has(newScriptName.trim())}
             value={newScriptName}
             onInput={(e) => setNewScriptName(e.currentTarget.value)}
@@ -44,7 +44,6 @@ export default function AddScriptForm(props: {
                 trimmed !== "" &&
                 !props.contents.has(trimmed)
               ) {
-                // TODO return success
                 invoke("update_entity", {
                   id: props.entityId,
                   data: {

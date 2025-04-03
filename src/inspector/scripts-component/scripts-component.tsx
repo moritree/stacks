@@ -55,7 +55,7 @@ export default function Scripts(props: {
         </div>
       }
     >
-      <div class="relative h-full flex flex-col font-mono overflow-y-auto overflow-x-hidden">
+      <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden">
         {Array.from(props.contents).map(([key, value]) => (
           <Accordion
             label={key}
