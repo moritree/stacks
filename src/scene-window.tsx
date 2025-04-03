@@ -166,34 +166,39 @@ export default function Scene() {
     };
   }, []);
 
-  const handleEntitySelect = (
-    id: string,
-    pos: { x: number; y: number },
-    selectable: boolean,
-  ) => {
-    if (selectable) {
+  const handleEntitySelect = (id: string, pos: { x: number; y: number }) => {
+    if (id == selectedId) return;
+    if (entities.get(id)?.selectable) {
       setSelectedId(id);
       setSelectedInitialPosition(pos);
     } else setSelectedId(undefined);
   };
 
-  const calculateNewPosition = (transform: string) => {
+  const handleDrag = ({ transform }: { transform: string }) => {
+    let newPos;
+
     // transform will be, annoyingly, a string in the format "translate(Xpx, Ypx)"
     const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
     if (matches) {
-      return {
+      newPos = {
         x: selectedInitialPosition.x + parseFloat(matches[1]) * transformScale,
         y: selectedInitialPosition.y + parseFloat(matches[2]) * transformScale,
       };
+    } else {
+      console.error("Drag transform format couldn't be parsed", transform);
+      newPos = selectedEntity?.pos; // fallback
     }
-    console.error("Drag transform format couldn't be parsed", transform);
-    return selectedEntity?.pos; // fallback
-  };
 
-  const handleDrag = ({ transform }: { transform: string }) => {
     invoke("update_entity", {
       id: selectedId,
-      data: { pos: calculateNewPosition(transform) },
+      data: { pos: newPos },
+    });
+  };
+
+  const handleRotate = ({ rotate }: { rotate: number }) => {
+    invoke("update_entity", {
+      id: selectedId,
+      data: { rotation: rotate },
     });
   };
 
@@ -211,17 +216,17 @@ export default function Scene() {
         <EntityComponent
           key={id}
           entity={entity}
-          onSelect={(pos, selectable) =>
-            handleEntitySelect(id, pos, selectable)
-          }
+          onSelect={(pos) => handleEntitySelect(id, pos)}
           isSelected={id === selectedId}
         />
       ))}
       {selectedEntity && (
         <Moveable
           target={`#${selectedId}`}
-          draggable={selectedEntity.draggable || false}
+          draggable={selectedEntity.selectable}
+          rotatable={selectedEntity.selectable}
           onDrag={handleDrag}
+          onRotate={handleRotate}
           className="[z-index:0!important]"
         />
       )}

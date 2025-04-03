@@ -30,7 +30,7 @@ interface BaseEntity {
   id: string;
   scripts: { [key: string]: string };
   pos: { x: number; y: number };
-  draggable?: boolean;
+  selectable?: boolean;
   rotation?: number;
 }
 
