@@ -14,42 +14,6 @@ const SCENE_BASE_SIZE = {
   height: 720,
 };
 
-async function saveScene() {
-  invoke("save_scene", {
-    path: await save({ filters: [{ name: "scene", extensions: ["txt"] }] }),
-  });
-}
-
-async function openScene() {
-  const path = await open({ multiple: false, directory: false });
-  if (path) {
-    const [success, msg] = await invoke<[boolean, string]>("load_scene", {
-      path: path,
-    });
-    if (!success) {
-      message(msg, {
-        title: `Error`,
-        kind: "error",
-      });
-      return;
-    }
-    const inspector = await WebviewWindow.getByLabel("inspector");
-    if (inspector) inspector.close();
-  }
-}
-
-async function handleContextMenu(event: Event) {
-  event.preventDefault();
-  (
-    await Menu.new({
-      items: [
-        { id: "save_scene", text: "Save Scene" },
-        { id: "load_scene", text: "Load Scene" },
-      ],
-    })
-  ).popup();
-}
-
 export default function Scene() {
   const [entities, setEntities] = useState<Map<string, Entity>>(new Map());
   const [transformScale, setTransformScale] = useState<number>(1);
@@ -87,11 +51,8 @@ export default function Scene() {
     async function setupSelectEntityListener() {
       const unsubscribe = await listen<string | undefined>(
         "select_entity",
-        (e) => {
-          setSelectedId(e.payload);
-        },
+        (e) => setSelectedId(e.payload),
       );
-
       listeners.push(unsubscribe);
     }
 
@@ -104,8 +65,8 @@ export default function Scene() {
 
         const scaleFactor: number = await invoke("window_scale");
         const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
-        const windowHeight = e.payload.height; // gives us the full window dimensions
-        const titleBarHeight = windowHeight / scaleFactor - contentHeight; // Calculate title bar height dynamically
+        const windowHeight = e.payload.height; // full window dimensions
+        const titleBarHeight = windowHeight / scaleFactor - contentHeight; // calculate title bar height dynamically
 
         const newScale = e.payload.width / SCENE_BASE_SIZE.width;
         setTransformScale(scaleFactor / newScale);
@@ -118,7 +79,7 @@ export default function Scene() {
         });
         document.documentElement.style.setProperty(
           `--scene-scale`,
-          newScale / scaleFactor + "",
+          (newScale / scaleFactor).toString(),
         );
       });
       listeners.push(unsubscribe);
@@ -129,19 +90,28 @@ export default function Scene() {
     }
 
     async function setupFileOperationListener() {
-      const unsubscribe = await listen<string>("file_operation", (e) => {
-        switch (e.payload) {
-          case "open_scene": {
-            openScene();
-            break;
+      const unsubscribe = await listen<string>("file_operation", async (e) => {
+        if (e.payload == "open_scene") {
+          const path = await open({ multiple: false, directory: false });
+          if (path) {
+            const [success, msg] = await invoke<[boolean, string]>(
+              "load_scene",
+              { path: path },
+            );
+            if (!success) {
+              message(msg, { title: `Error`, kind: "error" });
+              return;
+            }
+            const inspector = await WebviewWindow.getByLabel("inspector");
+            if (inspector) inspector.close();
           }
-          case "save_scene": {
-            saveScene();
-            break;
-          }
-          default:
-            console.warn("Unhandled file operation", e.payload);
-        }
+        } else if (e.payload == "save_scene") {
+          invoke("save_scene", {
+            path: await save({
+              filters: [{ name: "scene", extensions: ["txt"] }],
+            }),
+          });
+        } else console.warn("Unhandled file operation", e.payload);
       });
       listeners.push(unsubscribe);
     }
@@ -188,10 +158,7 @@ export default function Scene() {
   };
 
   const handleRotate = ({ rotate }: { rotate: number }) => {
-    invoke("update_entity", {
-      id: selectedId,
-      data: { rotation: rotate },
-    });
+    invoke("update_entity", { id: selectedId, data: { rotation: rotate } });
   };
 
   return (
@@ -200,9 +167,18 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      // onContextMenu={(e) =>
-      //   e.target === e.currentTarget && handleContextMenu(e)
-      // }
+      onContextMenu={async (e) => {
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        (
+          await Menu.new({
+            items: [
+              { id: "save_scene", text: "Save Scene" },
+              { id: "load_scene", text: "Load Scene" },
+            ],
+          })
+        ).popup();
+      }}
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
