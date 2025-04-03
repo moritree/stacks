@@ -7,7 +7,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 const TabBar = lazy(() => import("../components/tab-bar/tab-bar"));
 import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
-import Scripts from "./scripts-component";
+import Scripts from "./scripts-component/scripts-component";
 import { lazy, Suspense } from "preact/compat";
 import { platform } from "@tauri-apps/plugin-os";
 import { invoke } from "@tauri-apps/api/core";
@@ -20,7 +20,6 @@ export default function InspectorWindow() {
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
   const [openScripts, setOpenScripts] = useState(new Set<string>());
-  const [addScriptsOpen, setAddScriptsOpen] = useState(false);
   const [inspectorContents, setInspectorContents] = useState<string>("");
   const [scriptsContents, setScriptsContents] = useState<Map<string, string>>(
     new Map(),
@@ -148,8 +147,6 @@ export default function InspectorWindow() {
             setSaved(false);
           }}
           theme={theme}
-          addScriptsOpen={addScriptsOpen}
-          onAddScriptsOpenChange={() => setAddScriptsOpen(!addScriptsOpen)}
         />
       ),
     },
