@@ -7,38 +7,6 @@ import { Menu } from "@tauri-apps/api/menu";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../components/code-editor";
 
-async function handleContextMenu(
-  script: string,
-  contents: Map<string, string>,
-  onContentsChange: (scripts: Map<string, string>) => void,
-) {
-  (
-    await Menu.new({
-      items: [
-        {
-          id: "delete_script",
-          text: "Delete Script",
-          action: async (_: string) => {
-            let toUpdate = new Map([...Array.from(contents)]);
-            if (!toUpdate.delete(script)) {
-              console.error(
-                "Trying to delete script that couldn't be found",
-                script,
-              );
-              return;
-            }
-
-            (await confirm("This action cannot be reverted.\nAre you sure?", {
-              title: `Delete ${script} script`,
-              kind: "warning",
-            })) && onContentsChange(toUpdate);
-          },
-        },
-      ],
-    })
-  ).popup();
-}
-
 export default function Scripts(props: {
   entity: Entity;
   theme: "light" | "dark";
@@ -50,6 +18,39 @@ export default function Scripts(props: {
   onAddScriptsOpenChange: () => void;
 }) {
   const [newScriptName, setNewScriptName] = useState("");
+
+  async function handleContextMenu(
+    script: string,
+    contents: Map<string, string>,
+    onContentsChange: (scripts: Map<string, string>) => void,
+  ) {
+    (
+      await Menu.new({
+        items: [
+          {
+            id: "delete_script",
+            text: "Delete Script",
+            action: async (_: string) => {
+              let toUpdate = new Map([...Array.from(contents)]);
+              if (!toUpdate.delete(script)) {
+                console.error(
+                  "Trying to delete script that couldn't be found",
+                  script,
+                );
+                return;
+              }
+
+              (await confirm("This action cannot be reverted.\nAre you sure?", {
+                title: `Delete ${script} script`,
+                kind: "warning",
+              })) && onContentsChange(toUpdate);
+            },
+          },
+        ],
+      })
+    ).popup();
+  }
+
   return (
     <Suspense
       fallback={

@@ -2,83 +2,10 @@ import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
-import { Entity } from "./entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
 import { JSX } from "preact/jsx-runtime";
 import { message } from "@tauri-apps/plugin-dialog";
-
-async function handleContextMenu(event: Event, entity: Entity) {
-  event.preventDefault();
-  (
-    await Menu.new({
-      items: [
-        {
-          id: "delete_entity",
-          text: "Delete Entity",
-          action: async (_: string) =>
-            invoke("delete_entity", { id: entity.id }),
-        },
-        {
-          id: "duplicate_entity",
-          text: "Duplicate Entity",
-          action: async (_: string) =>
-            invoke("duplicate_entity", { id: entity.id }),
-        },
-        {
-          id: "inspect",
-          text: "Inspect",
-          action: async () => openInspector(entity),
-        },
-      ],
-    })
-  ).popup();
-}
-
-async function runScript(entity: Entity, script: string, params: any) {
-  const [success, msg] = await invoke<[boolean, string]>("run_script", {
-    id: entity.id,
-    function: script,
-    params: params,
-  });
-  if (!success)
-    message(msg, {
-      title: `Error executing script "${script}" on entity "${entity.id}"`,
-      kind: "error",
-    });
-}
-
-async function openInspector(entity: Entity) {
-  emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
-
-  // If window already exists, focus & update instead of creating a new one
-  const existing = await WebviewWindow.getByLabel("inspector");
-  if (existing) {
-    emitTo("inspector", "provide_entity", entity);
-    existing.setFocus();
-    return;
-  }
-
-  // Create new inspector window
-  const inspectorWindow = new WebviewWindow("inspector", {
-    title: "Inspector",
-    url: "src/inspector/inspector.html",
-    width: 300,
-    height: 600,
-    resizable: true,
-    minWidth: 200,
-    minHeight: 300,
-    focus: false,
-  });
-
-  inspectorWindow.once("mounted", () => {
-    emitTo("inspector", "provide_entity", entity);
-  });
-
-  inspectorWindow.once("tauri://error", (e) => {
-    console.error("Inspector webview had ERROR!", e);
-  });
-}
 
 interface EntityProps {
   entity: any;
@@ -131,7 +58,7 @@ export default function EntityComponent(props: EntityProps) {
                   data: { content: e.currentTarget.value },
                 });
                 if (props.entity.scripts.on_change) {
-                  runScript(props.entity, "on_change", {
+                  runScript("on_change", {
                     text: props.entity.content,
                   });
                 }
@@ -139,7 +66,7 @@ export default function EntityComponent(props: EntityProps) {
               onKeyUp={(e) => {
                 if (e.key === "Enter" && props.entity.scripts.on_submit) {
                   e.currentTarget.blur();
-                  runScript(props.entity, "on_submit", {
+                  runScript("on_submit", {
                     text: props.entity.content,
                   });
                 }
@@ -159,6 +86,51 @@ export default function EntityComponent(props: EntityProps) {
     }
   });
 
+  async function runScript(script: string, params: any) {
+    const [success, msg] = await invoke<[boolean, string]>("run_script", {
+      id: props.entity.id,
+      function: script,
+      params: params,
+    });
+    if (!success)
+      message(msg, {
+        title: `Error executing script "${script}" on entity "${props.entity.id}"`,
+        kind: "error",
+      });
+  }
+
+  async function openInspector() {
+    emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
+
+    // If window already exists, focus & update instead of creating a new one
+    const existing = await WebviewWindow.getByLabel("inspector");
+    if (existing) {
+      emitTo("inspector", "provide_entity", props.entity);
+      existing.setFocus();
+      return;
+    }
+
+    // Create new inspector window
+    const inspectorWindow = new WebviewWindow("inspector", {
+      title: "Inspector",
+      url: "src/inspector/inspector.html",
+      width: 300,
+      height: 600,
+      resizable: true,
+      minWidth: 200,
+      minHeight: 300,
+      focus: false,
+    });
+
+    inspectorWindow.once("mounted", () => {
+      emitTo("inspector", "provide_entity", props.entity);
+    });
+
+    inspectorWindow.once("tauri://error", (e) => {
+      console.error("Inspector webview had ERROR!", e);
+    });
+  }
+
   return (
     <div
       class={`absolute left-(--x) top-(--y) entity ${props.entity.type}
@@ -173,10 +145,34 @@ export default function EntityComponent(props: EntityProps) {
       onDblClick={async (e) => {
         e.stopPropagation();
         emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
-        if (props.entity.scripts.on_click)
-          runScript(props.entity, "on_click", {});
+        if (props.entity.scripts.on_click) runScript("on_click", {});
       }}
-      onContextMenu={(e) => handleContextMenu(e, props.entity)}
+      onContextMenu={async (e) => {
+        e.preventDefault();
+        (
+          await Menu.new({
+            items: [
+              {
+                id: "delete_entity",
+                text: "Delete Entity",
+                action: async (_: string) =>
+                  invoke("delete_entity", { id: props.entity.id }),
+              },
+              {
+                id: "duplicate_entity",
+                text: "Duplicate Entity",
+                action: async (_: string) =>
+                  invoke("duplicate_entity", { id: props.entity.id }),
+              },
+              {
+                id: "inspect",
+                text: "Inspect",
+                action: async () => openInspector(),
+              },
+            ],
+          })
+        ).popup();
+      }}
     >
       {content}
     </div>
