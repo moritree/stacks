@@ -22,7 +22,6 @@ end]]
             pos = { x = 200, y = 100 },
             content = "u can do it",
             selectable = true,
-            draggable = true,
             scripts = { on_click = { string = "self.pos = { x = self.pos.x + 20, y = self.pos.y }" } }
         }),
         test3 = Entity:new({
