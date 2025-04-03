@@ -41,10 +41,12 @@
 }
 
 @theme {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji",
+    --font-sans:
+        ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji",
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     --font-serif: Merriweather, Georgia, Cambria, "Times New Roman", serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    --font-mono:
+        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         "Liberation Mono", "Courier New", monospace;
 }
 
@@ -53,12 +55,11 @@
         cursor: default;
     }
 
-    .entity.selectable,
-    .entity.draggable {
+    .entity.selectable {
         cursor: pointer;
     }
 
-    .entity.selectable.selected.draggable {
+    .entity.selectable.selected {
         cursor: move;
     }
 }

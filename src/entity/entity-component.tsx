@@ -86,7 +86,7 @@ async function openInspector(entity: Entity) {
 
 interface EntityProps {
   entity: any;
-  onSelect: (pos: { x: number; y: number }, selectable: boolean) => void;
+  onSelect: (pos: { x: number; y: number }) => void;
   isSelected: boolean;
 }
 
@@ -167,13 +167,12 @@ export default function EntityComponent(props: EntityProps) {
     <div
       class={`absolute left-(--x) top-(--y) entity ${props.entity.type}
           ${props.entity.selectable ? " selectable" : ""}
-          ${props.isSelected ? " selected" : ""}
-          ${props.entity.draggable ? " draggable" : ""}`}
+          ${props.isSelected ? " selected" : ""}`}
       id={props.entity.id}
       style={style}
       onMouseDown={(e) => {
         e.stopPropagation();
-        props.onSelect(props.entity.pos, !!props.entity.selectable);
+        if (props.entity.selectable) props.onSelect(props.entity.pos);
       }}
       onDblClick={async (e) => {
         e.stopPropagation();
