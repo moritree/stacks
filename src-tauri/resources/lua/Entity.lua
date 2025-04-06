@@ -26,7 +26,7 @@ function Entity:load_script(funcname, script_string)
         end
     end
 
-    local full_string = "local func = function(self, params) " ..
+    local full_string = "local func = function(self, data) " ..
         (script_string) .. " ; end ; return func"
     local success, loaded = serializer.load(full_string, { safe = false })
 
