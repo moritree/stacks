@@ -167,18 +167,18 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      // onContextMenu={async (e) => {
-      //   if (e.target !== e.currentTarget) return;
-      //   e.preventDefault();
-      //   (
-      //     await Menu.new({
-      //       items: [
-      //         { id: "save_scene", text: "Save Scene" },
-      //         { id: "load_scene", text: "Load Scene" },
-      //       ],
-      //     })
-      //   ).popup();
-      // }}
+      onContextMenu={async (e) => {
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        (
+          await Menu.new({
+            items: [
+              { id: "save_scene", text: "Save Scene" },
+              { id: "load_scene", text: "Load Scene" },
+            ],
+          })
+        ).popup();
+      }}
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
@@ -193,10 +193,7 @@ export default function Scene() {
           target={`#${selectedId}`}
           draggable={selectedEntity.selectable}
           rotatable={selectedEntity.selectable}
-          onDrag={(e) => {
-            // console.log(e.inputEvent);
-            handleDrag(e);
-          }}
+          onDrag={handleDrag}
           onRotate={handleRotate}
           className="[z-index:0!important]"
         />
