@@ -45,12 +45,12 @@ export default function EntityComponent(props: EntityProps) {
 
           content = (
             <input
-              class="w-full h-full pl-1 pr-1 disabled:text-text-color/50"
+              class="w-full h-full pl-1 pr-1 read-only:text-text-color/50"
               value={props.entity.content}
               placeholder={props.entity.placeholder}
               autocomplete="off"
               autoCorrect="off"
-              disabled={props.entity.disabled}
+              readonly={props.entity.disabled}
               onInput={(e) => {
                 props.entity.content = e.currentTarget.value;
                 invoke("update_entity", {
