@@ -67,7 +67,7 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
     let w_broadcast = window.clone();
     lua.globals().set(
         "broadcast",
-        lua.create_function(move |l: &Lua, (msg, params): (String, LuaValue)| {
+        lua.create_function(move |l: &Lua, (event, data): (String, LuaValue)| {
             let pcall: LuaFunction = l.globals().get("pcall")?;
             let scene = get_scene(l)?;
             let (success, error): (bool, Option<String>) = pcall.call((
@@ -75,8 +75,8 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
                     .get::<_, LuaFunction>("handle_broadcast")
                     .map_err(|e| LuaError::LuaError(e))?,
                 scene,
-                msg,
-                params,
+                event,
+                data,
             ))?;
             if !success {
                 let _ = w_broadcast
@@ -99,7 +99,7 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
     lua.globals().set(
         "message",
         lua.create_function(
-            move |l: &Lua, (target, msg, params): (String, String, LuaValue)| {
+            move |l: &Lua, (target, event, data): (String, String, LuaValue)| {
                 let pcall: LuaFunction = l.globals().get("pcall")?;
                 let scene = get_scene(l)?;
                 let (success, error): (bool, Option<String>) = pcall.call((
@@ -108,8 +108,8 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
                         .map_err(|e| LuaError::LuaError(e))?,
                     scene,
                     target,
-                    msg,
-                    params,
+                    event,
+                    data,
                 ))?;
                 if !success {
                     let _ = w_message
