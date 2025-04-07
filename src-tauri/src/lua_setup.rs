@@ -367,29 +367,29 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 })?
                 .iter()
             {
-                entity
-                    .call_method::<(String, String), ()>(
-                        "load_script",
-                        (
-                            key.to_string(),
-                            value
-                                .as_str()
-                                .ok_or_else(|| {
-                                    LuaError::FormatError(
-                                        "Couldn't parse script as string".to_string(),
-                                    )
-                                })?
-                                .to_string(),
-                        ),
-                    )
-                    .map_err(|e| {
-                        let _ = response_tx.send((
-                            false,
-                            format!("Invalid syntax in {} script: {}", key, e),
-                            "".to_string(),
-                        ));
-                        LuaError::LuaError(e)
-                    })?;
+                let pcall: LuaFunction = lua.globals().get("pcall")?;
+                let ent_clone = entity.clone();
+                let (success, error): (bool, Option<String>) = pcall.call((
+                    ent_clone.get::<_, LuaFunction>("load_script")?,
+                    ent_clone,
+                    key.to_string(),
+                    value
+                        .as_str()
+                        .ok_or_else(|| {
+                            LuaError::FormatError("Couldn't parse script as string".to_string())
+                        })?
+                        .to_string(),
+                ))?;
+
+                if !success {
+                    let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());
+                    let _ = response_tx.send((
+                        false,
+                        format!("Invalid syntax in {} script: {}", key, error_msg),
+                        "".to_string(),
+                    ));
+                    return Ok(());
+                }
             }
 
             // finally, more standard update procedure!
