@@ -76,6 +76,17 @@ pub fn run() {
                 .build()?;
             menu.append(&file_menu)?;
 
+            let window_menu = SubmenuBuilder::with_id(handle, "window", "Window")
+                .item(&MenuItem::with_id(
+                    handle,
+                    "open_scene_tree_window",
+                    "Scene Tree",
+                    true,
+                    None::<&str>,
+                )?)
+                .build()?;
+            menu.append(&window_menu)?;
+
             let window_clone = window.clone();
             app.set_menu(menu)?;
             app.on_menu_event(move |app_handle: &tauri::AppHandle, event| {
