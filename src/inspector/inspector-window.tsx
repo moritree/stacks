@@ -1,6 +1,6 @@
 import { JSX, render } from "preact";
 import "../style.css";
-import { emit, listen } from "@tauri-apps/api/event";
+import { emit, emitTo, listen } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -9,9 +9,8 @@ import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
 import Scripts from "./scripts-component/scripts-component";
 import { lazy, Suspense } from "preact/compat";
-import { platform } from "@tauri-apps/plugin-os";
 import { invoke } from "@tauri-apps/api/core";
-import { message } from "@tauri-apps/plugin-dialog";
+import { confirm, message } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../components/code-editor";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
@@ -29,48 +28,43 @@ export default function InspectorWindow() {
   useEffect(() => {
     let listeners: (() => void)[] = [];
 
-    async function setupEntityUpdateListener() {
-      listeners.push(
-        await listen<any>("provide_entity", (e) => {
-          setOpenScripts(new Set<string>());
-          const scripts = e.payload.scripts;
-          setScriptsContents(new Map(Object.entries(scripts || {})));
-
-          invoke("get_entity_string", {
-            id: e.payload.id,
-            window: getCurrentWindow().label,
-          });
-          setEntity(e.payload);
-        }),
-      );
-    }
-
-    async function setupEntityStringListener() {
-      listeners.push(
-        await listen<{ id: string; table: string }>(
-          "entity_string",
-          (tableEvent) => {
-            setInspectorContents(tableEvent.payload.table);
-            getCurrentWebviewWindow().setFocus();
-          },
-        ),
-      );
-    }
-
-    async function setupThemeChangeListener() {
+    // setup/update listeners
+    (async () => {
       listeners.push(
         await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
           setTheme(theme),
         ),
       );
-    }
-
-    setupThemeChangeListener()
+    })()
       .then(async () => setTheme((await getCurrentWindow().theme()) || "light"))
-      .then(() =>
-        setupEntityStringListener()
-          .then(() => setupEntityUpdateListener())
-          .then(() => emit("mounted")),
+      .then(async () =>
+        (async () => {
+          listeners.push(
+            await listen<{ id: string; table: string }>(
+              "entity_string",
+              (tableEvent) => {
+                setInspectorContents(tableEvent.payload.table);
+                getCurrentWebviewWindow().setFocus();
+              },
+            ),
+          );
+        })().then(async () =>
+          (async () => {
+            listeners.push(
+              await listen<any>("provide_entity", (e) => {
+                setOpenScripts(new Set<string>());
+                const scripts = e.payload.scripts;
+                setScriptsContents(new Map(Object.entries(scripts || {})));
+
+                invoke("get_entity_string", {
+                  id: e.payload.id,
+                  window: getCurrentWindow().label,
+                });
+                setEntity(e.payload);
+              }),
+            );
+          })().then(() => emit("mounted")),
+        ),
       );
 
     return () => {
@@ -78,25 +72,12 @@ export default function InspectorWindow() {
     };
   }, []);
 
-  useEffect(() => {
-    if (entity != undefined) {
-      if (!saved) setSaved(true);
-      else getCurrentWindow().setTitle(entity.id);
-    }
-  }, [entity]);
-
-  useEffect(() => {
-    if (entity) getCurrentWindow().setTitle(entity.id + (saved ? "" : " *"));
-  }, [saved]);
-
-  if (!entity || inspectorContents == "")
-    return (
-      <div class="w-screen h-screen flex flex-col justify-center">
-        <Loader class="w-screen h-10" />
-      </div>
-    );
-
   const handleSave = async () => {
+    if (!entity) {
+      console.error("Can't save undefined entity");
+      return;
+    }
+    console.log("HANDLE SAVE", entity.id, inspectorContents, scriptsContents);
     const [success, msg, id] = await invoke<[boolean, string, string]>(
       "handle_inspector_save",
       {
@@ -115,6 +96,50 @@ export default function InspectorWindow() {
         kind: "error",
       });
   };
+
+  const handleRevert = async () => {
+    if (!entity) {
+      console.error("Can't revert inspector for undefined entity");
+      return;
+    }
+    if (
+      !(await confirm("This action cannot be reverted. Are you sure?", {
+        title: "Revert changes",
+        kind: "warning",
+      }))
+    )
+      return;
+
+    emitTo(getCurrentWindow().label, "provide_entity", entity);
+  };
+
+  useEffect(() => {
+    if (entity != undefined) {
+      if (!saved) setSaved(true);
+      else getCurrentWindow().setTitle(entity.id);
+    }
+  }, [entity]);
+
+  useEffect(() => {
+    if (entity) getCurrentWindow().setTitle(entity.id + (saved ? "" : " *"));
+  }, [saved]);
+
+  useEffect(() => {
+    if (!(entity && inspectorContents != "")) return;
+    let listeners: (() => void)[] = [];
+    (async () => {
+      listeners.push(await listen<any>("save_entity", handleSave));
+      listeners.push(await listen<any>("revert_entity", handleRevert));
+    })();
+    return () => listeners.forEach((unsubscribe) => unsubscribe());
+  }, [entity, inspectorContents, scriptsContents]);
+
+  if (!entity || inspectorContents == "")
+    return (
+      <div class="w-screen h-screen flex flex-col justify-center">
+        <Loader class="w-screen h-10" />
+      </div>
+    );
 
   const tabs: { label: string; icon: JSX.Element; component: JSX.Element }[] = [
     {
@@ -160,14 +185,7 @@ export default function InspectorWindow() {
         </div>
       }
     >
-      <div
-        class="w-screen h-screen flex flex-col"
-        onKeyUp={(e) => {
-          const os = platform();
-          if ((os == "macos" ? e.metaKey : e.ctrlKey) && e.code === "KeyS")
-            handleSave();
-        }}
-      >
+      <div class="w-screen h-screen flex flex-col">
         <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
         <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
           {tabs.map((tab) => (

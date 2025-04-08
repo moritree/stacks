@@ -58,6 +58,21 @@ pub fn run() {
                     true,
                     Some("CmdOrCtrl+O"),
                 )?)
+                .separator()
+                .item(&MenuItem::with_id(
+                    handle,
+                    "save_entity",
+                    "Save Entity",
+                    false,
+                    Some("CmdOrCtrl+S"),
+                )?)
+                .item(&MenuItem::with_id(
+                    handle,
+                    "revert_entity",
+                    "Revert Changes",
+                    false,
+                    Some("CmdOrCtrl+R"),
+                )?)
                 .build()?;
             menu.append(&file_menu)?;
 
@@ -74,6 +89,16 @@ pub fn run() {
                                 .emit_to("main", "file_operation", file_op)
                                 .expect(&format!("Failed to emit {}", file_op));
                         }
+                    }
+                    "save_entity" => {
+                        app_handle
+                            .emit_to("inspector", "save_entity", ())
+                            .expect("Failed to emit save_entity to inspector");
+                    }
+                    "revert_entity" => {
+                        app_handle
+                            .emit_to("inspector", "revert_entity", ())
+                            .expect("Failed to emit revert_entity to inspector");
                     }
                     "quit" => {
                         app_handle.exit(0);
@@ -92,10 +117,19 @@ pub fn run() {
                                     let _ = menu_item.set_enabled(focus_window == "main");
                                 }
                             }
-
                             if let Some(open_item) = submenu.get("open_scene") {
                                 if let Some(menu_item) = open_item.as_menuitem() {
                                     let _ = menu_item.set_enabled(focus_window == "main");
+                                }
+                            }
+                            if let Some(save_item) = submenu.get("save_entity") {
+                                if let Some(menu_item) = save_item.as_menuitem() {
+                                    let _ = menu_item.set_enabled(focus_window == "inspector");
+                                }
+                            }
+                            if let Some(save_item) = submenu.get("revert_entity") {
+                                if let Some(menu_item) = save_item.as_menuitem() {
+                                    let _ = menu_item.set_enabled(focus_window == "inspector");
                                 }
                             }
                         }
