@@ -1,0 +1,35 @@
+name: Check for console.log statements
+
+on:
+  pull_request:
+    branches: [ main ]
+    
+jobs:
+  check-console-logs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Find console.log statements
+      id: find-console-logs
+      run: |
+        # Find all console.log statements in JavaScript/TypeScript files
+        CONSOLE_LOGS=$(grep -r "console\.log" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" . || true)
+        
+        # If console.log statements are found, set output and print them
+        if [ -n "$CONSOLE_LOGS" ]; then
+          echo "Console.log statements found:"
+          echo "$CONSOLE_LOGS"
+          echo "console_logs_found=true" >> $GITHUB_OUTPUT
+        else
+          echo "No console.log statements found."
+          echo "console_logs_found=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Fail if console.log statements are found
+      if: steps.find-console-logs.outputs.console_logs_found == 'true'
+      run: |
+        echo "❌ PR check failed: console.log statements must be removed before merging"
+        exit 1
