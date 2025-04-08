@@ -31,10 +31,9 @@ export default function Scene() {
   useEffect(() => {
     let listeners: (() => void)[] = [];
 
-    async function setupUpdateListener() {
-      const unsubscribe = await listen<{ [id: string]: Partial<Entity> }>(
-        "scene_update",
-        (e) => {
+    (async () =>
+      listeners.push(
+        await listen<{ [id: string]: Partial<Entity> }>("scene_update", (e) => {
           setEntities(
             new Map(
               Object.entries(e.payload).map(([id, ent]) => [
@@ -43,78 +42,77 @@ export default function Scene() {
               ]),
             ),
           );
-        },
+        }),
+      ))();
+
+    (async () =>
+      listeners.push(
+        await listen<string | undefined>("select_entity", (e) =>
+          setSelectedId(e.payload),
+        ),
+      ))();
+
+    (async () => {
+      listeners.push(
+        await getCurrentWindow().listen<{
+          width: number;
+          height: number;
+        }>("tauri://resize", async (e) => {
+          setSelectedId(undefined);
+
+          const scaleFactor: number = await invoke("window_scale");
+          const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
+          const windowHeight = e.payload.height; // full window dimensions
+          const titleBarHeight = windowHeight / scaleFactor - contentHeight; // calculate title bar height dynamically
+
+          const newScale = e.payload.width / SCENE_BASE_SIZE.width;
+          setTransformScale(scaleFactor / newScale);
+
+          invoke("resize_window", {
+            width: Math.round(SCENE_BASE_SIZE.width * newScale),
+            height: Math.round(
+              SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
+            ),
+          });
+          document.documentElement.style.setProperty(
+            `--scene-scale`,
+            (newScale / scaleFactor).toString(),
+          );
+        }),
       );
-      listeners.push(unsubscribe);
-    }
-
-    async function setupSelectEntityListener() {
-      const unsubscribe = await listen<string | undefined>(
-        "select_entity",
-        (e) => setSelectedId(e.payload),
-      );
-      listeners.push(unsubscribe);
-    }
-
-    async function setupResizeListener() {
-      const unsubscribe = await getCurrentWindow().listen<{
-        width: number;
-        height: number;
-      }>("tauri://resize", async (e) => {
-        setSelectedId(undefined);
-
-        const scaleFactor: number = await invoke("window_scale");
-        const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
-        const windowHeight = e.payload.height; // full window dimensions
-        const titleBarHeight = windowHeight / scaleFactor - contentHeight; // calculate title bar height dynamically
-
-        const newScale = e.payload.width / SCENE_BASE_SIZE.width;
-        setTransformScale(scaleFactor / newScale);
-
-        invoke("resize_window", {
-          width: Math.round(SCENE_BASE_SIZE.width * newScale),
-          height: Math.round(
-            SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
-          ),
-        });
-        document.documentElement.style.setProperty(
-          `--scene-scale`,
-          (newScale / scaleFactor).toString(),
-        );
-      });
-      listeners.push(unsubscribe);
 
       emit("tauri://resize", await WebviewWindow.getCurrent().size()).then(() =>
         invoke("set_frontend_ready"),
       );
-    }
+    })();
 
-    async function setupFileOperationListener() {
-      const unsubscribe = await listen<string>("file_operation", async (e) => {
-        if (e.payload == "open_scene") {
-          const path = await open({ multiple: false, directory: false });
-          if (path) {
-            const [success, msg] = await invoke<[boolean, string]>(
-              "load_scene",
-              { path: path },
-            );
-            if (!success) {
-              message(msg, { title: `Error`, kind: "error" });
-              return;
+    (async () => {
+      listeners.push(
+        await listen<string>("file_operation", async (e) => {
+          if (e.payload == "open_scene") {
+            const path = await open({ multiple: false, directory: false });
+            if (path) {
+              const [success, msg] = await invoke<[boolean, string]>(
+                "load_scene",
+                { path: path },
+              );
+              if (!success) {
+                message(msg, { title: `Error`, kind: "error" });
+                return;
+              }
+              const inspector = await WebviewWindow.getByLabel("inspector");
+              if (inspector) inspector.close();
             }
-            const inspector = await WebviewWindow.getByLabel("inspector");
-            if (inspector) inspector.close();
-          }
-        } else if (e.payload == "save_scene") {
-          invoke("save_scene", {
-            path: await save({
-              filters: [{ name: "scene", extensions: ["txt"] }],
-            }),
-          });
-        } else console.warn("Unhandled file operation", e.payload);
-      });
-      listeners.push(unsubscribe);
-    }
+          } else if (e.payload == "save_scene") {
+            invoke("save_scene", {
+              path: await save({
+                filters: [{ name: "scene", extensions: ["txt"] }],
+              }),
+            });
+          } else console.warn("Unhandled file operation", e.payload);
+        }),
+      );
+    })();
 
     const tick = () => {
       const now = performance.now();
@@ -124,11 +122,6 @@ export default function Scene() {
       setAnimationFrameId(requestAnimationFrame(tick));
     };
     setAnimationFrameId(requestAnimationFrame(tick));
-
-    setupUpdateListener();
-    setupResizeListener();
-    setupSelectEntityListener();
-    setupFileOperationListener();
 
     return () => {
       listeners.forEach((unsubscribe) => unsubscribe());
