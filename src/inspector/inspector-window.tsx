@@ -28,7 +28,6 @@ export default function InspectorWindow() {
   useEffect(() => {
     let listeners: (() => void)[] = [];
 
-    // setup/update listeners
     (async () => {
       listeners.push(
         await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
@@ -77,7 +76,6 @@ export default function InspectorWindow() {
       console.error("Can't save undefined entity");
       return;
     }
-    console.log("HANDLE SAVE", entity.id, inspectorContents, scriptsContents);
     const [success, msg, id] = await invoke<[boolean, string, string]>(
       "handle_inspector_save",
       {
