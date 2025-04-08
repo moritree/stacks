@@ -9,7 +9,6 @@ import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
 import Scripts from "./scripts-component/scripts-component";
 import { lazy, Suspense } from "preact/compat";
-import { platform } from "@tauri-apps/plugin-os";
 import { invoke } from "@tauri-apps/api/core";
 import { confirm, message } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../components/code-editor";
