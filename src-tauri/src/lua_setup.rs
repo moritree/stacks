@@ -315,7 +315,7 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 .load(
                     r#"
                         function(data)
-                            local success, loaded = require("serpent").load(data)
+                            local success, loaded = require("serpent").load("{\n" .. data .. "\n}")
                             local entity = require("Entity"):new(loaded --[[@as table]])
                             entity.scripts = {} -- otherwise we can edit the metatable?
                             return entity
