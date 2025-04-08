@@ -170,9 +170,7 @@ export default function InspectorWindow() {
       <div
         class="w-screen h-screen flex flex-col"
         onKeyUp={(e) => {
-          const os = platform();
-          const cmdOrCtrl = os == "macos" ? e.metaKey : e.ctrlKey;
-          if (!cmdOrCtrl) return;
+          if (!(platform() == "macos" ? e.metaKey : e.ctrlKey)) return;
           if (e.code === "KeyS") handleSave();
           if (e.code === "KeyR") handleRevert();
         }}
