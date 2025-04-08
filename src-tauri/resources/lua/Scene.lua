@@ -76,7 +76,18 @@ function Scene:entity_as_block_string(id)
     local copy = self.entities[id]:serializable()
     copy.id = id
     copy.scripts = nil
-    return serializer.block(copy, { comment = false })
+    local block = serializer.block(copy, { comment = false })
+
+    -- strip brackets & unindent
+    block = block:sub(5, #block - 2)
+    local i = 1
+    while i < #block do
+        if block:sub(i, i) == "\n" and block:sub(i + 1, i + 2) == "  " then
+            block = block:sub(1, i) .. block:sub(i + 3, #block)
+        end
+        i = i + 1
+    end
+    return block
 end
 
 -- Invoke script on any listening entity
