@@ -1,6 +1,6 @@
 import { JSX, render } from "preact";
 import "../style.css";
-import { emit, listen } from "@tauri-apps/api/event";
+import { emit, emitTo, listen } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -11,7 +11,7 @@ import Scripts from "./scripts-component/scripts-component";
 import { lazy, Suspense } from "preact/compat";
 import { platform } from "@tauri-apps/plugin-os";
 import { invoke } from "@tauri-apps/api/core";
-import { message } from "@tauri-apps/plugin-dialog";
+import { confirm, message } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../components/code-editor";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
@@ -29,48 +29,42 @@ export default function InspectorWindow() {
   useEffect(() => {
     let listeners: (() => void)[] = [];
 
-    async function setupEntityUpdateListener() {
-      listeners.push(
-        await listen<any>("provide_entity", (e) => {
-          setOpenScripts(new Set<string>());
-          const scripts = e.payload.scripts;
-          setScriptsContents(new Map(Object.entries(scripts || {})));
-
-          invoke("get_entity_string", {
-            id: e.payload.id,
-            window: getCurrentWindow().label,
-          });
-          setEntity(e.payload);
-        }),
-      );
-    }
-
-    async function setupEntityStringListener() {
-      listeners.push(
-        await listen<{ id: string; table: string }>(
-          "entity_string",
-          (tableEvent) => {
-            setInspectorContents(tableEvent.payload.table);
-            getCurrentWebviewWindow().setFocus();
-          },
-        ),
-      );
-    }
-
-    async function setupThemeChangeListener() {
+    (async () => {
       listeners.push(
         await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
           setTheme(theme),
         ),
       );
-    }
-
-    setupThemeChangeListener()
+    })()
       .then(async () => setTheme((await getCurrentWindow().theme()) || "light"))
-      .then(() =>
-        setupEntityStringListener()
-          .then(() => setupEntityUpdateListener())
-          .then(() => emit("mounted")),
+      .then(async () =>
+        (async () => {
+          listeners.push(
+            await listen<{ id: string; table: string }>(
+              "entity_string",
+              (tableEvent) => {
+                setInspectorContents(tableEvent.payload.table);
+                getCurrentWebviewWindow().setFocus();
+              },
+            ),
+          );
+        })().then(async () =>
+          (async () => {
+            listeners.push(
+              await listen<any>("provide_entity", (e) => {
+                setOpenScripts(new Set<string>());
+                const scripts = e.payload.scripts;
+                setScriptsContents(new Map(Object.entries(scripts || {})));
+
+                invoke("get_entity_string", {
+                  id: e.payload.id,
+                  window: getCurrentWindow().label,
+                });
+                setEntity(e.payload);
+              }),
+            );
+          })().then(() => emit("mounted")),
+        ),
       );
 
     return () => {
@@ -114,6 +108,19 @@ export default function InspectorWindow() {
         title: "Could not save entity.",
         kind: "error",
       });
+  };
+
+  const handleRevert = async () => {
+    if (
+      !(await confirm("This action cannot be reverted. Are you sure?", {
+        title: "Revert changes",
+        kind: "warning",
+      }))
+    )
+      return;
+
+    // Trigger reload
+    emitTo(getCurrentWindow().label, "provide_entity", entity);
   };
 
   const tabs: { label: string; icon: JSX.Element; component: JSX.Element }[] = [
@@ -164,8 +171,10 @@ export default function InspectorWindow() {
         class="w-screen h-screen flex flex-col"
         onKeyUp={(e) => {
           const os = platform();
-          if ((os == "macos" ? e.metaKey : e.ctrlKey) && e.code === "KeyS")
-            handleSave();
+          const cmdOrCtrl = os == "macos" ? e.metaKey : e.ctrlKey;
+          if (!cmdOrCtrl) return;
+          if (e.code === "KeyS") handleSave();
+          if (e.code === "KeyR") handleRevert();
         }}
       >
         <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
