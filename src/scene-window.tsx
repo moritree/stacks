@@ -129,6 +129,10 @@ export default function Scene() {
     };
   }, []);
 
+  useEffect(() => {
+    if (selectedEntity && !selectedEntity.selectable) setSelectedId(undefined);
+  }, [entities]);
+
   const handleEntitySelect = (id: string, pos: { x: number; y: number }) => {
     if (id == selectedId) return;
     if (entities.get(id)?.selectable) {
