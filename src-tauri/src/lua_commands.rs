@@ -28,16 +28,16 @@ pub async fn update_entity(
         .as_object()
         .unwrap()
         .get("id")
-        .expect("Couldn't get valid new ID")
+        .ok_or_else(|| "Couldn't get ID from data")?
         .as_str()
-        .expect("New ID is not a string")
+        .ok_or_else(|| "New ID is not a string")?
         .to_string();
     let mut trimmed_data = data.clone();
     trimmed_data
         .as_object_mut()
-        .expect("Couldn't turn data into object")
+        .ok_or_else(|| "Couldn't turn data into object")?
         .remove("id")
-        .expect("Failed to remove id from data");
+        .ok_or_else(|| "Failed to remove id from data")?;
     state
         .tx
         .send(LuaMessage::UpdateEntityId(id, confirmed_id, trimmed_data))
@@ -77,7 +77,7 @@ pub async fn load_scene(
     state
         .tx
         .send(LuaMessage::LoadScene(path, response_tx))
-        .expect("Failed sending LoadScene");
+        .map_err(|e| e.to_string())?;
     response_rx.recv().map_err(|e| e.to_string())
 }
 
@@ -92,7 +92,7 @@ pub async fn run_script(
     state
         .tx
         .send(LuaMessage::RunScript(id, function, params, response_tx))
-        .expect("Failed sending RunScript");
+        .map_err(|e| e.to_string())?;
     response_rx.recv().map_err(|e| e.to_string())
 }
 
@@ -124,6 +124,6 @@ pub async fn handle_inspector_save(
             scripts,
             response_tx,
         ))
-        .expect("Failed sending HandleInspectorSave");
+        .map_err(|e| e.to_string())?;
     response_rx.recv().map_err(|e| e.to_string())
 }
