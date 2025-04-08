@@ -18,15 +18,13 @@ right-clicking on any entity and selecting `Inspect`. The properties of an entit
 As the programmer, you are allowed to *change* these facts!
 
 ```lua title="A simple entity, as it would appear in the Inspector"
-{
-    content = "Hello world!"
-    id = "hello",
-    pos = {
-        x = 100,
-        y = 200
-    },
-    type = "text"
-}
+content = "Hello world!"
+id = "hello",
+pos = {
+    x = 100,
+    y = 200
+},
+type = "text"
 ```
 
 ### Universal properties
