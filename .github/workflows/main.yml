@@ -15,4 +15,4 @@ jobs:
       - name: Update diagram
         uses: githubocto/repo-visualizer@main
         with:
-          excluded_paths: "ignore,.github"
+          excluded_paths: "ignore,.github,src-tauri/icons,package-lock.json,yarn.lock,src-tauri/Cargo.lock"
