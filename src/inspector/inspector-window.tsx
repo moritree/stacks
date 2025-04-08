@@ -29,6 +29,7 @@ export default function InspectorWindow() {
   useEffect(() => {
     let listeners: (() => void)[] = [];
 
+    // setup/update listeners
     (async () => {
       listeners.push(
         await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
@@ -72,25 +73,12 @@ export default function InspectorWindow() {
     };
   }, []);
 
-  useEffect(() => {
-    if (entity != undefined) {
-      if (!saved) setSaved(true);
-      else getCurrentWindow().setTitle(entity.id);
-    }
-  }, [entity]);
-
-  useEffect(() => {
-    if (entity) getCurrentWindow().setTitle(entity.id + (saved ? "" : " *"));
-  }, [saved]);
-
-  if (!entity || inspectorContents == "")
-    return (
-      <div class="w-screen h-screen flex flex-col justify-center">
-        <Loader class="w-screen h-10" />
-      </div>
-    );
-
   const handleSave = async () => {
+    if (!entity) {
+      console.error("Can't save undefined entity");
+      return;
+    }
+    console.log("HANDLE SAVE", entity.id, inspectorContents, scriptsContents);
     const [success, msg, id] = await invoke<[boolean, string, string]>(
       "handle_inspector_save",
       {
@@ -111,6 +99,10 @@ export default function InspectorWindow() {
   };
 
   const handleRevert = async () => {
+    if (!entity) {
+      console.error("Can't revert inspector for undefined entity");
+      return;
+    }
     if (
       !(await confirm("This action cannot be reverted. Are you sure?", {
         title: "Revert changes",
@@ -119,9 +111,36 @@ export default function InspectorWindow() {
     )
       return;
 
-    // Trigger reload
     emitTo(getCurrentWindow().label, "provide_entity", entity);
   };
+
+  useEffect(() => {
+    if (entity != undefined) {
+      if (!saved) setSaved(true);
+      else getCurrentWindow().setTitle(entity.id);
+    }
+  }, [entity]);
+
+  useEffect(() => {
+    if (entity) getCurrentWindow().setTitle(entity.id + (saved ? "" : " *"));
+  }, [saved]);
+
+  useEffect(() => {
+    if (!(entity && inspectorContents != "")) return;
+    let listeners: (() => void)[] = [];
+    (async () => {
+      listeners.push(await listen<any>("save_entity", handleSave));
+      listeners.push(await listen<any>("revert_entity", handleRevert));
+    })();
+    return () => listeners.forEach((unsubscribe) => unsubscribe());
+  }, [entity, inspectorContents, scriptsContents]);
+
+  if (!entity || inspectorContents == "")
+    return (
+      <div class="w-screen h-screen flex flex-col justify-center">
+        <Loader class="w-screen h-10" />
+      </div>
+    );
 
   const tabs: { label: string; icon: JSX.Element; component: JSX.Element }[] = [
     {
@@ -167,14 +186,7 @@ export default function InspectorWindow() {
         </div>
       }
     >
-      <div
-        class="w-screen h-screen flex flex-col"
-        onKeyUp={(e) => {
-          if (!(platform() == "macos" ? e.metaKey : e.ctrlKey)) return;
-          if (e.code === "KeyS") handleSave();
-          if (e.code === "KeyR") handleRevert();
-        }}
-      >
+      <div class="w-screen h-screen flex flex-col">
         <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
         <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
           {tabs.map((tab) => (
