@@ -27,13 +27,13 @@ pub fn run() {
             let window = app.get_webview_window("main").unwrap();
             let state = init_lua_thread(window.clone())?;
             app.manage(state);
-
             let handle = app.handle();
 
             // setup system menu
             let menu = build_system_menu(&handle)?;
             app.set_menu(menu)?;
 
+            // connect to events
             let window_clone = window.clone();
             app.on_menu_event(move |app_handle: &tauri::AppHandle, event| {
                 handle_menu_event(event.id().0.as_str(), app_handle, &window_clone)
