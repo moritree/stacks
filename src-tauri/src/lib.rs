@@ -140,6 +140,21 @@ fn handle_menu_event(event: &str, handle: &tauri::AppHandle, main_window: &Webvi
                 .emit_to("inspector", "revert_entity", ())
                 .expect("Failed to emit revert_entity to inspector");
         }
+        "open_scene_tree_window" => {
+            if let Some(scene_tree) = handle.webview_windows().get("scene_tree") {
+                scene_tree
+                    .set_focus()
+                    .expect("Couldn't focus scene tree window")
+            } else {
+                let _ = tauri::WebviewWindowBuilder::new(
+                    handle,
+                    "scene_tree",
+                    tauri::WebviewUrl::App("src/scene-tree/scene-tree.html".into()),
+                )
+                .min_inner_size(200.0, 200.0)
+                .build();
+            }
+        }
         "quit" => {
             handle.exit(0);
         }
