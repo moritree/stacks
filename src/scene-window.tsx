@@ -142,7 +142,16 @@ export default function Scene() {
   };
 
   const handleDrag = ({ beforeTranslate }: { beforeTranslate: number[] }) => {
-    const [dx, dy] = beforeTranslate;
+    const ang = (selectedEntity?.rotation || 0) * (Math.PI / 180);
+    const cos = Math.cos(ang);
+    const sin = Math.sin(ang);
+
+    const [rawDx, rawDy] = beforeTranslate;
+    const [dx, dy] = [
+      Math.round(10000 * (rawDx * cos - rawDy * sin)) / 10000,
+      Math.round(10000 * (rawDx * sin + rawDy * cos)) / 10000,
+    ];
+
     invoke("update_entity", {
       id: selectedId,
       data: {
@@ -164,18 +173,18 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      onContextMenu={async (e) => {
-        if (e.target !== e.currentTarget) return;
-        e.preventDefault();
-        (
-          await Menu.new({
-            items: [
-              { id: "save_scene", text: "Save Scene" },
-              { id: "load_scene", text: "Load Scene" },
-            ],
-          })
-        ).popup();
-      }}
+      // onContextMenu={async (e) => {
+      //   if (e.target !== e.currentTarget) return;
+      //   e.preventDefault();
+      //   (
+      //     await Menu.new({
+      //       items: [
+      //         { id: "save_scene", text: "Save Scene" },
+      //         { id: "load_scene", text: "Load Scene" },
+      //       ],
+      //     })
+      //   ).popup();
+      // }}
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
