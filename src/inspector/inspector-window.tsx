@@ -11,7 +11,7 @@ import Scripts from "./scripts-component/scripts-component";
 import { lazy, Suspense } from "preact/compat";
 import { invoke } from "@tauri-apps/api/core";
 import { confirm, message } from "@tauri-apps/plugin-dialog";
-import CodeEditor from "../components/code-editor";
+const CodeEditor = lazy(() => import("../components/code-editor"));
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 export default function InspectorWindow() {

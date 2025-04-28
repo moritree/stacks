@@ -13,6 +13,7 @@ export default defineConfig(async () => ({
       input: {
         main: "index.html",
         inspector: "src/inspector/inspector.html",
+        "scene-tree": "src/scene-tree/scene-tree.html",
       },
     },
   },

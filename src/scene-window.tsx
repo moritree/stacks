@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
 import Moveable from "preact-moveable";
-import { Menu, PredefinedMenuItem } from "@tauri-apps/api/menu";
+import { Menu } from "@tauri-apps/api/menu";
 import { save, open, message } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "preact/hooks";
