@@ -142,7 +142,16 @@ export default function Scene() {
   };
 
   const handleDrag = ({ beforeTranslate }: { beforeTranslate: number[] }) => {
-    const [dx, dy] = beforeTranslate;
+    const ang = (selectedEntity?.rotation || 0) * (Math.PI / 180);
+    const cos = Math.cos(ang);
+    const sin = Math.sin(ang);
+
+    const [rawDx, rawDy] = beforeTranslate;
+    const [dx, dy] = [
+      Math.round(10000 * (rawDx * cos - rawDy * sin)) / 10000,
+      Math.round(10000 * (rawDx * sin + rawDy * cos)) / 10000,
+    ];
+
     invoke("update_entity", {
       id: selectedId,
       data: {
