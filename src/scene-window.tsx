@@ -22,12 +22,9 @@ export default function Scene() {
   const [animationFrameId, setAnimationFrameId] = useState<
     number | undefined
   >();
-  const [selectedId, setSelectedId] = useState<string | undefined>();
-  const [selectedInitialPosition, setSelectedInitialPosition] = useState({
-    x: 0,
-    y: 0,
-  });
-  const selectedEntity = selectedId ? entities.get(selectedId) : null;
+  const [selectedEntities, setSelectedEntities] = useState<
+    Map<string, [Entity, { x: number; y: number }]>
+  >(new Map());
 
   useEffect(() => {
     let listeners: (() => void)[] = [];
@@ -48,9 +45,14 @@ export default function Scene() {
 
     (async () =>
       listeners.push(
-        await listen<string | undefined>("select_entity", (e) =>
-          setSelectedId(e.payload),
-        ),
+        await listen<string | undefined>("select_entity", (e) => {
+          const entity = e.payload && entities.get(e.payload);
+          if (entity && e.payload) {
+            setSelectedEntities(
+              new Map([...selectedEntities, [e.payload, [entity, entity.pos]]]),
+            );
+          } else setSelectedEntities(new Map());
+        }),
       ))();
 
     (async () => {
@@ -59,7 +61,7 @@ export default function Scene() {
           width: number;
           height: number;
         }>("tauri://resize", async (e) => {
-          setSelectedId(undefined);
+          setSelectedEntities(new Map());
 
           const scaleFactor: number = await invoke("window_scale");
           const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
@@ -138,48 +140,61 @@ export default function Scene() {
   }, []);
 
   useEffect(() => {
-    if (selectedEntity && !selectedEntity.selectable) setSelectedId(undefined);
+    // deselect entity if it is no longer selectable
+    setSelectedEntities(
+      new Map(
+        [...selectedEntities].filter(
+          (selected) => entities.get(selected[0])?.selectable,
+        ),
+      ),
+    );
   }, [entities]);
 
-  const handleEntitySelect = (id: string, pos: { x: number; y: number }) => {
-    if (id == selectedId) return;
-    if (entities.get(id)?.selectable) {
-      setSelectedId(id);
-      setSelectedInitialPosition(pos);
-    } else setSelectedId(undefined);
+  const handleEntitySelect = (id: string) => {
+    if (id in selectedEntities.keys()) return;
+    const entity = entities.get(id);
+    if (!entity)
+      console.error("Can't select an entity which is not found on the scene.");
+    else if (entity.selectable)
+      setSelectedEntities(
+        new Map([...selectedEntities, [id, [entity, entity.pos]]]),
+      );
+    else setSelectedEntities(new Map());
   };
 
   const handleDrag = ({ beforeTranslate }: { beforeTranslate: number[] }) => {
-    const ang = (selectedEntity?.rotation || 0) * (Math.PI / 180);
-    const cos = Math.cos(ang);
-    const sin = Math.sin(ang);
+    selectedEntities.forEach((selected) => {
+      const ang = (selected[0].rotation || 0) * (Math.PI / 180);
+      const cos = Math.cos(ang);
+      const sin = Math.sin(ang);
 
-    const [rawDx, rawDy] = beforeTranslate;
-    const [dx, dy] = [
-      Math.round(10000 * (rawDx * cos - rawDy * sin)) / 10000,
-      Math.round(10000 * (rawDx * sin + rawDy * cos)) / 10000,
-    ];
+      const [rawDx, rawDy] = beforeTranslate;
+      const [dx, dy] = [
+        Math.round(10000 * (rawDx * cos - rawDy * sin)) / 10000,
+        Math.round(10000 * (rawDx * sin + rawDy * cos)) / 10000,
+      ];
 
-    invoke("update_entity", {
-      id: selectedId,
-      data: {
-        pos: {
-          x: selectedInitialPosition.x + dx * transformScale,
-          y: selectedInitialPosition.y + dy * transformScale,
+      invoke("update_entity", {
+        id: selected[0].id,
+        data: {
+          pos: {
+            x: selected[1].x + dx * transformScale,
+            y: selected[1].y + dy * transformScale,
+          },
         },
-      },
+      });
     });
   };
 
   const handleRotate = ({ rotate }: { rotate: number }) => {
-    invoke("update_entity", { id: selectedId, data: { rotation: rotate } });
+    // invoke("update_entity", { id: selectedIds, data: { rotation: rotate } });
   };
 
   return (
     <div
       class="w-screen h-screen z-0"
       onClick={(e) => {
-        if (e.target === e.currentTarget) setSelectedId(undefined);
+        if (e.target === e.currentTarget) setSelectedEntities(new Map());
       }}
       onContextMenu={async (e) => {
         if (e.target !== e.currentTarget) return;
@@ -198,20 +213,20 @@ export default function Scene() {
         <EntityComponent
           key={id}
           entity={entity}
-          onSelect={(pos) => handleEntitySelect(id, pos)}
-          isSelected={id === selectedId}
+          onSelect={() => handleEntitySelect(id)}
+          isSelected={id in selectedEntities.keys()}
         />
       ))}
-      {selectedEntity && (
+      {Array.from(selectedEntities).map(([id, [entity, _]]) => (
         <Moveable
-          target={`#${selectedId}`}
-          draggable={selectedEntity.selectable}
-          rotatable={selectedEntity.selectable}
+          target={`#${id}`}
+          draggable={entity.selectable}
+          rotatable={entity.selectable}
           onDrag={handleDrag}
           onRotate={handleRotate}
           className="[z-index:0!important]"
         />
-      )}
+      ))}
       <Selecto
         container={document.body}
         selectableTargets={[document.querySelector(".selectable") as any]}
