@@ -180,18 +180,18 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      // onContextMenu={async (e) => {
-      //   if (e.target !== e.currentTarget) return;
-      //   e.preventDefault();
-      //   (
-      //     await Menu.new({
-      //       items: [
-      //         { id: "save_scene", text: "Save Scene" },
-      //         { id: "load_scene", text: "Load Scene" },
-      //       ],
-      //     })
-      //   ).popup();
-      // }}
+      onContextMenu={async (e) => {
+        if (e.target !== e.currentTarget) return;
+        e.preventDefault();
+        (
+          await Menu.new({
+            items: [
+              { id: "save_scene", text: "Save Scene" },
+              { id: "load_scene", text: "Load Scene" },
+            ],
+          })
+        ).popup();
+      }}
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
