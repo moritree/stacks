@@ -93,11 +93,11 @@ end
 -- Invoke script on any listening entity
 function Scene:handle_broadcast(event, data)
     local failed = {}
-    for _, entity in pairs(self.entities) do
+    for id, entity in pairs(self.entities) do
         for script, _ in pairs(entity.scripts) do
             if script == event then
                 local success, result = pcall(entity.run_script, entity, script, data)
-                if not success then table.insert(failed, { entity = entity.id, error = result }) end
+                if not success then table.insert(failed, { entity = id, error = result }) end
             end
         end
     end
