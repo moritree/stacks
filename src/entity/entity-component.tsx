@@ -120,6 +120,9 @@ export default function EntityComponent(props: EntityProps) {
       minWidth: 200,
       minHeight: 300,
       focus: false,
+      backgroundColor: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--background-color"),
     });
 
     inspectorWindow.once("mounted", () => {
