@@ -22,9 +22,9 @@ export default function Scene() {
   const [animationFrameId, setAnimationFrameId] = useState<
     number | undefined
   >();
-  const [selectedEntities, setSelectedEntities] = useState<
-    Map<string, [Entity, { x: number; y: number }]>
-  >(new Map());
+  const [selectedEntities, setSelectedEntities] = useState<{
+    entities: Map<string, [Entity, { x: number; y: number }]>;
+  }>({ entities: new Map() });
 
   useEffect(() => {
     let listeners: (() => void)[] = [];
@@ -48,10 +48,9 @@ export default function Scene() {
         await listen<string | undefined>("select_entity", (e) => {
           const entity = e.payload && entities.get(e.payload);
           if (entity && e.payload) {
-            setSelectedEntities(
-              new Map([...selectedEntities, [e.payload, [entity, entity.pos]]]),
-            );
-          } else setSelectedEntities(new Map());
+            selectedEntities.entities.set(e.payload, [entity, entity.pos]);
+            setSelectedEntities({ entities: selectedEntities.entities });
+          } else setSelectedEntities({ entities: new Map() });
         }),
       ))();
 
@@ -61,7 +60,7 @@ export default function Scene() {
           width: number;
           height: number;
         }>("tauri://resize", async (e) => {
-          setSelectedEntities(new Map());
+          setSelectedEntities({ entities: new Map() });
 
           const scaleFactor: number = await invoke("window_scale");
           const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
@@ -141,30 +140,26 @@ export default function Scene() {
 
   useEffect(() => {
     // deselect entity if it is no longer selectable
-    setSelectedEntities(
-      new Map(
-        [...selectedEntities].filter(
-          (selected) => entities.get(selected[0])?.selectable,
-        ),
-      ),
-    );
+    [...selectedEntities.entities].forEach(([id, [entity, _]]) => {
+      if (entity.selectable) selectedEntities.entities.delete(id);
+    });
+    setSelectedEntities({ entities: selectedEntities.entities });
   }, [entities]);
 
   const handleEntitySelect = (id: string) => {
-    if (id in selectedEntities.keys()) return;
+    if (id in selectedEntities.entities.keys()) return;
     const entity = entities.get(id);
     if (!entity)
       console.error("Can't select an entity which is not found on the scene.");
-    else if (entity.selectable)
-      setSelectedEntities(
-        new Map([...selectedEntities, [id, [entity, entity.pos]]]),
-      );
-    else setSelectedEntities(new Map());
+    else if (entity.selectable) {
+      selectedEntities.entities.set(id, [entity, entity.pos]);
+      setSelectedEntities({ entities: selectedEntities.entities });
+    } else setSelectedEntities({ entities: new Map() });
   };
 
   const handleDrag = (events: OnDrag[]) => {
     events.forEach((e) => {
-      const [entity, startPos] = selectedEntities.get(e.target.id)!;
+      const [entity, startPos] = selectedEntities.entities.get(e.target.id)!;
 
       const ang = (entity.rotation || 0) * (Math.PI / 180);
       const cos = Math.cos(ang);
@@ -193,7 +188,8 @@ export default function Scene() {
     <div
       class="w-screen h-screen z-0"
       onClick={(e) => {
-        if (e.target === e.currentTarget) setSelectedEntities(new Map());
+        if (e.target === e.currentTarget)
+          setSelectedEntities({ entities: new Map() });
       }}
       onContextMenu={async (e) => {
         if (e.target !== e.currentTarget) return;
@@ -213,11 +209,11 @@ export default function Scene() {
           key={id}
           entity={entity}
           onSelect={() => handleEntitySelect(id)}
-          isSelected={id in selectedEntities.keys()}
+          isSelected={id in selectedEntities.entities.keys()}
         />
       ))}
       <Moveable
-        target={[[...selectedEntities].map(([id, _]) => `#${id}`)]}
+        target={[[...selectedEntities.entities].map(([id, _]) => `#${id}`)]}
         draggable={true}
         rotatable={true}
         onDrag={(e) => handleDrag([e])}
@@ -227,7 +223,7 @@ export default function Scene() {
           handleDrag(events);
         }}
       />
-      {selectedEntities.size == 0 && (
+      {/* {selectedEntities.entities.size == 0 && (
         <Selecto
           container={document.body}
           selectableTargets={[document.querySelector(".selectable") as any]}
@@ -237,7 +233,7 @@ export default function Scene() {
             // });
           }}
         />
-      )}
+      )} */}
     </div>
   );
 }
