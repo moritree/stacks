@@ -1180,6 +1180,13 @@ preact-moveable@^0.55.0:
     preact-css-styled "^1.1.9"
     react-moveable "~0.56.0"
 
+preact-selecto@^1.23.3:
+  version "1.23.3"
+  resolved "https://registry.yarnpkg.com/preact-selecto/-/preact-selecto-1.23.3.tgz#9bf918cf7a6992af7f3e4f5d7625cdbb21edb2c5"
+  integrity sha512-mPVUT4UNuKzELNNLCs+9avdDBDf0fH88YMhTpOcAnqseeboDLhUNrnjitihxhhEDNREvuTceqOujBlk/uvCR8w==
+  dependencies:
+    react-selecto "~1.26.3"
+
 preact@^10.25.1:
   version "10.25.4"
   resolved "https://registry.yarnpkg.com/preact/-/preact-10.25.4.tgz#c1d00bee9d7b9dcd06a2311d9951973b506ae8ac"
@@ -1237,7 +1244,7 @@ react-moveable@~0.56.0:
     react-css-styled "^1.1.9"
     react-selecto "^1.25.0"
 
-react-selecto@^1.25.0:
+react-selecto@^1.25.0, react-selecto@~1.26.3:
   version "1.26.3"
   resolved "https://registry.yarnpkg.com/react-selecto/-/react-selecto-1.26.3.tgz#f9081c006cee2e2fed85ac1811cfe17136cf81a5"
   integrity sha512-Ubik7kWSnZyQEBNro+1k38hZaI1tJarE+5aD/qsqCOA1uUBSjgKVBy3EWRzGIbdmVex7DcxznFZLec/6KZNvwQ==

@@ -8,6 +8,7 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "preact/hooks";
 import { Entity } from "./entity/entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import Selecto from "preact-selecto";
 
 const SCENE_BASE_SIZE = {
   width: 1280,
@@ -211,6 +212,15 @@ export default function Scene() {
           className="[z-index:0!important]"
         />
       )}
+      <Selecto
+        container={document.body}
+        selectableTargets={[document.querySelector(".selectable") as any]}
+        onSelect={(e) => {
+          e.added.forEach((_) => {
+            console.log("select");
+          });
+        }}
+      />
     </div>
   );
 }
