@@ -29,7 +29,8 @@ type = "text"
 
 ### Universal properties
 
-Every entity has a unique `id`, which is a *string*. (1)
+Every entity has a unique `id`, which is a *string*. (1) This is used to identify entities
+so you can tell what's happening for which entity, and send messages to specific entities.
 { .annotate }
 
 1.  A piece of text — a "string" of zero or more characters.
@@ -44,7 +45,7 @@ Every entity has an `x` and `y` position in the Scene.
 - `x` is the position of the entity from left to right.
 - `y` is the position of the entity from top to bottom.
 - The position of an entity is measured from its top left corner.
-- At the top left of the scene, `x = 0` and `y = 0`.
+- The position at the top left of the scene is `x = 0, y = 0`.
 - The position at the bottom right of the scene is `x = 1280, y = 720`
   (no matter how you shrink or scale the scene window).
 
@@ -71,18 +72,17 @@ Your scripts can use any of the basic Lua language features. Additionally:
 
 - Scripts are able to access properties of the entity they belong to through the variable `self`.
     - For example, `self.pos` will give you the entity's position.
-- Some events also come with data, which is passed to the corresponding script as a table in the `data` parameter.
+- Some events also come with **data**, which is passed to the corresponding script as a table in the `data` parameter.
     - For example, the `on_change` event for the `text_input` entity type passes the text currently in the input:
     `data = { text = "something"}`.
 - You can use the `broadcast` and `message` functions to trigger other scripts ([more info](#triggering-other-scripts)).
+    - You can pass arbitrary data when you trigger scripts in this way.
 
 You can combine any of these features in a script.
 
-```lua title="Example: move this entity a bit to the right"
-self.pos = {
-    x = self.pos.x + 20,
-    y = self.pos.y
-}
+```lua title="Example: move this entity a bit to the right, & announce its new position"
+self.pos.x = self.pos.x + 20
+broadcast("moved", { to = self.pos })
 ```
 
 ### Built-in events
