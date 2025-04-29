@@ -35,12 +35,12 @@ export default function EntityComponent(props: EntityProps) {
         break;
       case "type":
         if (value == "text") {
-          style.fontSize = `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`;
+          style.fontSize = `calc(${(props.entity.font_size || 1) * 1.5}em * var(--scene-scale))`;
           style.fontFamily = "var(--font-serif)";
           content = <Markdown>{props.entity.content}</Markdown>;
           break;
         } else if (value == "text_input") {
-          style.fontSize = `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`;
+          style.fontSize = `calc(${(props.entity.font_size || 1) * 1.5}em * var(--scene-scale))`;
           style.fontFamily = "var(--font-sans)";
 
           content = (
