@@ -90,7 +90,14 @@ export default function Scene() {
       listeners.push(
         await listen<string>("file_operation", async (e) => {
           if (e.payload == "open_scene") {
-            const path = await open({ multiple: false, directory: false });
+            const path = await open({
+              multiple: false,
+              directory: false,
+            }).catch(() => {
+              message("Failed to open file selection dialog", {
+                kind: "error",
+              });
+            });
             if (path) {
               const [success, msg] = await invoke<[boolean, string]>(
                 "load_scene",
