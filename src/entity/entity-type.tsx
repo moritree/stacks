@@ -7,7 +7,7 @@ interface RectEntity {
 interface TextEntity {
   type: "text";
   content: string;
-  fontSize?: number;
+  font_size?: number;
 }
 
 interface SvgEntity {
@@ -21,7 +21,7 @@ interface TextInputEntity {
   content?: string;
   placeholder?: string;
   size: { width: number; height: number };
-  fontSize?: number;
+  font_size?: number;
   color: string;
   disabled?: string;
 }
