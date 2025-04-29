@@ -68,16 +68,16 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
     lua.globals().set(
         "broadcast",
         lua.create_function(move |l: &Lua, (event, data): (String, LuaValue)| {
-            let pcall: LuaFunction = l.globals().get("pcall")?;
             let scene = get_scene(l)?;
-            let (success, error): (bool, Option<String>) = pcall.call((
-                scene
-                    .get::<_, LuaFunction>("handle_broadcast")
-                    .map_err(|e| LuaError::LuaError(e))?,
-                scene,
-                event,
-                data,
-            ))?;
+            let (success, error): (bool, Option<String>) =
+                l.globals().get::<_, LuaFunction>("pcall")?.call((
+                    scene
+                        .get::<_, LuaFunction>("handle_broadcast")
+                        .map_err(|e| LuaError::LuaError(e))?,
+                    scene,
+                    event,
+                    data,
+                ))?;
             if !success {
                 let _ = w_broadcast
                     .app_handle()
@@ -100,17 +100,17 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
         "message",
         lua.create_function(
             move |l: &Lua, (target, event, data): (String, String, LuaValue)| {
-                let pcall: LuaFunction = l.globals().get("pcall")?;
                 let scene = get_scene(l)?;
-                let (success, error): (bool, Option<String>) = pcall.call((
-                    scene
-                        .get::<_, LuaFunction>("handle_message")
-                        .map_err(|e| LuaError::LuaError(e))?,
-                    scene,
-                    target,
-                    event,
-                    data,
-                ))?;
+                let (success, error): (bool, Option<String>) =
+                    l.globals().get::<_, LuaFunction>("pcall")?.call((
+                        scene
+                            .get::<_, LuaFunction>("handle_message")
+                            .map_err(|e| LuaError::LuaError(e))?,
+                        scene,
+                        target,
+                        event,
+                        data,
+                    ))?;
                 if !success {
                     let _ = w_message
                         .app_handle()
@@ -276,13 +276,13 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                     )
                 })?;
 
-            // Wrap the script execution in pcall to catch Lua runtime errors
-            let pcall: LuaFunction = lua.globals().get("pcall")?;
-            let run_script: LuaFunction = entity.get("run_script")?;
-            let lua_params = json_value_to_lua(lua, &params)?;
-
             let (success, error): (bool, Option<String>) =
-                pcall.call((run_script, entity, function.clone(), lua_params))?;
+                lua.globals().get::<_, LuaFunction>("pcall")?.call((
+                    entity.get::<_, LuaFunction>("run_script")?,
+                    entity,
+                    function.clone(),
+                    json_value_to_lua(lua, &params)?,
+                ))?;
 
             if !success {
                 let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());
@@ -365,19 +365,19 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 })?
                 .iter()
             {
-                let pcall: LuaFunction = lua.globals().get("pcall")?;
                 let ent_clone = entity.clone();
-                let (success, error): (bool, Option<String>) = pcall.call((
-                    ent_clone.get::<_, LuaFunction>("load_script")?,
-                    ent_clone,
-                    key.to_string(),
-                    value
-                        .as_str()
-                        .ok_or_else(|| {
-                            LuaError::FormatError("Couldn't parse script as string".to_string())
-                        })?
-                        .to_string(),
-                ))?;
+                let (success, error): (bool, Option<String>) =
+                    lua.globals().get::<_, LuaFunction>("pcall")?.call((
+                        ent_clone.get::<_, LuaFunction>("load_script")?,
+                        ent_clone,
+                        key.to_string(),
+                        value
+                            .as_str()
+                            .ok_or_else(|| {
+                                LuaError::FormatError("Couldn't parse script as string".to_string())
+                            })?
+                            .to_string(),
+                    ))?;
 
                 if !success {
                     let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());
