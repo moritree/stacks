@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
-import Moveable from "preact-moveable";
+import Moveable, { OnDrag } from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open, message } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -162,24 +162,23 @@ export default function Scene() {
     else setSelectedEntities(new Map());
   };
 
-  const handleDrag = ({ beforeTranslate }: { beforeTranslate: number[] }) => {
-    selectedEntities.forEach((selected) => {
-      const ang = (selected[0].rotation || 0) * (Math.PI / 180);
+  const handleDrag = (events: OnDrag[]) => {
+    events.forEach((e) => {
+      const [entity, startPos] = selectedEntities.get(e.target.id)!;
+
+      const ang = (entity.rotation || 0) * (Math.PI / 180);
       const cos = Math.cos(ang);
       const sin = Math.sin(ang);
 
-      const [rawDx, rawDy] = beforeTranslate;
-      const [dx, dy] = [
-        Math.round(10000 * (rawDx * cos - rawDy * sin)) / 10000,
-        Math.round(10000 * (rawDx * sin + rawDy * cos)) / 10000,
-      ];
+      const [rawDx, rawDy] = e.beforeTranslate;
+      const [dx, dy] = [rawDx * cos - rawDy * sin, rawDx * sin + rawDy * cos];
 
       invoke("update_entity", {
-        id: selected[0].id,
+        id: entity.id,
         data: {
           pos: {
-            x: selected[1].x + dx * transformScale,
-            y: selected[1].y + dy * transformScale,
+            x: Math.round(startPos.x + dx * transformScale),
+            y: Math.round(startPos.y + dy * transformScale),
           },
         },
       });
@@ -221,13 +220,11 @@ export default function Scene() {
         target={[[...selectedEntities].map(([id, _]) => `#${id}`)]}
         draggable={true}
         rotatable={true}
-        onDrag={handleDrag}
-        onRotate={handleRotate}
+        onDrag={(e) => handleDrag([e])}
+        // onRotate={handleRotate}
         className="[z-index:0!important]"
         onDragGroup={({ events }) => {
-          events.forEach((ev) => {
-            ev.target.style.transform = ev.transform;
-          });
+          handleDrag(events);
         }}
       />
       {selectedEntities.size == 0 && (
