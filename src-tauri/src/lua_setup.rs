@@ -251,12 +251,10 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
         }
         LuaMessage::LoadScene(path, response_tx) => {
             let scene = get_scene(lua)?;
-            let pcall: LuaFunction = lua.globals().get("pcall")?;
-            let (success, error): (bool, Option<String>) = pcall.call(
-                scene
-                    .get::<_, LuaFunction>("load_scene")?
-                    .call::<_, ()>((scene, path)),
-            )?;
+            let (success, error): (bool, Option<String>) = lua
+                .globals()
+                .get::<_, LuaFunction>("pcall")?
+                .call((scene.get::<_, LuaFunction>("load_scene")?, scene, path))?;
 
             if !success {
                 let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());

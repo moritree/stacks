@@ -90,7 +90,14 @@ export default function Scene() {
       listeners.push(
         await listen<string>("file_operation", async (e) => {
           if (e.payload == "open_scene") {
-            const path = await open({ multiple: false, directory: false });
+            const path = await open({
+              multiple: false,
+              directory: false,
+            }).catch(() => {
+              message("Failed to open file selection dialog", {
+                kind: "error",
+              });
+            });
             if (path) {
               const [success, msg] = await invoke<[boolean, string]>(
                 "load_scene",
@@ -173,18 +180,18 @@ export default function Scene() {
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
-      onContextMenu={async (e) => {
-        if (e.target !== e.currentTarget) return;
-        e.preventDefault();
-        (
-          await Menu.new({
-            items: [
-              { id: "save_scene", text: "Save Scene" },
-              { id: "load_scene", text: "Load Scene" },
-            ],
-          })
-        ).popup();
-      }}
+      // onContextMenu={async (e) => {
+      //   if (e.target !== e.currentTarget) return;
+      //   e.preventDefault();
+      //   (
+      //     await Menu.new({
+      //       items: [
+      //         { id: "save_scene", text: "Save Scene" },
+      //         { id: "load_scene", text: "Load Scene" },
+      //       ],
+      //     })
+      //   ).popup();
+      // }}
     >
       {Array.from(entities).map(([id, entity]) => (
         <EntityComponent
