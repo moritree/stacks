@@ -217,25 +217,30 @@ export default function Scene() {
           isSelected={id in selectedEntities.keys()}
         />
       ))}
-      {Array.from(selectedEntities).map(([id, [entity, _]]) => (
-        <Moveable
-          target={`#${id}`}
-          draggable={entity.selectable}
-          rotatable={entity.selectable}
-          onDrag={handleDrag}
-          onRotate={handleRotate}
-          className="[z-index:0!important]"
-        />
-      ))}
-      <Selecto
-        container={document.body}
-        selectableTargets={[document.querySelector(".selectable") as any]}
-        onSelect={(e) => {
-          e.added.forEach((_) => {
-            console.log("select");
+      <Moveable
+        target={[[...selectedEntities].map(([id, _]) => `#${id}`)]}
+        draggable={true}
+        rotatable={true}
+        onDrag={handleDrag}
+        onRotate={handleRotate}
+        className="[z-index:0!important]"
+        onDragGroup={({ events }) => {
+          events.forEach((ev) => {
+            ev.target.style.transform = ev.transform;
           });
         }}
       />
+      {selectedEntities.size == 0 && (
+        <Selecto
+          container={document.body}
+          selectableTargets={[document.querySelector(".selectable") as any]}
+          onSelect={(e) => {
+            // e.added.forEach((el) => {
+            //   // el.style.
+            // });
+          }}
+        />
+      )}
     </div>
   );
 }
