@@ -147,7 +147,7 @@ export default function Scene() {
   }, [entities]);
 
   const handleEntitySelect = (id: string) => {
-    if (id in selectedEntities.entities.keys()) return;
+    if (selectedEntities.entities.has(id)) return;
     const entity = entities.get(id);
     if (!entity)
       console.error("Can't select an entity which is not found on the scene.");
@@ -180,9 +180,9 @@ export default function Scene() {
     });
   };
 
-  const handleRotate = ({ rotate }: { rotate: number }) => {
-    // invoke("update_entity", { id: selectedIds, data: { rotation: rotate } });
-  };
+  // const handleRotate = ({ rotate }: { rotate: number }) => {
+  //    invoke("update_entity", { id: selectedIds, data: { rotation: rotate } });
+  // };
 
   return (
     <div
@@ -209,7 +209,7 @@ export default function Scene() {
           key={id}
           entity={entity}
           onSelect={() => handleEntitySelect(id)}
-          isSelected={id in selectedEntities.entities.keys()}
+          isSelected={selectedEntities.entities.has(id)}
         />
       ))}
       <Moveable
@@ -223,17 +223,17 @@ export default function Scene() {
           handleDrag(events);
         }}
       />
-      {/* {selectedEntities.entities.size == 0 && (
+      {selectedEntities.entities.size == 0 && (
         <Selecto
           container={document.body}
           selectableTargets={[document.querySelector(".selectable") as any]}
-          onSelect={(e) => {
-            // e.added.forEach((el) => {
-            //   // el.style.
-            // });
-          }}
+          // onSelect={(e) => {
+          // e.added.forEach((el) => {
+          //   // el.style.
+          // });
+          // }}
         />
-      )} */}
+      )}
     </div>
   );
 }
