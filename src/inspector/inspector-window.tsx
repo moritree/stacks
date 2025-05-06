@@ -23,6 +23,9 @@ export default function InspectorWindow() {
   const [scriptsContents, setScriptsContents] = useState<Map<string, string>>(
     new Map(),
   );
+  const [editorHeights, setEditorHeights] = useState<Map<string, number>>(
+    new Map(),
+  );
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -54,6 +57,7 @@ export default function InspectorWindow() {
                 setOpenScripts(new Set<string>());
                 const scripts = e.payload.scripts;
                 setScriptsContents(new Map(Object.entries(scripts || {})));
+                setEditorHeights(new Map());
 
                 invoke("get_entity_string", {
                   id: e.payload.id,
@@ -169,6 +173,8 @@ export default function InspectorWindow() {
             setScriptsContents(newVal);
             setSaved(false);
           }}
+          editorHeights={editorHeights}
+          setEditorHeights={setEditorHeights}
           theme={theme}
         />
       ),
