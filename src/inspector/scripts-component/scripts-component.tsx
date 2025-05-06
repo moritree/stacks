@@ -1,7 +1,7 @@
-import { Loader } from "preact-feather";
+import { Loader, MoreHorizontal } from "preact-feather";
 import { Entity } from "../../entity/entity-type";
 const Accordion = lazy(() => import("../../components/accordion"));
-import { lazy, Suspense } from "preact/compat";
+import { lazy, Suspense, useState } from "preact/compat";
 import { Menu } from "@tauri-apps/api/menu";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../../components/code-editor";
@@ -15,6 +15,10 @@ export default function Scripts(props: {
   contents: Map<string, string>;
   onContentsChange: (scripts: Map<string, string>) => void;
 }) {
+  const [editorHeights, setEditorHeights] = useState<Map<string, number>>(
+    new Map(Array.from(props.contents.keys()).map((key) => [key, 128])), // 128px default height (32 * 4)
+  );
+
   async function handleContextMenu(
     script: string,
     contents: Map<string, string>,
@@ -56,7 +60,7 @@ export default function Scripts(props: {
       }
     >
       <div class="flex flex-col font-mono overflow-y-auto overflow-x-hidden">
-        {Array.from(props.contents).map(([key, value]) => (
+        {Array.from(props.contents).map(([key, value], index) => (
           <Accordion
             label={key}
             open={props.openScripts.has(key)}
@@ -71,7 +75,10 @@ export default function Scripts(props: {
               handleContextMenu(key, props.contents, props.onContentsChange);
             }}
           >
-            <div class="w-full h-32">
+            <div
+              class={`w-full`}
+              style={{ height: `${editorHeights.get(key)}px` }}
+            >
               <CodeEditor
                 name={key + "-editor"}
                 value={value}
@@ -83,6 +90,34 @@ export default function Scripts(props: {
                 theme={props.theme}
               />
             </div>
+            {index < props.contents.size - 1 && (
+              <div
+                class="h-[6px] border-y-1 border-secondary cursor-ns-resize flex justify-center items-center p-0"
+                onMouseDown={(startEvent) => {
+                  const startHeight = editorHeights.get(key) || 128;
+                  const startY = startEvent.clientY;
+
+                  function onMouseMove(moveEvent: MouseEvent) {
+                    const delta = moveEvent.clientY - startY;
+                    const newHeight = Math.max(50, startHeight + delta);
+
+                    setEditorHeights(
+                      new Map(editorHeights).set(key, newHeight),
+                    );
+                  }
+
+                  function onMouseUp() {
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener("mouseup", onMouseUp);
+                  }
+
+                  document.addEventListener("mousemove", onMouseMove);
+                  document.addEventListener("mouseup", onMouseUp);
+                }}
+              >
+                <MoreHorizontal class="h-3 text-border" />
+              </div>
+            )}
           </Accordion>
         ))}
         <AddScriptForm
