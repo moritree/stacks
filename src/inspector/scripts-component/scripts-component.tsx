@@ -14,11 +14,9 @@ export default function Scripts(props: {
   onOpenScriptsChange: (sections: Set<string>) => void;
   contents: Map<string, string>;
   onContentsChange: (scripts: Map<string, string>) => void;
+  editorHeights: Map<string, number>;
+  setEditorHeights: (heights: Map<string, number>) => void;
 }) {
-  const [editorHeights, setEditorHeights] = useState<Map<string, number>>(
-    new Map(Array.from(props.contents.keys()).map((key) => [key, 128])), // 128px default height (32 * 4)
-  );
-
   async function handleContextMenu(
     script: string,
     contents: Map<string, string>,
@@ -77,7 +75,7 @@ export default function Scripts(props: {
           >
             <div
               class={`w-full`}
-              style={{ height: `${editorHeights.get(key)}px` }}
+              style={{ height: `${props.editorHeights.get(key) || 128}px` }}
             >
               <CodeEditor
                 name={key + "-editor"}
@@ -94,15 +92,15 @@ export default function Scripts(props: {
               <div
                 class="h-[6px] border-y-1 border-secondary cursor-ns-resize flex justify-center items-center p-0"
                 onMouseDown={(startEvent) => {
-                  const startHeight = editorHeights.get(key) || 128;
+                  const startHeight = props.editorHeights.get(key) || 128;
                   const startY = startEvent.clientY;
 
                   function onMouseMove(moveEvent: MouseEvent) {
                     const delta = moveEvent.clientY - startY;
                     const newHeight = Math.max(50, startHeight + delta);
 
-                    setEditorHeights(
-                      new Map(editorHeights).set(key, newHeight),
+                    props.setEditorHeights(
+                      new Map(props.editorHeights).set(key, newHeight),
                     );
                   }
 
