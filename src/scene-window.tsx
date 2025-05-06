@@ -189,7 +189,14 @@ export default function Scene() {
               { id: "save_scene", text: "Save Scene" },
               { id: "load_scene", text: "Load Scene" },
               { item: "Separator" },
-              { id: "add_entity", text: "Add Entity" },
+              {
+                id: "submenu",
+                text: "Add New Entity",
+                items: [
+                  { id: "add_entity", text: "Text" },
+                  { id: "add_entity", text: "Rect" },
+                ],
+              },
             ],
           })
         ).popup();
