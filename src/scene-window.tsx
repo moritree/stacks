@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
 import Moveable from "preact-moveable";
-import { Menu } from "@tauri-apps/api/menu";
+import { Menu, MenuItem, PredefinedMenuItem } from "@tauri-apps/api/menu";
 import { save, open, message } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "preact/hooks";
@@ -188,6 +188,8 @@ export default function Scene() {
             items: [
               { id: "save_scene", text: "Save Scene" },
               { id: "load_scene", text: "Load Scene" },
+              { item: "Separator" },
+              { id: "add_entity", text: "Add Entity" },
             ],
           })
         ).popup();
