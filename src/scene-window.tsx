@@ -174,6 +174,27 @@ export default function Scene() {
     invoke("update_entity", { id: selectedId, data: { rotation: rotate } });
   };
 
+  const addNewEntity = async (entity: Entity) => {
+    // ensure unique id
+    var unique_index: number = 0;
+    while (entities.has("new_".repeat(unique_index) + entity.id)) {
+      unique_index += 1;
+    }
+    entity.id = "new_".repeat(unique_index) + entity.id;
+
+    // invoke add
+    const [success, msg] = await invoke<[boolean, string]>("new_entity", {
+      data: entity,
+    });
+    if (!success) {
+      console.log("fail");
+      message(msg, {
+        title: "Entity creation failed",
+        kind: "error",
+      });
+    } else console.log("success");
+  };
+
   return (
     <div
       class="w-screen h-screen z-0"
@@ -197,8 +218,8 @@ export default function Scene() {
                     id: "add_entity",
                     text: "Text",
                     action: async () => {
-                      const entity: Entity = {
-                        id: "new_entity",
+                      addNewEntity({
+                        id: "text_entity",
                         type: "text",
                         content: "Text",
                         pos: {
@@ -206,20 +227,7 @@ export default function Scene() {
                           y: e.y * transformScale,
                         },
                         scripts: {},
-                      };
-                      const [success, msg] = await invoke<[boolean, string]>(
-                        "new_entity",
-                        {
-                          data: entity,
-                        },
-                      );
-                      if (!success) {
-                        console.log("fail");
-                        message(msg, {
-                          title: "Entity creation failed",
-                          kind: "error",
-                        });
-                      } else console.log("success");
+                      });
                     },
                   },
                   { id: "add_entity", text: "Rect" },
