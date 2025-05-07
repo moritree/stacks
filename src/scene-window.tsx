@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
 import Moveable from "preact-moveable";
-import { Menu, MenuItem, PredefinedMenuItem } from "@tauri-apps/api/menu";
+import { Menu } from "@tauri-apps/api/menu";
 import { save, open, message } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "preact/hooks";
@@ -193,8 +193,37 @@ export default function Scene() {
                 id: "submenu",
                 text: "Add New Entity",
                 items: [
-                  { id: "add_entity", text: "Text" },
+                  {
+                    id: "add_entity",
+                    text: "Text",
+                    action: async () => {
+                      const entity: Entity = {
+                        id: "new_entity",
+                        type: "text",
+                        content: "Text",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        scripts: {},
+                      };
+                      const [success, msg] = await invoke<[boolean, string]>(
+                        "new_entity",
+                        {
+                          data: entity,
+                        },
+                      );
+                      if (!success) {
+                        console.log("fail");
+                        message(msg, {
+                          title: "Entity creation failed",
+                          kind: "error",
+                        });
+                      } else console.log("success");
+                    },
+                  },
                   { id: "add_entity", text: "Rect" },
+                  { id: "add_entity", text: "Text Input" },
                 ],
               },
             ],

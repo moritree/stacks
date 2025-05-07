@@ -13,13 +13,11 @@ pub fn init_lua_thread(window: WebviewWindow) -> Result<LuaState, LuaError> {
         .spawn(move || -> Result<(), LuaError> {
             let lua = Lua::new();
             set_globals(&lua, window)?;
-
             while let Ok(msg) = rx.recv() {
                 match_message(&lua, msg)?;
             }
             Ok(())
         });
-
     Ok(LuaState { tx })
 }
 
@@ -182,6 +180,35 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 .get::<_, LuaFunction>("emit_update")?
                 .call::<_, ()>((scene, dt))
                 .map_err(|e| LuaError::LuaError(e))?
+        }
+        LuaMessage::AddEntity(id, data, response_tx) => {
+            let scene = get_scene(lua)?;
+            match scene.get::<_, LuaFunction>("add_entity")?.call::<_, ()>((
+                scene,
+                id,
+                json_value_to_lua(lua, &data)?,
+            )) {
+                Ok(_) => {
+                    response_tx
+                        .send((true, "Success".to_string()))
+                        .map_err(|e| {
+                            LuaError::CommunicationError(format!(
+                                "Failed to send success response: {}",
+                                e
+                            ))
+                        })?;
+                }
+                Err(e) => {
+                    response_tx
+                        .send((false, format!("Couldn't add entity: {}", e.to_string())))
+                        .map_err(|e| {
+                            LuaError::CommunicationError(format!(
+                                "Failed to send error response: {}",
+                                e
+                            ))
+                        })?;
+                }
+            }
         }
         LuaMessage::UpdateEntityId(original_id, new_id, data) => {
             let scene = get_scene(lua)?;
