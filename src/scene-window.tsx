@@ -187,12 +187,11 @@ export default function Scene() {
       data: entity,
     });
     if (!success) {
-      console.log("fail");
       message(msg, {
         title: "Entity creation failed",
         kind: "error",
       });
-    } else console.log("success");
+    }
   };
 
   return (
