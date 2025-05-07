@@ -174,6 +174,26 @@ export default function Scene() {
     invoke("update_entity", { id: selectedId, data: { rotation: rotate } });
   };
 
+  const addNewEntity = async (entity: Entity) => {
+    // ensure unique id
+    var unique_index: number = 0;
+    while (entities.has("new_".repeat(unique_index) + entity.id)) {
+      unique_index += 1;
+    }
+    entity.id = "new_".repeat(unique_index) + entity.id;
+
+    // invoke add
+    const [success, msg] = await invoke<[boolean, string]>("new_entity", {
+      data: entity,
+    });
+    if (!success) {
+      message(msg, {
+        title: "Entity creation failed",
+        kind: "error",
+      });
+    }
+  };
+
   return (
     <div
       class="w-screen h-screen z-0"
@@ -188,6 +208,63 @@ export default function Scene() {
             items: [
               { id: "save_scene", text: "Save Scene" },
               { id: "load_scene", text: "Load Scene" },
+              { item: "Separator" },
+              {
+                id: "submenu",
+                text: "Add New Entity",
+                items: [
+                  {
+                    id: "add_text_entity",
+                    text: "Text",
+                    action: async () => {
+                      addNewEntity({
+                        id: "text_entity",
+                        type: "text",
+                        content: "text",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        scripts: {},
+                      });
+                    },
+                  },
+                  {
+                    id: "add_rect_entity",
+                    text: "rect",
+                    action: async () => {
+                      addNewEntity({
+                        id: "rect_entity",
+                        type: "rect",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        size: { width: 100, height: 100 },
+                        color: "#ff0000",
+                        scripts: {},
+                      });
+                    },
+                  },
+                  {
+                    id: "add_text_input_entity",
+                    text: "text_input",
+                    action: async () => {
+                      addNewEntity({
+                        id: "text_input_entity",
+                        type: "text_input",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        size: { width: 120, height: 40 },
+                        color: "#aaaaaa",
+                        scripts: {},
+                      });
+                    },
+                  },
+                ],
+              },
             ],
           })
         ).popup();

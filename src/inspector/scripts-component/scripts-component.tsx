@@ -1,7 +1,7 @@
 import { Loader, MoreHorizontal } from "preact-feather";
 import { Entity } from "../../entity/entity-type";
 const Accordion = lazy(() => import("../../components/accordion"));
-import { lazy, Suspense, useState } from "preact/compat";
+import { lazy, Suspense } from "preact/compat";
 import { Menu } from "@tauri-apps/api/menu";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../../components/code-editor";

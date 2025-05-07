@@ -38,9 +38,7 @@ function Scene:update_entity_id(original_id, new_id, data)
 end
 
 function Scene:duplicate_entity(id)
-    if not self.entities[id] then
-        error(string.format("Can't duplicate %s, no entity with this id exists.", id))
-    end
+    assert(self.entities[id], string.format("Can't duplicate %s, no entity with this id exists.", id))
 
     local new_key = id .. "_clone"
     while self.entities[new_key] do new_key = new_key .. "_clone" end
@@ -48,6 +46,16 @@ function Scene:duplicate_entity(id)
     self.entities[new_key] = deep_copy(self.entities[id])
     self.entities[new_key].pos.x = self.entities[new_key].pos.x + 15
     self.entities[new_key].pos.y = self.entities[new_key].pos.y + 15
+end
+
+function Scene:add_entity(id, data)
+    assert(id, "No entity id provided")
+    assert(type(id) == "string", "ID is not a string")
+    assert(data, "No entity data provided")
+    assert(type(data) == "table", "Entity data is not a table")
+    assert(not self.entities[id], string.format("An entity with id %s already exists", id))
+
+    self.entities[id] = Entity:new(data)
 end
 
 function Scene:save_scene(path)

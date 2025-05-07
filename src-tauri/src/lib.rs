@@ -5,7 +5,7 @@ mod lua_types;
 use frontend_commands::{resize_window, set_frontend_ready, window_scale, SetupState};
 use lua_commands::{
     delete_entity, duplicate_entity, get_entity_string, handle_inspector_save, load_scene,
-    run_script, save_scene, tick, update_entity,
+    new_entity, run_script, save_scene, tick, update_entity,
 };
 use lua_setup::init_lua_thread;
 use std::sync::Mutex;
@@ -25,7 +25,7 @@ pub fn run() {
         }))
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
-            let state = init_lua_thread(window.clone())?;
+            let state = init_lua_thread(window.clone()).expect("Error initializing lua thread");
             app.manage(state);
 
             let handle = app.handle();
@@ -163,6 +163,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             tick,
+            new_entity,
             update_entity,
             delete_entity,
             duplicate_entity,
