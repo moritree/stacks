@@ -215,13 +215,13 @@ export default function Scene() {
                 text: "Add New Entity",
                 items: [
                   {
-                    id: "add_entity",
+                    id: "add_text_entity",
                     text: "Text",
                     action: async () => {
                       addNewEntity({
                         id: "text_entity",
                         type: "text",
-                        content: "Text",
+                        content: "text",
                         pos: {
                           x: e.x * transformScale,
                           y: e.y * transformScale,
@@ -230,8 +230,40 @@ export default function Scene() {
                       });
                     },
                   },
-                  { id: "add_entity", text: "Rect" },
-                  { id: "add_entity", text: "Text Input" },
+                  {
+                    id: "add_rect_entity",
+                    text: "rect",
+                    action: async () => {
+                      addNewEntity({
+                        id: "rect_entity",
+                        type: "rect",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        size: { width: 100, height: 100 },
+                        color: "#ff0000",
+                        scripts: {},
+                      });
+                    },
+                  },
+                  {
+                    id: "add_text_input_entity",
+                    text: "text_input",
+                    action: async () => {
+                      addNewEntity({
+                        id: "text_input_entity",
+                        type: "text_input",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        size: { width: 120, height: 40 },
+                        color: "#aaaaaa",
+                        scripts: {},
+                      });
+                    },
+                  },
                 ],
               },
             ],
