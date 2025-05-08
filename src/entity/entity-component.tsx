@@ -9,7 +9,7 @@ import { message } from "@tauri-apps/plugin-dialog";
 
 interface EntityProps {
   entity: any;
-  onSelect: (pos: { x: number; y: number }) => void;
+  onSelect: () => void;
   isSelected: boolean;
 }
 
@@ -144,7 +144,7 @@ export default function EntityComponent(props: EntityProps) {
       onMouseDown={(e) => {
         e.stopPropagation();
         if (props.isSelected) e.stopPropagation();
-        else if (props.entity.selectable) props.onSelect(props.entity.pos);
+        else if (props.entity.selectable) props.onSelect();
       }}
       onDblClick={async (e) => {
         e.stopPropagation();

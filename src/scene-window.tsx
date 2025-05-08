@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
-import Moveable from "preact-moveable";
+import Moveable, { OnDrag, OnRotate } from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open, message } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -26,6 +26,7 @@ export default function Scene() {
     x: 0,
     y: 0,
   });
+  const [selectedInitialRotation, setSelectedInitialRotation] = useState(0);
   const selectedEntity = selectedId ? entities.get(selectedId) : null;
 
   useEffect(() => {
@@ -140,38 +141,50 @@ export default function Scene() {
     if (selectedEntity && !selectedEntity.selectable) setSelectedId(undefined);
   }, [entities]);
 
-  const handleEntitySelect = (id: string, pos: { x: number; y: number }) => {
+  const handleEntitySelect = (id: string) => {
     if (id == selectedId) return;
-    if (entities.get(id)?.selectable) {
-      setSelectedId(id);
-      setSelectedInitialPosition(pos);
-    } else setSelectedId(undefined);
+    setSelectedId(id);
   };
 
-  const handleDrag = ({ beforeTranslate }: { beforeTranslate: number[] }) => {
+  const handleDrag = (e: OnDrag) => {
     const ang = (selectedEntity?.rotation || 0) * (Math.PI / 180);
     const cos = Math.cos(ang);
     const sin = Math.sin(ang);
 
-    const [rawDx, rawDy] = beforeTranslate;
+    const [rawDx, rawDy] = e.beforeTranslate;
     const [dx, dy] = [
       Math.round(10000 * (rawDx * cos - rawDy * sin)) / 10000,
       Math.round(10000 * (rawDx * sin + rawDy * cos)) / 10000,
     ];
 
+    let startPos = selectedInitialPosition;
+    if (e.isFirstDrag) {
+      setSelectedInitialPosition(selectedEntity!.pos);
+      startPos = selectedEntity!.pos;
+    }
+
     invoke("update_entity", {
       id: selectedId,
       data: {
         pos: {
-          x: selectedInitialPosition.x + dx * transformScale,
-          y: selectedInitialPosition.y + dy * transformScale,
+          x: startPos.x + dx * transformScale,
+          y: startPos.y + dy * transformScale,
         },
       },
     });
   };
 
-  const handleRotate = ({ rotate }: { rotate: number }) => {
-    invoke("update_entity", { id: selectedId, data: { rotation: rotate } });
+  const handleRotate = (e: OnRotate) => {
+    let startRotate = selectedInitialRotation;
+    if (e.isFirstDrag) {
+      setSelectedInitialRotation(selectedEntity?.rotation || 0);
+      startRotate = selectedEntity?.rotation || 0;
+    }
+
+    invoke("update_entity", {
+      id: selectedId,
+      data: { rotation: startRotate + e.beforeRotation },
+    });
   };
 
   const addNewEntity = async (entity: Entity) => {
@@ -274,7 +287,7 @@ export default function Scene() {
         <EntityComponent
           key={id}
           entity={entity}
-          onSelect={(pos) => handleEntitySelect(id, pos)}
+          onSelect={() => handleEntitySelect(id)}
           isSelected={id === selectedId}
         />
       ))}
