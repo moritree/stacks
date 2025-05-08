@@ -6,6 +6,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
 import { JSX } from "preact/jsx-runtime";
 import { message } from "@tauri-apps/plugin-dialog";
+import { Entity } from "./entity-type";
 
 interface EntityProps {
   entity: any;
@@ -14,7 +15,9 @@ interface EntityProps {
 }
 
 export default function EntityComponent(props: EntityProps) {
-  const style: Record<string, string> = {};
+  const style: Record<string, string> = {
+    zIndex: Math.max((props.entity as Entity).layer || 0, 1).toString(),
+  };
   let content: JSX.Element | null = null;
 
   Array.from(Object.entries(props.entity)).forEach(([key, value]) => {
