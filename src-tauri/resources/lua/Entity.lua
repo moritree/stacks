@@ -52,7 +52,13 @@ function Entity:run_script(funcname, params)
         error "Couldn't load script."
     end
 
-    self.scripts[funcname].func(self, params)
+    local success, data
+    if type(params) == "string" then
+        success, data = serializer.load(params)
+        assert(success, "Deserializing data failed: " .. serializer.line(data))
+    end
+
+    self.scripts[funcname].func(self, data)
 end
 
 function Entity:serializable()

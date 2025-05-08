@@ -74,7 +74,11 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
                         .map_err(|e| LuaError::LuaError(e))?,
                     scene,
                     event,
-                    data,
+                    if let Some(table) = data.as_table() {
+                        serialized_table(&l, table)?.into_lua(l)?
+                    } else {
+                        LuaNil
+                    },
                 ))?;
             if !success {
                 let _ = w_broadcast
@@ -107,7 +111,11 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
                         scene,
                         target,
                         event,
-                        data,
+                        if let Some(table) = data.as_table() {
+                            serialized_table(&l, table)?.into_lua(l)?
+                        } else {
+                            LuaNil
+                        },
                     ))?;
                 if !success {
                     let _ = w_message
@@ -170,6 +178,40 @@ fn get_entity<'lua>(lua: &'lua Lua, id: &str) -> Result<LuaTable<'lua>, LuaError
     entities.get::<_, LuaTable>(id).map_err(|e| {
         LuaError::EntityProcessingError(id.to_string(), format!("Failed to get entity: {}", e))
     })
+}
+
+fn serialized_table<'lua>(
+    lua: &'lua Lua,
+    table: &LuaTable<'lua>,
+) -> Result<LuaString<'lua>, LuaError> {
+    let (success, result): (bool, Option<LuaString>) = lua
+        .globals()
+        .get::<_, LuaFunction>("pcall")
+        .map_err(|e| LuaError::LuaError(e))?
+        .call((
+            lua.load(
+                r#"function(data)
+                    return assert(require("serpent").dump(data), "Serializing data failed")
+                end"#,
+            )
+            .eval::<LuaFunction>()
+            .map_err(|e| LuaError::LuaError(e))?,
+            table,
+        ))
+        .map_err(|e| LuaError::LuaError(e))?;
+
+    if success {
+        result.ok_or_else(|| LuaError::FormatError("Serialization returned nil".to_string()))
+    } else {
+        let error_msg = match result {
+            Some(s) => match s.to_str() {
+                Ok(str) => str.to_string(),
+                Err(_) => "Invalid error message".to_string(),
+            },
+            None => "Unknown error".to_string(),
+        };
+        Err(LuaError::FormatError(error_msg))
+    }
 }
 
 fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
