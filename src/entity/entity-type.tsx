@@ -32,6 +32,7 @@ interface BaseEntity {
   pos: { x: number; y: number };
   selectable?: boolean;
   rotation?: number;
+  layer?: number;
 }
 
 export type Entity = BaseEntity &

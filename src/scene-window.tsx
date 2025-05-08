@@ -209,7 +209,7 @@ export default function Scene() {
 
   return (
     <div
-      class="w-screen h-screen z-0"
+      class="w-screen h-screen"
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
@@ -298,7 +298,6 @@ export default function Scene() {
           rotatable={selectedEntity.selectable}
           onDrag={handleDrag}
           onRotate={handleRotate}
-          className="[z-index:0!important]"
         />
       )}
     </div>

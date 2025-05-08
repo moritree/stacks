@@ -49,6 +49,15 @@ Every entity has an `x` and `y` position in the Scene.
 - The position at the bottom right of the scene is `x = 1280, y = 720`
   (no matter how you shrink or scale the scene window).
 
+### Optional universal properties
+
+These are properties which can be specified for any entity, but are not required.
+
+- `selectable` determines whether you can select this entity and drag/rotate it on the scene.
+- `rotation` is the angle this entity is pointing. It defaults to `rotation = 0` (upright).
+- `layer` helps you control which entity renders in front of which. Entities with a higher numbered layer will show in
+  front of entities with a lower numbered layer. The default layer, and also the minimum, is `layer = 0`.
+
 ## Scripts
 **Scripts** in Stacks are associated with specific **entities** and triggered by **events**.
 Any entity can have any number of scripts.

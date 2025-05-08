@@ -7,13 +7,19 @@ local Entity = {
 }
 
 function Entity:new(o)
-    o = o or {}
-    setmetatable(o, self)
+    local entity = {}
+    setmetatable(entity, self)
     self.__index = self
-    return o
+    entity:update(o or {})
+    return entity
 end
 
 function Entity:update(data)
+    if (data.layer and ((not type(data.layer) == "number") or data.layer < 0)) then
+        data.layer = 0
+        print("Provided layer out of bounds; set to default (0)")
+    end
+
     for k, v in pairs(data) do self[k] = v end
 end
 
