@@ -15,7 +15,10 @@ function Entity:new(o)
 end
 
 function Entity:update(data)
-    if (data.layer and ((not type(data.layer) == "number") or data.layer < 0)) then data.layer = 0 end
+    if (data.layer and ((not type(data.layer) == "number") or data.layer < 0)) then
+        data.layer = 0
+        print("Provided layer out of bounds; set to default (0)")
+    end
 
     for k, v in pairs(data) do self[k] = v end
 end
