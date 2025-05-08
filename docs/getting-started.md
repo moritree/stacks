@@ -65,10 +65,23 @@ Any entity can have any number of scripts.
 The name of a script is also the name of the event that triggers it. So, for example, an `on_click` script will be
 triggered when you click on the entity the script is attached to.
 
-!!! Note
-    Stacks uses the programming language [Lua](https://www.lua.org/) for scripting. Lua was chosen because it is a very
-    small language with a simple set of rules. This means, compared to other languages, there are few Lua-specific
-    quirks to learn and adapt to, so you can focus on the core logic of what you actually want to do.
+### Lua
+Stacks uses the programming language [Lua](https://www.lua.org/) for scripting. Lua was chosen because it is a very
+small language with a simple set of rules. This means, compared to other languages, there are few Lua-specific quirks to
+learn and adapt to, so you can focus on the core logic of what you actually want to do.
+
+You can get a long way just by experimenting and tweaking.
+But if you'd like a more general introduction to Lua, here are a few resources:
+
+=== "If you're new to programming"
+    - [Codecademy course](https://www.codecademy.com/learn/learn-lua)
+    - [TutorialsPoint Lua guide](https://www.tutorialspoint.com/lua/index.htm)
+=== "If you're comfortable with programming fundamentals"
+    - [Learn Lua in Y minutes](https://learnxinyminutes.com/lua/): Information dense code-example based summary.
+    - [Lua for Programmers](https://ebens.me/posts/lua-for-programmers-part-1/): A four-part guide aimed at people
+      who already know how to program.
+    - [Programming in Lua (1ed)](https://www.lua.org/pil/contents.html): The Official Book.
+      Written by Lua's chief architect.
 
 ### Writing scripts
 When you open the Inspector for any given entity, you will notice that there are two tabs at the bottom of the window.
