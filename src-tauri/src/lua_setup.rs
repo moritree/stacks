@@ -183,32 +183,20 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
         }
         LuaMessage::AddEntity(id, data, response_tx) => {
             let scene = get_scene(lua)?;
-            match scene.get::<_, LuaFunction>("add_entity")?.call::<_, ()>((
-                scene,
-                id,
-                json_value_to_lua(lua, &data)?,
-            )) {
-                Ok(_) => {
-                    response_tx
-                        .send((true, "Success".to_string()))
-                        .map_err(|e| {
-                            LuaError::CommunicationError(format!(
-                                "Failed to send success response: {}",
-                                e
-                            ))
-                        })?;
-                }
-                Err(e) => {
-                    response_tx
-                        .send((false, format!("Couldn't add entity: {}", e.to_string())))
-                        .map_err(|e| {
-                            LuaError::CommunicationError(format!(
-                                "Failed to send error response: {}",
-                                e
-                            ))
-                        })?;
-                }
-            }
+            response_tx
+                .send(
+                    match scene.get::<_, LuaFunction>("add_entity")?.call::<_, ()>((
+                        scene,
+                        id,
+                        json_value_to_lua(lua, &data)?,
+                    )) {
+                        Ok(_) => (true, "Success".to_string()),
+                        Err(e) => (false, format!("Couldn't add entity: {}", e.to_string())),
+                    },
+                )
+                .map_err(|e| {
+                    LuaError::CommunicationError(format!("Failed to send error response: {}", e))
+                })?
         }
         LuaMessage::UpdateEntityId(original_id, new_id, data) => {
             let scene = get_scene(lua)?;
@@ -283,13 +271,20 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                 .get::<_, LuaFunction>("pcall")?
                 .call((scene.get::<_, LuaFunction>("load_scene")?, scene, path))?;
 
-            if !success {
-                let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());
-                let _ = response_tx.send((false, format!("Failed loading: {}", error_msg)));
-                return Ok(());
-            }
-
-            let _ = response_tx.send((true, "Successfully loaded scene".to_string()));
+            response_tx
+                .send(match success {
+                    true => (true, "Successfully loaded scene".to_string()),
+                    false => (
+                        false,
+                        format!(
+                            "Failed loading: {}",
+                            error.unwrap_or_else(|| "Unknown error".to_string())
+                        ),
+                    ),
+                })
+                .map_err(|e| {
+                    LuaError::CommunicationError(format!("Failed to send error response: {}", e))
+                })?
         }
         LuaMessage::RunScript(id, function, params, response_tx) => {
             let entity: LuaTable = get_scene(lua)?
@@ -311,13 +306,14 @@ fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
                     json_value_to_lua(lua, &params)?,
                 ))?;
 
-            if !success {
-                let error_msg = error.unwrap_or_else(|| "Unknown error".to_string());
-                let _ = response_tx.send((false, error_msg));
-                return Ok(());
-            }
-
-            let _ = response_tx.send((true, "Script executed successfully".to_string()));
+            response_tx
+                .send(match success {
+                    true => (true, "Script executed successfully".to_string()),
+                    false => (false, error.unwrap_or_else(|| "Unknown error".to_string())),
+                })
+                .map_err(|e| {
+                    LuaError::CommunicationError(format!("Failed to send error response: {}", e))
+                })?
         }
         LuaMessage::EmitEntityString(id, window) => {
             let scene = get_scene(lua)?;
