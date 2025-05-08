@@ -50,7 +50,7 @@ function Entity:run_script(funcname, params)
 
     local success, data
     if type(params) == "string" then
-        success, data = serializer.load(params)
+        success, data = serializer.load(params, { safe = false })
         assert(success, "Deserializing data failed: " .. serializer.line(data))
     end
 
