@@ -65,7 +65,20 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
     let w_broadcast = window.clone();
     lua.globals().set(
         "broadcast",
-        lua.create_function(move |l: &Lua, (event, data): (String, LuaValue)| {
+        lua.create_function(move |l: &Lua, (event, data): (LuaValue, LuaValue)| {
+            if !event.is_string() {
+                let _ = w_broadcast
+                    .app_handle()
+                    .dialog()
+                    .message(format!(
+                        "Event parameter must be a string.\nProvided: {}",
+                        event.type_name()
+                    ))
+                    .kind(MessageDialogKind::Error)
+                    .title("Broadcast failed")
+                    .blocking_show();
+                return Ok(());
+            }
             let scene = get_scene(l)?;
             let (success, error): (bool, Option<String>) =
                 l.globals().get::<_, LuaFunction>("pcall")?.call((
@@ -101,7 +114,35 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
     lua.globals().set(
         "message",
         lua.create_function(
-            move |l: &Lua, (target, event, data): (String, String, LuaValue)| {
+            move |l: &Lua, (target, event, data): (LuaValue, LuaValue, LuaValue)| {
+                if !target.is_string() || !event.is_string() {
+                    let _ = w_message
+                        .app_handle()
+                        .dialog()
+                        .message(if !target.is_string() && !event.is_string() {
+                            format!(
+                                "Target and event parameters must both be strings.
+                                \nProvided (target): {}\nProvided (event): {}",
+                                target.type_name(),
+                                event.type_name()
+                            )
+                        } else if !target.is_string() {
+                            format!(
+                                "Target parameter must be a string.\nProvided: {}",
+                                target.type_name()
+                            )
+                        } else {
+                            format!(
+                                "Event parameter must be a string.\nProvided: {}",
+                                event.type_name()
+                            )
+                        })
+                        .kind(MessageDialogKind::Error)
+                        .title("Broadcast failed")
+                        .blocking_show();
+                    return Ok(());
+                }
+
                 let scene = get_scene(l)?;
                 let (success, error): (bool, Option<String>) =
                     l.globals().get::<_, LuaFunction>("pcall")?.call((

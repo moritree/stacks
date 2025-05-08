@@ -100,6 +100,7 @@ end
 
 -- Invoke script on any listening entity
 function Scene:handle_broadcast(event, data)
+    assert(type(event) == "string", "Broadcast event must be a string.")
     local failed = {}
     for id, entity in pairs(self.entities) do
         for script, _ in pairs(entity.scripts) do
@@ -125,8 +126,10 @@ end
 
 -- Invoke script on specific entity
 function Scene:handle_message(target, event, data)
+    assert(type(target) == "string", "Message target must be a string.")
     assert(self.entities[target],
         string.format("Couldn't invoke message \"%s\" because the target \"%s\" wasn't found.", event, target))
+    assert(type(event) == "string", "Message event must be a string.")
     assert(self.entities[target].scripts[event],
         string.format("Couldn't invoke message \"%s\" because no matching script on \"%s\" was found.",
             event, target))
