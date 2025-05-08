@@ -32,11 +32,10 @@ function Entity:load_script(funcname, script_string)
         end
     end
 
-    local full_string = "local func = function(self, data) " ..
-        (script_string) .. " ; end ; return func"
-    local success, loaded = serializer.load(full_string, { safe = false })
-
-    if not success then error "Serializer couldn't load script as function." end
+    local success, loaded = serializer.load(
+        "local func = function(self, data) " .. (script_string) .. " ; end ; return func",
+        { safe = false })
+    assert(success, "Serializer couldn't load script as function.")
 
     if not self.scripts[funcname] then self.scripts[funcname] = {} end
     self.scripts[funcname].string = script_string
@@ -44,15 +43,18 @@ function Entity:load_script(funcname, script_string)
 end
 
 function Entity:run_script(funcname, params)
-    if not self.scripts[funcname] then
-        error(string.format("Warning: %s is not a valid function on this entity.", funcname))
+    assert(self.scripts[funcname],
+        string.format("Warning: %s is not a valid function on this entity.", funcname))
+    assert(type(self.scripts[funcname].func) == "function" or pcall(self.load_script, self, funcname),
+        "Couldn't load script.")
+
+    local success, data
+    if type(params) == "string" then
+        success, data = serializer.load(params, { safe = false })
+        assert(success, "Deserializing data failed: " .. serializer.line(data))
     end
 
-    if type(self.scripts[funcname].func) ~= "function" and not pcall(self.load_script, self, funcname) then
-        error "Couldn't load script."
-    end
-
-    self.scripts[funcname].func(self, params)
+    self.scripts[funcname].func(self, data)
 end
 
 function Entity:serializable()
