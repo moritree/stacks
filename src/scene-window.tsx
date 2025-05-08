@@ -209,7 +209,7 @@ export default function Scene() {
 
   return (
     <div
-      class="w-screen h-screen -z-10"
+      class="w-screen h-screen"
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}

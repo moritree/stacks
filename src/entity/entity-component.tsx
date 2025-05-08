@@ -16,7 +16,7 @@ interface EntityProps {
 
 export default function EntityComponent(props: EntityProps) {
   const style: Record<string, string> = {
-    zIndex: Math.max((props.entity as Entity).layer || 0, 1).toString(),
+    zIndex: Math.max((props.entity as Entity).layer || 0, 0).toString(),
   };
   let content: JSX.Element | null = null;
 
