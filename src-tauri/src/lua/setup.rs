@@ -1,10 +1,13 @@
-use super::types::{LuaError, LuaMessage, LuaState};
+use super::{
+    globals::set_globals,
+    types::{LuaError, LuaMessage, LuaState},
+    utils::{get_entity, get_scene, json_value_to_lua},
+};
 use mlua::prelude::*;
 use std::fs;
 use std::path::Path;
 use std::sync::mpsc;
-use tauri::{Emitter, Manager, WebviewWindow};
-use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+use tauri::{Manager, WebviewWindow};
 
 pub fn init_lua_thread(window: WebviewWindow) -> Result<LuaState, LuaError> {
     let (tx, rx) = mpsc::channel(); // create communication channel
@@ -12,247 +15,30 @@ pub fn init_lua_thread(window: WebviewWindow) -> Result<LuaState, LuaError> {
         .name("Lua Environment".to_string())
         .spawn(move || -> Result<(), LuaError> {
             let lua = Lua::new();
-            set_globals(&lua, window)?;
+            set_globals(&lua, window.clone())?;
+
+            // Preload modules
+            preload_lua_modules(window.clone(), &lua)
+                .map_err(|e| LuaError::InitializationError(e.to_string()))?;
+
+            // load main scene
+            let lua_main: LuaTable =
+                lua // Do this last to minimise risk of any code on .eval() not working
+                    .load(include_str!("../../resources/lua/main.lua"))
+                    .eval::<LuaTable>()
+                    .map_err(|e| {
+                        LuaError::InitializationError(format!("Failed loading main scene: {}", e))
+                    })?;
+            lua.globals().set("currentScene", lua_main).map_err(|e| {
+                LuaError::InitializationError(format!("Failed to set main scene: {}", e))
+            })?;
+
             while let Ok(msg) = rx.recv() {
                 match_message(&lua, msg)?;
             }
             Ok(())
         });
     Ok(LuaState { tx })
-}
-
-fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
-    let w_emit = window.clone();
-    lua.globals().set(
-        "emit",
-        lua.create_function(move |_: &Lua, (evt, data): (String, LuaValue)| {
-            let json = serde_json::to_value(&data)
-                .map_err(|e| LuaError::FormatError(format!("JSON conversion error: {}", e)))?;
-            w_emit.emit(&evt, json).map_err(|e| {
-                LuaError::CommunicationError(format!("Couldn't emit event {}: {}", evt, e))
-            })?;
-            Ok(())
-        })
-        .map_err(|e| {
-            LuaError::InitializationError(format!("Couldn't create Lua emit function: {}", e))
-        })?,
-    )?;
-
-    let w_emit_to = window.clone();
-    lua.globals().set(
-        "emit_to",
-        lua.create_function(
-            move |_: &Lua, (evt, window_label, data): (String, String, LuaValue)| {
-                let json = serde_json::to_value(&data)
-                    .map_err(|e| LuaError::FormatError(format!("JSON conversion error: {}", e)))?;
-                w_emit_to
-                    .emit_to(window_label.clone(), &evt, json)
-                    .map_err(|e| {
-                        LuaError::CommunicationError(format!(
-                            "Failed to emit event {} to {}: {}",
-                            evt, window_label, e
-                        ))
-                    })?;
-                Ok(())
-            },
-        )
-        .map_err(|e| {
-            LuaError::InitializationError(format!("Failed to create Lua emit_to function: {}", e))
-        })?,
-    )?;
-
-    // broadcasting
-    let w_broadcast = window.clone();
-    lua.globals().set(
-        "broadcast",
-        lua.create_function(move |l: &Lua, (event, data): (LuaValue, LuaValue)| {
-            if !event.is_string() {
-                let _ = w_broadcast
-                    .app_handle()
-                    .dialog()
-                    .message(format!(
-                        "Event parameter must be a string.\nProvided: {}",
-                        event.type_name()
-                    ))
-                    .kind(MessageDialogKind::Error)
-                    .title("Broadcast failed")
-                    .blocking_show();
-                return Ok(());
-            }
-            let scene = get_scene(l)?;
-            let (success, error): (bool, Option<String>) =
-                l.globals().get::<_, LuaFunction>("pcall")?.call((
-                    scene
-                        .get::<_, LuaFunction>("handle_broadcast")
-                        .map_err(|e| LuaError::LuaError(e))?,
-                    scene,
-                    event,
-                    if let Some(table) = data.as_table() {
-                        serialized_table(&l, table)?.into_lua(l)?
-                    } else {
-                        LuaNil
-                    },
-                ))?;
-            if !success {
-                let _ = w_broadcast
-                    .app_handle()
-                    .dialog()
-                    .message(error.unwrap_or_else(|| "Unknown error".to_string()))
-                    .kind(MessageDialogKind::Error)
-                    .title("Broadcast failed")
-                    .blocking_show();
-            }
-            Ok(())
-        })
-        .map_err(|e| {
-            LuaError::InitializationError(format!("Failed to create Lua broadcast function: {}", e))
-        })?,
-    )?;
-
-    // messaging
-    let w_message = window.clone();
-    lua.globals().set(
-        "message",
-        lua.create_function(
-            move |l: &Lua, (target, event, data): (LuaValue, LuaValue, LuaValue)| {
-                if !target.is_string() || !event.is_string() {
-                    let _ = w_message
-                        .app_handle()
-                        .dialog()
-                        .message(if !target.is_string() && !event.is_string() {
-                            format!(
-                                "Target and event parameters must both be strings.
-                                \nProvided (target): {}\nProvided (event): {}",
-                                target.type_name(),
-                                event.type_name()
-                            )
-                        } else if !target.is_string() {
-                            format!(
-                                "Target parameter must be a string.\nProvided: {}",
-                                target.type_name()
-                            )
-                        } else {
-                            format!(
-                                "Event parameter must be a string.\nProvided: {}",
-                                event.type_name()
-                            )
-                        })
-                        .kind(MessageDialogKind::Error)
-                        .title("Broadcast failed")
-                        .blocking_show();
-                    return Ok(());
-                }
-
-                let scene = get_scene(l)?;
-                let (success, error): (bool, Option<String>) =
-                    l.globals().get::<_, LuaFunction>("pcall")?.call((
-                        scene
-                            .get::<_, LuaFunction>("handle_message")
-                            .map_err(|e| LuaError::LuaError(e))?,
-                        scene,
-                        target,
-                        event,
-                        if let Some(table) = data.as_table() {
-                            serialized_table(&l, table)?.into_lua(l)?
-                        } else {
-                            LuaNil
-                        },
-                    ))?;
-                if !success {
-                    let _ = w_message
-                        .app_handle()
-                        .dialog()
-                        .message(error.unwrap_or_else(|| "Unknown error".to_string()))
-                        .kind(MessageDialogKind::Error)
-                        .title("Message failed")
-                        .blocking_show();
-                }
-                Ok(())
-            },
-        )
-        .map_err(|e| {
-            LuaError::InitializationError(format!("Failed to create Lua message function: {}", e))
-        })?,
-    )?;
-
-    // intercept & tag lua prints to stdout
-    lua.globals()
-        .set(
-            "print",
-            lua.create_function(|_, msg: String| {
-                println!("[lua] {}", msg);
-                Ok(())
-            })?,
-        )
-        .map_err(|e| {
-            LuaError::InitializationError(format!("Failed to set Lua print function: {}", e))
-        })?;
-
-    // Preload modules
-    preload_lua_modules(window.clone(), &lua)
-        .map_err(|e| LuaError::InitializationError(e.to_string()))?;
-
-    // load main scene
-    let lua_main: LuaTable = lua // Do this last to minimise risk of any code on .eval() not working
-        .load(include_str!("../../resources/lua/main.lua"))
-        .eval::<LuaTable>()
-        .map_err(|e| LuaError::InitializationError(format!("Failed loading main scene: {}", e)))?;
-    lua.globals()
-        .set("currentScene", lua_main)
-        .map_err(|e| LuaError::InitializationError(format!("Failed to set main scene: {}", e)))?;
-
-    Ok(())
-}
-
-fn get_scene<'lua>(lua: &'lua Lua) -> Result<LuaTable<'lua>, LuaError> {
-    lua.globals()
-        .get("currentScene")
-        .map_err(|e| LuaError::LuaError(e))
-}
-
-fn get_entity<'lua>(lua: &'lua Lua, id: &str) -> Result<LuaTable<'lua>, LuaError> {
-    let scene = get_scene(lua)?;
-    let entities = scene
-        .get::<_, LuaTable>("entities")
-        .map_err(|e| LuaError::LuaError(e))?;
-
-    entities.get::<_, LuaTable>(id).map_err(|e| {
-        LuaError::EntityProcessingError(id.to_string(), format!("Failed to get entity: {}", e))
-    })
-}
-
-fn serialized_table<'lua>(
-    lua: &'lua Lua,
-    table: &LuaTable<'lua>,
-) -> Result<LuaString<'lua>, LuaError> {
-    let (success, result): (bool, Option<LuaString>) = lua
-        .globals()
-        .get::<_, LuaFunction>("pcall")
-        .map_err(|e| LuaError::LuaError(e))?
-        .call((
-            lua.load(
-                r#"function(data)
-                    return assert(require("serpent").dump(data), "Serializing data failed")
-                end"#,
-            )
-            .eval::<LuaFunction>()
-            .map_err(|e| LuaError::LuaError(e))?,
-            table,
-        ))
-        .map_err(|e| LuaError::LuaError(e))?;
-
-    if success {
-        result.ok_or_else(|| LuaError::FormatError("Serialization returned nil".to_string()))
-    } else {
-        let error_msg = match result {
-            Some(s) => match s.to_str() {
-                Ok(str) => str.to_string(),
-                Err(_) => "Invalid error message".to_string(),
-            },
-            None => "Unknown error".to_string(),
-        };
-        Err(LuaError::FormatError(error_msg))
-    }
 }
 
 fn match_message(lua: &Lua, msg: LuaMessage) -> Result<(), LuaError> {
@@ -615,51 +401,4 @@ fn scan_directory(
         }
     }
     Ok(())
-}
-
-fn json_value_to_lua<'lua>(
-    lua: &'lua Lua,
-    value: &serde_json::Value,
-) -> Result<mlua::Value<'lua>, LuaError> {
-    match value {
-        serde_json::Value::Null => Ok(mlua::Value::Nil),
-        serde_json::Value::Bool(b) => Ok(mlua::Value::Boolean(*b)),
-        serde_json::Value::Number(n) => {
-            if let Some(f) = n.as_f64() {
-                Ok(mlua::Value::Number(f))
-            } else {
-                Ok(mlua::Value::Number(0.0))
-            }
-        }
-        serde_json::Value::String(s) => {
-            let lua_str = lua.create_string(s).map_err(|e| {
-                LuaError::FormatError(format!("Failed to create Lua string: {}", e))
-            })?;
-            Ok(mlua::Value::String(lua_str))
-        }
-        serde_json::Value::Array(arr) => {
-            let table = lua
-                .create_table()
-                .map_err(|e| LuaError::FormatError(format!("Failed to create Lua table: {}", e)))?;
-            for (i, value) in arr.iter().enumerate() {
-                let lua_value = json_value_to_lua(lua, value)?;
-                table.set(i + 1, lua_value).map_err(|e| {
-                    LuaError::FormatError(format!("Failed to set array value: {}", e))
-                })?;
-            }
-            Ok(mlua::Value::Table(table))
-        }
-        serde_json::Value::Object(map) => {
-            let table = lua
-                .create_table()
-                .map_err(|e| LuaError::FormatError(format!("Failed to create Lua table: {}", e)))?;
-            for (key, value) in map {
-                let lua_value = json_value_to_lua(lua, value)?;
-                table.set(key.clone(), lua_value).map_err(|e| {
-                    LuaError::FormatError(format!("Failed to set object value: {}", e))
-                })?;
-            }
-            Ok(mlua::Value::Table(table))
-        }
-    }
 }
