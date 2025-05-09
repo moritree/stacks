@@ -1,4 +1,4 @@
-use crate::lua_types::{LuaMessage, LuaState};
+use super::types::{LuaMessage, LuaState};
 use serde_json::Value;
 use std::sync::mpsc;
 use tauri::State;

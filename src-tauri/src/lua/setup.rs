@@ -1,4 +1,4 @@
-use crate::lua_types::{LuaError, LuaMessage, LuaState};
+use super::types::{LuaError, LuaMessage, LuaState};
 use mlua::prelude::*;
 use std::fs;
 use std::path::Path;
@@ -194,7 +194,7 @@ fn set_globals(lua: &Lua, window: WebviewWindow) -> Result<(), LuaError> {
 
     // load main scene
     let lua_main: LuaTable = lua // Do this last to minimise risk of any code on .eval() not working
-        .load(include_str!("../resources/lua/main.lua"))
+        .load(include_str!("../../resources/lua/main.lua"))
         .eval::<LuaTable>()
         .map_err(|e| LuaError::InitializationError(format!("Failed loading main scene: {}", e)))?;
     lua.globals()
