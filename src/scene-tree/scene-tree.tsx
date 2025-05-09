@@ -7,7 +7,7 @@ import { listen } from "@tauri-apps/api/event";
 import { Entity } from "../entity/entity-type";
 
 export default function SceneTree() {
-  const [entities, setEntities] = useState<Map<string, Entity>>(new Map());
+  const [entities, setEntities] = useState<string[]>([]);
 
   useEffect(() => {
     let listeners: (() => void)[] = [];
@@ -15,19 +15,10 @@ export default function SceneTree() {
     (async () =>
       listeners.push(
         await listen<{ [id: string]: Partial<Entity> }>("scene_update", (e) => {
-          setEntities(
-            new Map(
-              Object.entries(e.payload).map(([id, ent]) => [
-                id,
-                { ...ent, id: id } as Entity,
-              ]),
-            ),
-          );
+          setEntities(Object.entries(e.payload).map(([id, _]) => id));
         }),
       ))();
   });
-
-  console.log("entities: ", entities.size);
 
   return (
     <div class="w-screen h-screen bg-base flex flex-col justify-center items-center">
