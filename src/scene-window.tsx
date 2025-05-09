@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
-import Moveable from "preact-moveable";
+import Moveable, { OnDrag, OnRotate } from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open, message } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -26,6 +26,7 @@ export default function Scene() {
     x: 0,
     y: 0,
   });
+  const [selectedInitialRotation, setSelectedInitialRotation] = useState(0);
   const selectedEntity = selectedId ? entities.get(selectedId) : null;
 
   useEffect(() => {
@@ -90,7 +91,14 @@ export default function Scene() {
       listeners.push(
         await listen<string>("file_operation", async (e) => {
           if (e.payload == "open_scene") {
-            const path = await open({ multiple: false, directory: false });
+            const path = await open({
+              multiple: false,
+              directory: false,
+            }).catch(() => {
+              message("Failed to open file selection dialog", {
+                kind: "error",
+              });
+            });
             if (path) {
               const [success, msg] = await invoke<[boolean, string]>(
                 "load_scene",
@@ -133,34 +141,75 @@ export default function Scene() {
     if (selectedEntity && !selectedEntity.selectable) setSelectedId(undefined);
   }, [entities]);
 
-  const handleEntitySelect = (id: string, pos: { x: number; y: number }) => {
+  const handleEntitySelect = (id: string) => {
     if (id == selectedId) return;
-    if (entities.get(id)?.selectable) {
-      setSelectedId(id);
-      setSelectedInitialPosition(pos);
-    } else setSelectedId(undefined);
+    setSelectedId(id);
   };
 
-  const handleDrag = ({ beforeTranslate }: { beforeTranslate: number[] }) => {
-    const [dx, dy] = beforeTranslate;
+  const handleDrag = (e: OnDrag) => {
+    const ang = (selectedEntity?.rotation || 0) * (Math.PI / 180);
+    const cos = Math.cos(ang);
+    const sin = Math.sin(ang);
+
+    const [rawDx, rawDy] = e.beforeTranslate;
+    const [dx, dy] = [
+      Math.round(10000 * (rawDx * cos - rawDy * sin)) / 10000,
+      Math.round(10000 * (rawDx * sin + rawDy * cos)) / 10000,
+    ];
+
+    let startPos = selectedInitialPosition;
+    if (e.isFirstDrag) {
+      setSelectedInitialPosition(selectedEntity!.pos);
+      startPos = selectedEntity!.pos;
+    }
+
     invoke("update_entity", {
       id: selectedId,
       data: {
         pos: {
-          x: selectedInitialPosition.x + dx * transformScale,
-          y: selectedInitialPosition.y + dy * transformScale,
+          x: startPos.x + dx * transformScale,
+          y: startPos.y + dy * transformScale,
         },
       },
     });
   };
 
-  const handleRotate = ({ rotate }: { rotate: number }) => {
-    invoke("update_entity", { id: selectedId, data: { rotation: rotate } });
+  const handleRotate = (e: OnRotate) => {
+    let startRotate = selectedInitialRotation;
+    if (e.isFirstDrag) {
+      setSelectedInitialRotation(selectedEntity?.rotation || 0);
+      startRotate = selectedEntity?.rotation || 0;
+    }
+
+    invoke("update_entity", {
+      id: selectedId,
+      data: { rotation: startRotate + e.beforeRotation },
+    });
+  };
+
+  const addNewEntity = async (entity: Entity) => {
+    // ensure unique id
+    var unique_index: number = 0;
+    while (entities.has("new_".repeat(unique_index) + entity.id)) {
+      unique_index += 1;
+    }
+    entity.id = "new_".repeat(unique_index) + entity.id;
+
+    // invoke add
+    const [success, msg] = await invoke<[boolean, string]>("new_entity", {
+      data: entity,
+    });
+    if (!success) {
+      message(msg, {
+        title: "Entity creation failed",
+        kind: "error",
+      });
+    }
   };
 
   return (
     <div
-      class="w-screen h-screen z-0"
+      class="w-screen h-screen"
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
@@ -174,6 +223,62 @@ export default function Scene() {
               { id: "load_scene", text: "Load Scene" },
               { item: "Separator" },
               { id: "open_scene_tree_window", text: "Open Scene Tree" },
+              {
+                id: "submenu",
+                text: "Add New Entity",
+                items: [
+                  {
+                    id: "add_text_entity",
+                    text: "Text",
+                    action: async () => {
+                      addNewEntity({
+                        id: "text_entity",
+                        type: "text",
+                        content: "text",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        scripts: {},
+                      });
+                    },
+                  },
+                  {
+                    id: "add_rect_entity",
+                    text: "rect",
+                    action: async () => {
+                      addNewEntity({
+                        id: "rect_entity",
+                        type: "rect",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        size: { width: 100, height: 100 },
+                        color: "#ff0000",
+                        scripts: {},
+                      });
+                    },
+                  },
+                  {
+                    id: "add_text_input_entity",
+                    text: "text_input",
+                    action: async () => {
+                      addNewEntity({
+                        id: "text_input_entity",
+                        type: "text_input",
+                        pos: {
+                          x: e.x * transformScale,
+                          y: e.y * transformScale,
+                        },
+                        size: { width: 120, height: 40 },
+                        color: "#aaaaaa",
+                        scripts: {},
+                      });
+                    },
+                  },
+                ],
+              },
             ],
           })
         ).popup();
@@ -183,7 +288,7 @@ export default function Scene() {
         <EntityComponent
           key={id}
           entity={entity}
-          onSelect={(pos) => handleEntitySelect(id, pos)}
+          onSelect={() => handleEntitySelect(id)}
           isSelected={id === selectedId}
         />
       ))}
@@ -194,7 +299,6 @@ export default function Scene() {
           rotatable={selectedEntity.selectable}
           onDrag={handleDrag}
           onRotate={handleRotate}
-          className="[z-index:0!important]"
         />
       )}
     </div>

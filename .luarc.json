@@ -1,0 +1,5 @@
+{
+  "diagnostics": {
+    "globals": ["emit", "window_scale", "Entity"]
+  }
+}

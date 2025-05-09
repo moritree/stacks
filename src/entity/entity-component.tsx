@@ -6,15 +6,18 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
 import { JSX } from "preact/jsx-runtime";
 import { message } from "@tauri-apps/plugin-dialog";
+import { Entity } from "./entity-type";
 
 interface EntityProps {
   entity: any;
-  onSelect: (pos: { x: number; y: number }) => void;
+  onSelect: () => void;
   isSelected: boolean;
 }
 
 export default function EntityComponent(props: EntityProps) {
-  const style: Record<string, string> = {};
+  const style: Record<string, string> = {
+    zIndex: Math.max((props.entity as Entity).layer || 0, 0).toString(),
+  };
   let content: JSX.Element | null = null;
 
   Array.from(Object.entries(props.entity)).forEach(([key, value]) => {
@@ -35,12 +38,12 @@ export default function EntityComponent(props: EntityProps) {
         break;
       case "type":
         if (value == "text") {
-          style.fontSize = `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`;
+          style.fontSize = `calc(${(props.entity.font_size || 1) * 1.5}em * var(--scene-scale))`;
           style.fontFamily = "var(--font-serif)";
           content = <Markdown>{props.entity.content}</Markdown>;
           break;
         } else if (value == "text_input") {
-          style.fontSize = `calc(${(props.entity.fontSize || 1) * 1.5}em * var(--scene-scale))`;
+          style.fontSize = `calc(${(props.entity.font_size || 1) * 1.5}em * var(--scene-scale))`;
           style.fontFamily = "var(--font-sans)";
 
           content = (
@@ -120,6 +123,9 @@ export default function EntityComponent(props: EntityProps) {
       minWidth: 200,
       minHeight: 300,
       focus: false,
+      backgroundColor: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--background-color"),
     });
 
     inspectorWindow.once("mounted", () => {
@@ -141,7 +147,7 @@ export default function EntityComponent(props: EntityProps) {
       onMouseDown={(e) => {
         e.stopPropagation();
         if (props.isSelected) e.stopPropagation();
-        else if (props.entity.selectable) props.onSelect(props.entity.pos);
+        else if (props.entity.selectable) props.onSelect();
       }}
       onDblClick={async (e) => {
         e.stopPropagation();

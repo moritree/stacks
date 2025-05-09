@@ -9,6 +9,7 @@ pub struct LuaState {
 
 pub enum LuaMessage {
     Tick(f64),
+    AddEntity(String, Value, Sender<(bool, String)>),
     UpdateEntityId(String, String, Value),
     UpdateEntity(String, Value),
     DeleteEntity(String),

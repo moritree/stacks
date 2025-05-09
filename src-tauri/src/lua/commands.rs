@@ -1,4 +1,4 @@
-use crate::lua_types::{LuaMessage, LuaState};
+use super::types::{LuaMessage, LuaState};
 use serde_json::Value;
 use std::sync::mpsc;
 use tauri::State;
@@ -9,6 +9,36 @@ pub async fn tick(state: State<'_, LuaState>, dt: f64) -> Result<(), String> {
         .tx
         .send(LuaMessage::Tick(dt))
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn new_entity(state: State<'_, LuaState>, data: Value) -> Result<(bool, String), String> {
+    if !data.as_object().unwrap().contains_key("id") {
+        return Err(format!("Cannot create an entity with no ID."));
+    }
+
+    let id = data
+        .as_object()
+        .unwrap()
+        .get("id")
+        .ok_or_else(|| "Couldn't get ID from data")?
+        .as_str()
+        .ok_or_else(|| "New ID is not a string")?
+        .to_string();
+
+    let mut data_clone = data.clone();
+    let obj = data_clone
+        .as_object_mut()
+        .ok_or_else(|| "Couldn't turn data into object")?;
+    obj.remove("id"); // Remove the ID
+    let trimmed_data = Value::Object(obj.clone()); // Use the remaining object
+
+    let (response_tx, response_rx) = mpsc::channel();
+    state
+        .tx
+        .send(LuaMessage::AddEntity(id, trimmed_data, response_tx))
+        .map_err(|e| e.to_string())?;
+    response_rx.recv().map_err(|e| e.to_string())
 }
 
 #[tauri::command]

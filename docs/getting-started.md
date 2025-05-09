@@ -29,7 +29,8 @@ type = "text"
 
 ### Universal properties
 
-Every entity has a unique `id`, which is a *string*. (1)
+Every entity has a unique `id`, which is a *string*. (1) This is used to identify entities
+so you can tell what's happening for which entity, and send messages to specific entities.
 { .annotate }
 
 1.  A piece of text — a "string" of zero or more characters.
@@ -44,9 +45,18 @@ Every entity has an `x` and `y` position in the Scene.
 - `x` is the position of the entity from left to right.
 - `y` is the position of the entity from top to bottom.
 - The position of an entity is measured from its top left corner.
-- At the top left of the scene, `x = 0` and `y = 0`.
+- The position at the top left of the scene is `x = 0, y = 0`.
 - The position at the bottom right of the scene is `x = 1280, y = 720`
   (no matter how you shrink or scale the scene window).
+
+### Optional universal properties
+
+These are properties which can be specified for any entity, but are not required.
+
+- `selectable` determines whether you can select this entity and drag/rotate it on the scene.
+- `rotation` is the angle this entity is pointing. It defaults to `rotation = 0` (upright).
+- `layer` helps you control which entity renders in front of which. Entities with a higher numbered layer will show in
+  front of entities with a lower numbered layer. The default layer, and also the minimum, is `layer = 0`.
 
 ## Scripts
 **Scripts** in Stacks are associated with specific **entities** and triggered by **events**.
@@ -55,10 +65,23 @@ Any entity can have any number of scripts.
 The name of a script is also the name of the event that triggers it. So, for example, an `on_click` script will be
 triggered when you click on the entity the script is attached to.
 
-!!! Note
-    Stacks uses the programming language [Lua](https://www.lua.org/) for scripting. Lua was chosen because it is a very
-    small language with a simple set of rules. This means, compared to other languages, there are few Lua-specific
-    quirks to learn and adapt to, so you can focus on the core logic of what you actually want to do.
+### Lua
+Stacks uses the programming language [Lua](https://www.lua.org/) for scripting. Lua was chosen because it is a very
+small language with a simple set of rules. This means, compared to other languages, there are few Lua-specific quirks to
+learn and adapt to, so you can focus on the core logic of what you actually want to do.
+
+You can get a long way just by experimenting and tweaking.
+But if you'd like a more general introduction to Lua, here are a few resources:
+
+=== "If you're new to programming"
+    - [Codecademy course](https://www.codecademy.com/learn/learn-lua)
+    - [TutorialsPoint Lua guide](https://www.tutorialspoint.com/lua/index.htm)
+=== "If you're comfortable with programming fundamentals"
+    - [Learn Lua in Y minutes](https://learnxinyminutes.com/lua/): Information dense code-example based summary.
+    - [Lua for Programmers](https://ebens.me/posts/lua-for-programmers-part-1/): A four-part guide aimed at people
+      who already know how to program.
+    - [Programming in Lua (1ed)](https://www.lua.org/pil/contents.html): The Official Book.
+      Written by Lua's chief architect.
 
 ### Writing scripts
 When you open the Inspector for any given entity, you will notice that there are two tabs at the bottom of the window.
@@ -71,18 +94,17 @@ Your scripts can use any of the basic Lua language features. Additionally:
 
 - Scripts are able to access properties of the entity they belong to through the variable `self`.
     - For example, `self.pos` will give you the entity's position.
-- Some events also come with data, which is passed to the corresponding script as a table in the `data` parameter.
+- Some events also come with **data**, which is passed to the corresponding script as a table in the `data` parameter.
     - For example, the `on_change` event for the `text_input` entity type passes the text currently in the input:
     `data = { text = "something"}`.
 - You can use the `broadcast` and `message` functions to trigger other scripts ([more info](#triggering-other-scripts)).
+    - You can pass arbitrary data when you trigger scripts in this way.
 
 You can combine any of these features in a script.
 
-```lua title="Example: move this entity a bit to the right"
-self.pos = {
-    x = self.pos.x + 20,
-    y = self.pos.y
-}
+```lua title="Example: move this entity a bit to the right, & announce its new position"
+self.pos.x = self.pos.x + 20
+broadcast("moved", { to = self.pos })
 ```
 
 ### Built-in events

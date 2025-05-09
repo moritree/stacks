@@ -7,13 +7,19 @@ local Entity = {
 }
 
 function Entity:new(o)
-    o = o or {}
-    setmetatable(o, self)
+    local entity = {}
+    setmetatable(entity, self)
     self.__index = self
-    return o
+    entity:update(o or {})
+    return entity
 end
 
 function Entity:update(data)
+    if (data.layer and ((not type(data.layer) == "number") or data.layer < 0)) then
+        data.layer = 0
+        print("Provided layer out of bounds; set to default (0)")
+    end
+
     for k, v in pairs(data) do self[k] = v end
 end
 
@@ -26,11 +32,10 @@ function Entity:load_script(funcname, script_string)
         end
     end
 
-    local full_string = "local func = function(self, data) " ..
-        (script_string) .. " ; end ; return func"
-    local success, loaded = serializer.load(full_string, { safe = false })
-
-    if not success then error "Serializer couldn't load script as function." end
+    local success, loaded = serializer.load(
+        "local func = function(self, data) " .. (script_string) .. " ; end ; return func",
+        { safe = false })
+    assert(success, "Serializer couldn't load script as function.")
 
     if not self.scripts[funcname] then self.scripts[funcname] = {} end
     self.scripts[funcname].string = script_string
@@ -38,15 +43,18 @@ function Entity:load_script(funcname, script_string)
 end
 
 function Entity:run_script(funcname, params)
-    if not self.scripts[funcname] then
-        error(string.format("Warning: %s is not a valid function on this entity.", funcname))
+    assert(self.scripts[funcname],
+        string.format("Warning: %s is not a valid function on this entity.", funcname))
+    assert(type(self.scripts[funcname].func) == "function" or pcall(self.load_script, self, funcname),
+        "Couldn't load script.")
+
+    local success, data
+    if type(params) == "string" then
+        success, data = serializer.load(params, { safe = false })
+        assert(success, "Deserializing data failed: " .. serializer.line(data))
     end
 
-    if type(self.scripts[funcname].func) ~= "function" and not pcall(self.load_script, self, funcname) then
-        error "Couldn't load script."
-    end
-
-    self.scripts[funcname].func(self, params)
+    self.scripts[funcname].func(self, data)
 end
 
 function Entity:serializable()
