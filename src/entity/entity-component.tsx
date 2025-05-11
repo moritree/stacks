@@ -163,13 +163,13 @@ export default function EntityComponent(props: EntityProps) {
               {
                 id: "delete_entity",
                 text: "Delete Entity",
-                action: async (_: string) =>
+                action: async () =>
                   invoke("delete_entity", { id: props.entity.id }),
               },
               {
                 id: "duplicate_entity",
                 text: "Duplicate Entity",
-                action: async (_: string) =>
+                action: async () =>
                   invoke("duplicate_entity", { id: props.entity.id }),
               },
               {
