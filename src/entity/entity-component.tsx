@@ -103,6 +103,7 @@ export default function EntityComponent(props: EntityProps) {
   }
 
   async function openInspector() {
+    console.log("openInspector function");
     emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
 
     // If window already exists, focus & update instead of creating a new one
@@ -179,6 +180,7 @@ export default function EntityComponent(props: EntityProps) {
             ],
           })
         ).popup();
+        console.log("Opened context menu");
       }}
     >
       {content}

@@ -1,4 +1,3 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import "../style.css";
 import { render } from "preact";
 import { Folder } from "preact-feather";
@@ -15,7 +14,11 @@ export default function SceneTree() {
     (async () =>
       listeners.push(
         await listen<{ [id: string]: Partial<Entity> }>("scene_update", (e) => {
-          setEntities(Object.entries(e.payload).map(([id, _]) => id));
+          setEntities(
+            Object.entries(e.payload)
+              .sort((a, b) => (a[1].layer || 0) - (b[1].layer || 0))
+              .map(([id, _]) => id),
+          );
         }),
       ))();
   });
@@ -23,6 +26,11 @@ export default function SceneTree() {
   return (
     <div class="w-screen h-screen bg-base flex flex-col justify-center items-center">
       <Folder />
+      {entities.map((entity) => (
+        <div class="w-screen h-10 not-last:border-b border-border flex flex-row items-center p-2">
+          <h2>{entity}</h2>
+        </div>
+      ))}
     </div>
   );
 }
