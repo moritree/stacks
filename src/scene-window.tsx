@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { emit, listen } from "@tauri-apps/api/event";
+import { emit, listen, once } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
 import Moveable, { OnDrag, OnRotate } from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
@@ -8,6 +8,7 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useState } from "preact/hooks";
 import { Entity } from "./entity/entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 const SCENE_BASE_SIZE = {
   width: 1280,
@@ -59,7 +60,13 @@ export default function Scene() {
           width: number;
           height: number;
         }>("tauri://resize", async (e) => {
+          console.log("dangerous resize invoked...");
           setSelectedId(undefined);
+
+          if (e.payload.width <= 0 || e.payload.height <= 0) {
+            console.log("Invalid window dimensions");
+            return;
+          }
 
           const scaleFactor: number = await invoke("window_scale");
           const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
@@ -69,12 +76,25 @@ export default function Scene() {
           const newScale = e.payload.width / SCENE_BASE_SIZE.width;
           setTransformScale(scaleFactor / newScale);
 
-          invoke("resize_window", {
-            width: Math.round(SCENE_BASE_SIZE.width * newScale),
-            height: Math.round(
-              SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
-            ),
+          console.log("Resize info", {
+            window: {
+              windowWidth: e.payload.width,
+              windowHeight: windowHeight,
+            },
+            content: {
+              contentWidth: document.documentElement.clientWidth,
+              contentHeight: contentHeight,
+            },
+            scaleFactor: scaleFactor,
+            titleBarHeight: titleBarHeight,
           });
+
+          // invoke("resize_window", {
+          //   width: Math.round(SCENE_BASE_SIZE.width * newScale),
+          //   height: Math.round(
+          //     SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
+          //   ),
+          // });
           document.documentElement.style.setProperty(
             `--scene-scale`,
             (newScale / scaleFactor).toString(),
@@ -82,8 +102,13 @@ export default function Scene() {
         }),
       );
 
-      emit("tauri://resize", await WebviewWindow.getCurrent().size()).then(() =>
-        invoke("set_frontend_ready"),
+      await once("tauri://resize", () => console.log("resize received")).then(
+        async () => {
+          console.log("Initial size", await WebviewWindow.getCurrent().size());
+          emit("tauri://resize", await WebviewWindow.getCurrent().size()).then(
+            () => invoke("set_frontend_ready"),
+          );
+        },
       );
     })();
 
