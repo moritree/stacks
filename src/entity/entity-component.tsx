@@ -1,7 +1,6 @@
 import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
 import { emitTo } from "@tauri-apps/api/event";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
 import { JSX } from "preact/jsx-runtime";
 import { message } from "@tauri-apps/plugin-dialog";

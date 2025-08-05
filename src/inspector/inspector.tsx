@@ -13,8 +13,7 @@ import { confirm, message } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../components/code-editor";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-export default function Inspector() {
-  const [theme, setTheme] = useState<"light" | "dark">("light"); // TODO: manage theme at App level
+export default function Inspector(props: { theme: "light" | "dark" }) {
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
   const [openScripts, setOpenScripts] = useState(new Set<string>());
@@ -32,46 +31,34 @@ export default function Inspector() {
 
     (async () => {
       listeners.push(
-        await getCurrentWindow().onThemeChanged(({ payload: theme }) =>
-          setTheme(theme),
+        await listen<{ id: string; table: string }>(
+          "entity_string",
+          (tableEvent) => {
+            setInspectorContents(tableEvent.payload.table);
+            getCurrentWebviewWindow().setFocus();
+          },
         ),
       );
-    })()
-      .then(async () => setTheme((await getCurrentWindow().theme()) || "light"))
-      .then(async () =>
-        (async () => {
-          listeners.push(
-            await listen<{ id: string; table: string }>(
-              "entity_string",
-              (tableEvent) => {
-                setInspectorContents(tableEvent.payload.table);
-                getCurrentWebviewWindow().setFocus();
-              },
-            ),
-          );
-        })().then(async () =>
-          (async () => {
-            listeners.push(
-              await listen<any>("provide_entity", (e) => {
-                setOpenScripts(new Set<string>());
-                const scripts = e.payload.scripts;
-                setScriptsContents(new Map(Object.entries(scripts || {})));
-                setEditorHeights(new Map());
+    })().then(async () =>
+      (async () => {
+        listeners.push(
+          await listen<any>("provide_entity", (e) => {
+            setOpenScripts(new Set<string>());
+            const scripts = e.payload.scripts;
+            setScriptsContents(new Map(Object.entries(scripts || {})));
+            setEditorHeights(new Map());
 
-                invoke("get_entity_string", {
-                  id: e.payload.id,
-                  window: getCurrentWindow().label,
-                });
-                setEntity(e.payload);
-              }),
-            );
-          })().then(() => emit("mounted")),
-        ),
-      );
+            invoke("get_entity_string", {
+              id: e.payload.id,
+              window: getCurrentWindow().label,
+            });
+            setEntity(e.payload);
+          }),
+        );
+      })().then(() => emit("mounted")),
+    );
 
-    return () => {
-      listeners.forEach((unsubscribe) => unsubscribe());
-    };
+    return () => listeners.forEach((unsubscribe) => unsubscribe());
   }, []);
 
   const handleSave = async () => {
@@ -154,7 +141,7 @@ export default function Inspector() {
             setInspectorContents(newVal);
             setSaved(false);
           }}
-          theme={theme}
+          theme={props.theme}
         />
       ),
     },
@@ -174,7 +161,7 @@ export default function Inspector() {
           }}
           editorHeights={editorHeights}
           setEditorHeights={setEditorHeights}
-          theme={theme}
+          theme={props.theme}
         />
       ),
     },
