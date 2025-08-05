@@ -1,21 +1,20 @@
-import { JSX, render } from "preact";
+import { JSX } from "preact";
 import "../style.css";
 import { emit, emitTo, listen } from "@tauri-apps/api/event";
 import { Info, Loader, Code } from "preact-feather";
 import { Entity } from "../entity/entity-type";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-const TabBar = lazy(() => import("../components/tab-bar/tab-bar"));
+import TabBar from "../components/tab-bar/tab-bar";
 import TabItem from "../components/tab-bar/tab-item";
 import { useEffect, useState } from "preact/hooks";
 import Scripts from "./scripts-component/scripts-component";
-import { lazy, Suspense } from "preact/compat";
 import { invoke } from "@tauri-apps/api/core";
 import { confirm, message } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../components/code-editor";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 export default function Inspector() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">("light"); // todo: manage at App level
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
   const [openScripts, setOpenScripts] = useState(new Set<string>());
@@ -138,8 +137,8 @@ export default function Inspector() {
 
   if (!entity || inspectorContents == "")
     return (
-      <div class="w-screen h-screen flex flex-col justify-center">
-        <Loader class="w-screen h-10" />
+      <div class="w-full h-full flex flex-col justify-center">
+        <Loader class="w-full h-10" />
       </div>
     );
 
@@ -182,26 +181,16 @@ export default function Inspector() {
   ];
 
   return (
-    <Suspense
-      fallback={
-        <div class="flex justify-center">
-          <Loader />
-        </div>
-      }
-    >
-      <div class="w-full h-full flex flex-col">
-        <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
-        <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
-          {tabs.map((tab) => (
-            <TabItem>
-              {tab.icon}
-              {tab.label}
-            </TabItem>
-          ))}
-        </TabBar>
-      </div>
-    </Suspense>
+    <div class="w-full h-full flex flex-col">
+      <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
+      <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
+        {tabs.map((tab) => (
+          <TabItem>
+            {tab.icon}
+            {tab.label}
+          </TabItem>
+        ))}
+      </TabBar>
+    </div>
   );
 }
-
-render(<Inspector />, document.getElementById("root")!);
