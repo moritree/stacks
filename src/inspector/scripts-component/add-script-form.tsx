@@ -13,7 +13,7 @@ export default function AddScriptForm(props: {
   return (
     <div
       class={
-        "flex flex-row absolute top-1 right-1 justify-end h-auto gap-1 pl-2 z-10" +
+        "flex flex-row top-1 right-1 justify-end h-auto gap-1 pl-2 z-100" +
         (open && " w-full")
       }
     >
