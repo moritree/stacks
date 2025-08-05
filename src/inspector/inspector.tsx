@@ -14,7 +14,7 @@ import CodeEditor from "../components/code-editor";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 export default function Inspector() {
-  const [theme, setTheme] = useState<"light" | "dark">("light"); // todo: manage at App level
+  const [theme, setTheme] = useState<"light" | "dark">("light"); // TODO: manage theme at App level
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
   const [openScripts, setOpenScripts] = useState(new Set<string>());
@@ -25,7 +25,7 @@ export default function Inspector() {
   const [editorHeights, setEditorHeights] = useState<Map<string, number>>(
     new Map(),
   );
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(false); // TODO: idk
 
   useEffect(() => {
     let listeners: (() => void)[] = [];

@@ -8,7 +8,7 @@ export default function App() {
     <div class="w-screen h-screen flex flex-row">
       <div class="w-full h-full flex flex-col">
         <Scene />
-        <div class="flex-auto bg-red-400" />
+        <div class="flex-auto bg-border" />
       </div>
       <div class="flex-none w-96">
         <Inspector />
