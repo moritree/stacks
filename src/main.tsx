@@ -4,9 +4,12 @@ import Scene from "./scene-window";
 
 export default function App() {
   return (
-    <div class="w-screen h-screen flex flex-col">
-      <Scene />
-      <div class="flex-auto bg-red-400" />
+    <div class="w-screen h-screen flex flex-row">
+      <div class="w-full h-full flex flex-col">
+        <Scene />
+        <div class="flex-auto bg-red-400" />
+      </div>
+      <div class="flex-none w-8 bg-blue-900" />
     </div>
   );
 }
