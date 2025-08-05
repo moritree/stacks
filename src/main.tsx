@@ -1,7 +1,7 @@
 import { render } from "preact";
 import "./style.css";
 import Scene from "./scene-window";
-import InspectorWindow from "./inspector/inspector-window";
+import Inspector from "./inspector/inspector";
 
 export default function App() {
   return (
@@ -11,7 +11,7 @@ export default function App() {
         <div class="flex-auto bg-red-400" />
       </div>
       <div class="flex-none w-96">
-        <InspectorWindow />
+        <Inspector />
       </div>
     </div>
   );

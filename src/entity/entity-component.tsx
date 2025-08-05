@@ -1,6 +1,5 @@
 import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
@@ -105,36 +104,7 @@ export default function EntityComponent(props: EntityProps) {
   async function openInspector() {
     emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
 
-    // If window already exists, focus & update instead of creating a new one
-    const existing = await WebviewWindow.getByLabel("inspector");
-    if (existing) {
-      emitTo("inspector", "provide_entity", props.entity);
-      existing.setFocus();
-      return;
-    }
-
-    // Create new inspector window
-    const inspectorWindow = new WebviewWindow("inspector", {
-      title: "Inspector",
-      url: "src/inspector/inspector.html",
-      width: 300,
-      height: 600,
-      resizable: true,
-      minWidth: 200,
-      minHeight: 300,
-      focus: false,
-      backgroundColor: window
-        .getComputedStyle(document.body)
-        .getPropertyValue("--background-color"),
-    });
-
-    inspectorWindow.once("mounted", () => {
-      emitTo("inspector", "provide_entity", props.entity);
-    });
-
-    inspectorWindow.once("tauri://error", (e) => {
-      console.error("Inspector webview had ERROR!", e);
-    });
+    emitTo("inspector", "provide_entity", props.entity);
   }
 
   return (

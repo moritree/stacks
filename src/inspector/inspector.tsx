@@ -14,7 +14,7 @@ import { confirm, message } from "@tauri-apps/plugin-dialog";
 import CodeEditor from "../components/code-editor";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-export default function InspectorWindow() {
+export default function Inspector() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [activeTab, setActiveTab] = useState<number>(0);
   const [entity, setEntity] = useState<Entity | undefined>();
@@ -204,4 +204,4 @@ export default function InspectorWindow() {
   );
 }
 
-render(<InspectorWindow />, document.getElementById("root")!);
+render(<Inspector />, document.getElementById("root")!);
