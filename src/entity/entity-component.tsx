@@ -9,7 +9,7 @@ import { Entity } from "./entity-type";
 
 interface EntityProps {
   entity: any;
-  onSelect: () => void;
+  onSelect: (select: boolean) => void;
   isSelected: boolean;
 }
 
@@ -102,8 +102,9 @@ export default function EntityComponent(props: EntityProps) {
   }
 
   async function openInspector() {
-    emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
+    props.onSelect(false);
 
+    // TODO
     emitTo("inspector", "provide_entity", props.entity);
   }
 
@@ -117,11 +118,11 @@ export default function EntityComponent(props: EntityProps) {
       onMouseDown={(e) => {
         e.stopPropagation();
         if (props.isSelected) e.stopPropagation();
-        else if (props.entity.selectable) props.onSelect();
+        else if (props.entity.selectable) props.onSelect(true);
       }}
       onDblClick={async (e) => {
         e.stopPropagation();
-        emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
+        props.onSelect(false);
         if (props.entity.scripts.on_click) runScript("on_click", {});
       }}
       onContextMenu={async (e) => {

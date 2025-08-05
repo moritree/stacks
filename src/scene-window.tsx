@@ -62,13 +62,6 @@ export default function Scene() {
         }),
       ))();
 
-    (async () =>
-      listeners.push(
-        await listen<string | undefined>("select_entity", (e) =>
-          setSelectedId(e.payload),
-        ),
-      ))();
-
     (async () => {
       listeners.push(
         await listen<string>("file_operation", async (e) => {
@@ -125,11 +118,6 @@ export default function Scene() {
   useEffect(() => {
     if (selectedEntity && !selectedEntity.selectable) setSelectedId(undefined);
   }, [entities]);
-
-  const handleEntitySelect = (id: string) => {
-    if (id == selectedId) return;
-    setSelectedId(id);
-  };
 
   const handleDrag = (e: OnDrag) => {
     const ang = (selectedEntity?.rotation || 0) * (Math.PI / 180);
@@ -273,7 +261,7 @@ export default function Scene() {
         <EntityComponent
           key={id}
           entity={entity}
-          onSelect={() => handleEntitySelect(id)}
+          onSelect={(select) => setSelectedId(select ? id : undefined)}
           isSelected={id === selectedId}
         />
       ))}
