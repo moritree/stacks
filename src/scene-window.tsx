@@ -1,13 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
-import { emit, listen } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 import EntityComponent from "./entity/entity-component";
 import Moveable, { OnDrag, OnRotate } from "preact-moveable";
 import { Menu } from "@tauri-apps/api/menu";
 import { save, open, message } from "@tauri-apps/plugin-dialog";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { Entity } from "./entity/entity-type";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const SCENE_BASE_SIZE = {
   width: 1280,
@@ -15,6 +14,7 @@ const SCENE_BASE_SIZE = {
 };
 
 export default function Scene() {
+  const boundingRef = useRef(null);
   const [entities, setEntities] = useState<Map<string, Entity>>(new Map());
   const [transformScale, setTransformScale] = useState<number>(1);
   const [lastTime, setLastTime] = useState(performance.now());
@@ -30,6 +30,22 @@ export default function Scene() {
   const selectedEntity = selectedId ? entities.get(selectedId) : null;
 
   useEffect(() => {
+    let observer: ResizeObserver;
+    if (boundingRef.current) {
+      observer = new ResizeObserver((entries) =>
+        entries.forEach(async (entry) => {
+          const newScale = entry.contentRect.width / SCENE_BASE_SIZE.width;
+          setTransformScale(1 / newScale);
+          document.documentElement.style.setProperty(
+            `--scene-scale`,
+            newScale.toString(),
+          );
+        }),
+      );
+
+      observer.observe(boundingRef.current);
+    }
+
     let listeners: (() => void)[] = [];
 
     (async () =>
@@ -52,40 +68,6 @@ export default function Scene() {
           setSelectedId(e.payload),
         ),
       ))();
-
-    (async () => {
-      listeners.push(
-        await getCurrentWindow().listen<{
-          width: number;
-          height: number;
-        }>("tauri://resize", async (e) => {
-          setSelectedId(undefined);
-
-          const scaleFactor: number = await invoke("window_scale");
-          const contentHeight = document.documentElement.clientHeight; // content area dimensions (excluding title bar)
-          const windowHeight = e.payload.height; // full window dimensions
-          const titleBarHeight = windowHeight / scaleFactor - contentHeight; // calculate title bar height dynamically
-
-          const newScale = e.payload.width / SCENE_BASE_SIZE.width;
-          setTransformScale(scaleFactor / newScale);
-
-          invoke("resize_window", {
-            width: Math.round(SCENE_BASE_SIZE.width * newScale),
-            height: Math.round(
-              SCENE_BASE_SIZE.height * newScale + titleBarHeight * scaleFactor,
-            ),
-          });
-          document.documentElement.style.setProperty(
-            `--scene-scale`,
-            (newScale / scaleFactor).toString(),
-          );
-        }),
-      );
-
-      emit("tauri://resize", await WebviewWindow.getCurrent().size()).then(() =>
-        invoke("set_frontend_ready"),
-      );
-    })();
 
     (async () => {
       listeners.push(
@@ -131,9 +113,12 @@ export default function Scene() {
     };
     setAnimationFrameId(requestAnimationFrame(tick));
 
+    invoke("set_frontend_ready");
+
     return () => {
       listeners.forEach((unsubscribe) => unsubscribe());
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (observer) observer.disconnect();
     };
   }, []);
 
@@ -209,7 +194,8 @@ export default function Scene() {
 
   return (
     <div
-      class="w-screen h-screen"
+      class="w-full aspect-video"
+      ref={boundingRef}
       onClick={(e) => {
         if (e.target === e.currentTarget) setSelectedId(undefined);
       }}
