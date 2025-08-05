@@ -20,6 +20,8 @@ export default function App() {
     })().then(async () =>
       setTheme((await getCurrentWindow().theme()) || "light"),
     );
+
+    return () => listeners.forEach((unsubscribe) => unsubscribe());
   });
 
   return (
