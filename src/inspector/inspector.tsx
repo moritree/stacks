@@ -168,7 +168,7 @@ export default function Inspector(props: { theme: "light" | "dark" }) {
   ];
 
   return (
-    <div class="w-full h-full flex flex-col">
+    <div class="w-full flex-auto h-full flex flex-col">
       <div class="flex-1 overflow-auto">{tabs[activeTab].component}</div>
       <TabBar onTabChange={(index) => setActiveTab(index)} atBottom>
         {tabs.map((tab) => (
