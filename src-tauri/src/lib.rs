@@ -11,7 +11,7 @@ use lua_setup::init_lua_thread;
 use std::sync::Mutex;
 use tauri::{
     menu::{Menu, MenuItem, SubmenuBuilder},
-    Emitter, Listener, Manager,
+    Emitter, Manager,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -63,98 +63,41 @@ pub fn run() {
                     handle,
                     "save_entity",
                     "Save Entity",
-                    false,
-                    Some("CmdOrCtrl+S"),
+                    true,
+                    Some("CmdOrCtrl+alt+S"),
                 )?)
                 .item(&MenuItem::with_id(
                     handle,
                     "revert_entity",
                     "Revert Changes",
-                    false,
-                    Some("CmdOrCtrl+R"),
+                    true,
+                    Some("CmdOrCtrl+alt+R"),
                 )?)
                 .build()?;
             menu.append(&file_menu)?;
 
-            let window_clone = window.clone();
             app.set_menu(menu)?;
             app.on_menu_event(move |app_handle: &tauri::AppHandle, event| {
                 match event.id().0.as_str() {
                     file_op @ ("save_scene" | "open_scene") => {
-                        if window_clone
-                            .is_focused()
-                            .expect("Couldn't find main window focus status")
-                        {
-                            app_handle
-                                .emit_to("main", "file_operation", file_op)
-                                .expect(&format!("Failed to emit {}", file_op));
-                        }
+                        app_handle
+                            .emit_to("main", "file_operation", file_op)
+                            .expect(&format!("Failed to emit {}", file_op));
                     }
                     "save_entity" => {
                         app_handle
-                            .emit_to("inspector", "save_entity", ())
+                            .emit_to("main", "save_entity", ())
                             .expect("Failed to emit save_entity to inspector");
                     }
                     "revert_entity" => {
                         app_handle
-                            .emit_to("inspector", "revert_entity", ())
+                            .emit_to("main", "revert_entity", ())
                             .expect("Failed to emit revert_entity to inspector");
                     }
                     "quit" => {
                         app_handle.exit(0);
                     }
                     _ => return,
-                }
-            });
-
-            // enable/disable menu items based on focused window
-            fn on_focus_change(handle: &tauri::AppHandle, focus_window: String) {
-                if let Some(menu) = handle.menu() {
-                    if let Some(file_menu) = menu.get("file") {
-                        if let Some(submenu) = file_menu.as_submenu() {
-                            if let Some(save_item) = submenu.get("save_scene") {
-                                if let Some(menu_item) = save_item.as_menuitem() {
-                                    let _ = menu_item.set_enabled(focus_window == "main");
-                                }
-                            }
-                            if let Some(open_item) = submenu.get("open_scene") {
-                                if let Some(menu_item) = open_item.as_menuitem() {
-                                    let _ = menu_item.set_enabled(focus_window == "main");
-                                }
-                            }
-                            if let Some(save_item) = submenu.get("save_entity") {
-                                if let Some(menu_item) = save_item.as_menuitem() {
-                                    let _ = menu_item.set_enabled(focus_window == "inspector");
-                                }
-                            }
-                            if let Some(save_item) = submenu.get("revert_entity") {
-                                if let Some(menu_item) = save_item.as_menuitem() {
-                                    let _ = menu_item.set_enabled(focus_window == "inspector");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            let handle_for_main = handle.clone();
-            window.listen("tauri://focus", move |_| {
-                on_focus_change(&handle_for_main, "main".to_string())
-            });
-
-            let handle_for_created = handle.clone();
-            app.listen("tauri://window-created", move |event| {
-                if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
-                    if let Some(label) = payload.get("label").and_then(|l| l.as_str()) {
-                        let label = label.to_string();
-                        if let Some(w) = handle_for_created.get_webview_window(label.as_str()) {
-                            let handle_for_focus = handle_for_created.clone();
-                            let label_for_focus = label.clone();
-                            w.listen("tauri://focus", move |_| {
-                                on_focus_change(&handle_for_focus, label_for_focus.clone());
-                            });
-                        }
-                    }
                 }
             });
 
