@@ -1,8 +1,6 @@
 import { Menu } from "@tauri-apps/api/menu";
 import { invoke } from "@tauri-apps/api/core";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { emitTo } from "@tauri-apps/api/event";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import Markdown from "marked-react";
 import { JSX } from "preact/jsx-runtime";
 import { message } from "@tauri-apps/plugin-dialog";
@@ -10,7 +8,7 @@ import { Entity } from "./entity-type";
 
 interface EntityProps {
   entity: any;
-  onSelect: () => void;
+  onSelect: (select: boolean) => void;
   isSelected: boolean;
 }
 
@@ -103,38 +101,10 @@ export default function EntityComponent(props: EntityProps) {
   }
 
   async function openInspector() {
-    emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
+    props.onSelect(false);
 
-    // If window already exists, focus & update instead of creating a new one
-    const existing = await WebviewWindow.getByLabel("inspector");
-    if (existing) {
-      emitTo("inspector", "provide_entity", props.entity);
-      existing.setFocus();
-      return;
-    }
-
-    // Create new inspector window
-    const inspectorWindow = new WebviewWindow("inspector", {
-      title: "Inspector",
-      url: "src/inspector/inspector.html",
-      width: 300,
-      height: 600,
-      resizable: true,
-      minWidth: 200,
-      minHeight: 300,
-      focus: false,
-      backgroundColor: window
-        .getComputedStyle(document.body)
-        .getPropertyValue("--background-color"),
-    });
-
-    inspectorWindow.once("mounted", () => {
-      emitTo("inspector", "provide_entity", props.entity);
-    });
-
-    inspectorWindow.once("tauri://error", (e) => {
-      console.error("Inspector webview had ERROR!", e);
-    });
+    // TODO
+    emitTo("inspector", "provide_entity", props.entity);
   }
 
   return (
@@ -147,11 +117,11 @@ export default function EntityComponent(props: EntityProps) {
       onMouseDown={(e) => {
         e.stopPropagation();
         if (props.isSelected) e.stopPropagation();
-        else if (props.entity.selectable) props.onSelect();
+        else if (props.entity.selectable) props.onSelect(true);
       }}
       onDblClick={async (e) => {
         e.stopPropagation();
-        emitTo(getCurrentWindow().label, "select_entity", { id: undefined });
+        props.onSelect(false);
         if (props.entity.scripts.on_click) runScript("on_click", {});
       }}
       onContextMenu={async (e) => {

@@ -12,7 +12,6 @@ export default defineConfig(async () => ({
     rollupOptions: {
       input: {
         main: "index.html",
-        inspector: "src/inspector/inspector.html",
       },
     },
   },
