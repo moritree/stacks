@@ -1,17 +1,7 @@
-use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State, WebviewWindow};
-
-pub struct SetupState {
-    pub frontend_ready: bool,
-}
+use tauri::{AppHandle, Manager, WebviewWindow};
 
 #[tauri::command]
-pub async fn set_frontend_ready(
-    app: AppHandle,
-    state: State<'_, Mutex<SetupState>>,
-) -> Result<(), ()> {
-    let mut state_lock = state.lock().unwrap();
-    state_lock.frontend_ready = true;
+pub async fn set_frontend_ready(app: AppHandle) -> Result<(), ()> {
     let main_window = app.get_webview_window("main").unwrap();
     main_window.show().unwrap();
     Ok(())
